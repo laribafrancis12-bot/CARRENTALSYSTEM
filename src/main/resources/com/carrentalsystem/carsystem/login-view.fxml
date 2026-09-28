@@ -11,7 +11,7 @@
 <HBox prefHeight="400.0" prefWidth="640.0" styleClass="root-pane" stylesheets="@style.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carrentalsystem.carsystem.LoginController">
 
     <VBox alignment="CENTER" prefWidth="240.0" spacing="8.0" styleClass="brand-panel">
-        <Label styleClass="brand-title" text="CAR-RATE" textAlignment="CENTER" wrapText="true" />
+        <Label styleClass="brand-title" text="CARECARE" textAlignment="CENTER" wrapText="true" />
     </VBox>
 
     <VBox alignment="CENTER_LEFT" spacing="10.0" HBox.hgrow="ALWAYS">
