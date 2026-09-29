@@ -1,69 +1,88 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane prefHeight="480.0" prefWidth="760.0" styleClass="root-pane" stylesheets="@style.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carrentalsystem.carsystem.DashboardController">
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.carrentalsystem.carsystem.DashboardController"
+            prefHeight="560.0" prefWidth="860.0"
+            stylesheets="@style.css" styleClass="app-root">
 
+    <!-- Icon rail -->
     <left>
-        <VBox prefWidth="140.0" spacing="2.0" styleClass="sidebar">
-            <padding><Insets bottom="12.0" left="8.0" right="8.0" top="12.0" /></padding>
-            <Label styleClass="sidebar-brand" text="RentApp" />
-            <Button maxWidth="Infinity" onAction="#onDashboardClick" styleClass="sidebar-btn-active" text="Dashboard" />
-            <Button maxWidth="Infinity" onAction="#onVehiclesClick" styleClass="sidebar-btn" text="Vehicles" />
-            <Button maxWidth="Infinity" onAction="#onCustomersClick" styleClass="sidebar-btn" text="Customers" />
-            <Button maxWidth="Infinity" onAction="#onRentalsClick" styleClass="sidebar-btn" text="Rentals" />
-            <VBox VBox.vgrow="ALWAYS" />
-            <Button maxWidth="Infinity" onAction="#onLogoutClick" styleClass="sidebar-btn" text="Log out" />
+        <VBox prefWidth="78.0" spacing="4.0" styleClass="rail">
+            <padding><Insets top="16.0" bottom="16.0"/></padding>
+            <Label text="&#128663;" styleClass="rail-logo"/>
+            <Button text="Dashboard" styleClass="rail-btn-active" maxWidth="Infinity" onAction="#onDashboardClick"/>
+            <Button text="Vehicles" styleClass="rail-btn" maxWidth="Infinity" onAction="#onVehiclesClick"/>
+            <Button text="Rentals" styleClass="rail-btn" maxWidth="Infinity" onAction="#onRentalsClick"/>
+            <VBox VBox.vgrow="ALWAYS"/>
+            <Button text="Log out" styleClass="rail-btn" maxWidth="Infinity" onAction="#onLogoutClick"/>
         </VBox>
     </left>
 
     <center>
         <VBox spacing="12.0">
-            <padding><Insets bottom="14.0" left="16.0" right="16.0" top="14.0" /></padding>
+            <padding><Insets top="18.0" bottom="18.0" left="20.0" right="20.0"/></padding>
 
             <HBox alignment="CENTER_LEFT" spacing="10.0">
                 <VBox HBox.hgrow="ALWAYS">
-                    <Label styleClass="page-title" text="Dashboard" />
-                    <Label fx:id="loggedInAsLabel" styleClass="page-subtitle" text="Logged in as Admin" />
+                    <Label text="Dashboard" styleClass="page-title"/>
+                    <Label fx:id="dateLabel" text="Logged in as Admin" styleClass="page-subtitle"/>
                 </VBox>
-                <Button onAction="#onNewRentalClick" prefHeight="35.0" prefWidth="97.0" styleClass="login-button" text="+ New rental" />
+                <Button text="+ New rental" styleClass="cta-button" onAction="#onNewRentalClick"/>
             </HBox>
 
+            <!-- Stat cards -->
             <HBox spacing="10.0">
                 <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
-                    <Label styleClass="stat-label" text="Total vehicles" />
-                    <Label fx:id="totalVehiclesLabel" styleClass="stat-value" text="0" />
+                    <Label text="Total vehicles" styleClass="stat-label"/>
+                    <Label fx:id="totalVehiclesLabel" text="0" styleClass="stat-value"/>
                 </VBox>
                 <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
-                    <Label styleClass="stat-label" text="Available" />
-                    <Label fx:id="availableLabel" styleClass="stat-value-green" text="0" />
+                    <Label text="Available" styleClass="stat-label"/>
+                    <Label fx:id="availableLabel" text="0" styleClass="stat-value-green"/>
                 </VBox>
                 <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
-                    <Label styleClass="stat-label" text="Rented out" />
-                    <Label fx:id="rentedLabel" styleClass="stat-value-amber" text="0" />
+                    <Label text="Rented out" styleClass="stat-label"/>
+                    <Label fx:id="rentedLabel" text="0" styleClass="stat-value-amber"/>
                 </VBox>
                 <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
-                    <Label styleClass="stat-label" text="Overdue" />
-                    <Label fx:id="overdueLabel" styleClass="stat-value-red" text="0" />
+                    <Label text="Overdue" styleClass="stat-label"/>
+                    <Label fx:id="overdueLabel" text="0" styleClass="stat-value-red"/>
                 </VBox>
             </HBox>
 
-            <Label styleClass="section-label" text="Due today &amp; overdue" />
-            <TableView fx:id="dueTable" VBox.vgrow="ALWAYS">
-                <columns>
-                    <TableColumn fx:id="dueCustomerCol" prefWidth="180.0" text="Customer" />
-                    <TableColumn fx:id="dueVehicleCol" prefWidth="160.0" text="Vehicle" />
-                    <TableColumn fx:id="dueDateCol" prefWidth="120.0" text="Return date" />
-                    <TableColumn fx:id="dueStatusCol" prefWidth="120.0" text="Status" />
-                </columns>
-            </TableView>
+            <!-- Revenue + Due today -->
+            <HBox spacing="12.0" VBox.vgrow="ALWAYS">
+
+                <VBox styleClass="stat-card" spacing="4.0" HBox.hgrow="ALWAYS" prefWidth="360.0">
+                    <Label text="Revenue" styleClass="section-label"/>
+                    <Label fx:id="revenueMonthLabel" text="₱0" styleClass="revenue-total"/>
+                    <Label text="this month" styleClass="page-subtitle"/>
+                    <HBox spacing="8.0">
+                        <Label fx:id="revenueTodayLabel" text="Today ₱0" styleClass="revenue-chip"/>
+                        <Label fx:id="revenueWeekLabel" text="This week ₱0" styleClass="revenue-chip"/>
+                    </HBox>
+                    <BarChart fx:id="revenueChart" legendVisible="false" animated="false" VBox.vgrow="ALWAYS">
+                        <xAxis><CategoryAxis fx:id="revenueXAxis" label=""/></xAxis>
+                        <yAxis><NumberAxis fx:id="revenueYAxis" label=""/></yAxis>
+                    </BarChart>
+                </VBox>
+
+                <VBox styleClass="stat-card" spacing="6.0" HBox.hgrow="ALWAYS" prefWidth="300.0">
+                    <Label text="Due today and overdue" styleClass="section-label"/>
+                    <VBox fx:id="dueListContainer" spacing="6.0" VBox.vgrow="ALWAYS"/>
+                </VBox>
+
+            </HBox>
         </VBox>
     </center>
 </BorderPane>
