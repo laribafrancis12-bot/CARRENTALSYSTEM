@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane prefHeight="480.0" prefWidth="760.0" styleClass="root-pane" stylesheets="@style.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carrentalsystem.carsystem.DashboardController">
+
+    <left>
+        <VBox prefWidth="140.0" spacing="2.0" styleClass="sidebar">
+            <padding><Insets bottom="12.0" left="8.0" right="8.0" top="12.0" /></padding>
+            <Label styleClass="sidebar-brand" text="RentApp" />
+            <Button maxWidth="Infinity" onAction="#onDashboardClick" styleClass="sidebar-btn-active" text="Dashboard" />
+            <Button maxWidth="Infinity" onAction="#onVehiclesClick" styleClass="sidebar-btn" text="Vehicles" />
+            <Button maxWidth="Infinity" onAction="#onCustomersClick" styleClass="sidebar-btn" text="Customers" />
+            <Button maxWidth="Infinity" onAction="#onRentalsClick" styleClass="sidebar-btn" text="Rentals" />
+            <VBox VBox.vgrow="ALWAYS" />
+            <Button maxWidth="Infinity" onAction="#onLogoutClick" styleClass="sidebar-btn" text="Log out" />
+        </VBox>
+    </left>
+
+    <center>
+        <VBox spacing="12.0">
+            <padding><Insets bottom="14.0" left="16.0" right="16.0" top="14.0" /></padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+                <VBox HBox.hgrow="ALWAYS">
+                    <Label styleClass="page-title" text="Dashboard" />
+                    <Label fx:id="loggedInAsLabel" styleClass="page-subtitle" text="Logged in as Admin" />
+                </VBox>
+                <Button onAction="#onNewRentalClick" prefHeight="35.0" prefWidth="97.0" styleClass="login-button" text="+ New rental" />
+            </HBox>
+
+            <HBox spacing="10.0">
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                    <Label styleClass="stat-label" text="Total vehicles" />
+                    <Label fx:id="totalVehiclesLabel" styleClass="stat-value" text="0" />
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                    <Label styleClass="stat-label" text="Available" />
+                    <Label fx:id="availableLabel" styleClass="stat-value-green" text="0" />
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                    <Label styleClass="stat-label" text="Rented out" />
+                    <Label fx:id="rentedLabel" styleClass="stat-value-amber" text="0" />
+                </VBox>
+                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS">
+                    <Label styleClass="stat-label" text="Overdue" />
+                    <Label fx:id="overdueLabel" styleClass="stat-value-red" text="0" />
+                </VBox>
+            </HBox>
+
+            <Label styleClass="section-label" text="Due today &amp; overdue" />
+            <TableView fx:id="dueTable" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="dueCustomerCol" prefWidth="180.0" text="Customer" />
+                    <TableColumn fx:id="dueVehicleCol" prefWidth="160.0" text="Vehicle" />
+                    <TableColumn fx:id="dueDateCol" prefWidth="120.0" text="Return date" />
+                    <TableColumn fx:id="dueStatusCol" prefWidth="120.0" text="Status" />
+                </columns>
+            </TableView>
+        </VBox>
+    </center>
+</BorderPane>

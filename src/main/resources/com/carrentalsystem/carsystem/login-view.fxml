@@ -2,38 +2,61 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox prefHeight="400.0" prefWidth="640.0" styleClass="root-pane" stylesheets="@style.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carrentalsystem.carsystem.LoginController">
+<StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.carrentalsystem.carsystem.LoginController"
+           prefHeight="560.0" prefWidth="400.0"
+           stylesheets="@style.css" styleClass="login-root">
 
-    <VBox alignment="CENTER" prefWidth="240.0" spacing="8.0" styleClass="brand-panel">
-        <Label styleClass="brand-title" text="CARECARE" textAlignment="CENTER" wrapText="true" />
+    <VBox alignment="TOP_CENTER" spacing="0.0">
+
+        <!-- Curved green header -->
+        <VBox alignment="CENTER" styleClass="login-hero" prefHeight="150.0">
+            <Label text="RentApp" styleClass="login-hero-title"/>
+            <Label text="Vehicle rental management" styleClass="login-hero-subtitle"/>
+        </VBox>
+
+        <!-- Badge overlapping the header/card boundary -->
+        <StackPane styleClass="login-badge" translateY="-30.0">
+            <Label styleClass="login-badge-icon" text=""/>
+        </StackPane>
+
+        <!-- White form card -->
+        <VBox styleClass="login-card" spacing="10.0" translateY="-22.0">
+            <padding><Insets top="20.0" bottom="24.0" left="26.0" right="26.0"/></padding>
+
+            <Label text="Welcome back" styleClass="login-title"/>
+            <Label text="Log in to continue" styleClass="login-subtitle"/>
+
+            <Label text="Username" styleClass="field-label">
+                <VBox.margin><Insets top="10.0"/></VBox.margin>
+            </Label>
+            <TextField fx:id="usernameField" promptText="Enter username" styleClass="field-input"/>
+
+            <Label text="Password" styleClass="field-label"/>
+            <StackPane>
+                <PasswordField fx:id="passwordField" promptText="Enter password" styleClass="field-input"
+                               onAction="#onLoginClick"/>
+                <TextField fx:id="passwordVisibleField" promptText="Enter password" styleClass="field-input"
+                           onAction="#onLoginClick" visible="false" managed="false"/>
+            </StackPane>
+
+            <CheckBox fx:id="showPasswordCheck" text="Show password" styleClass="field-checkbox"
+                      onAction="#onTogglePasswordVisibility">
+                <VBox.margin><Insets top="2.0" bottom="6.0"/></VBox.margin>
+            </CheckBox>
+
+            <Button text="Log in" maxWidth="Infinity" styleClass="login-button" onAction="#onLoginClick"/>
+
+            <Label fx:id="messageLabel" styleClass="error-label" wrapText="true">
+                <VBox.margin><Insets top="4.0"/></VBox.margin>
+            </Label>
+        </VBox>
     </VBox>
-
-    <VBox alignment="CENTER_LEFT" spacing="10.0" HBox.hgrow="ALWAYS">
-        <padding>
-            <Insets bottom="30.0" left="36.0" right="36.0" top="30.0" />
-        </padding>
-
-        <Label styleClass="title-label" text="Welcome back" />
-        <Label styleClass="subtitle-label" text="Log in to continue" />
-
-        <Label text="Username" />
-        <TextField fx:id="usernameField" promptText="Enter username" />
-
-        <Label text="Password" />
-        <PasswordField fx:id="passwordField" onAction="#onLoginClick" promptText="Enter password" />
-
-        <Button maxWidth="Infinity" onAction="#onLoginClick" styleClass="login-button" text="Log in">
-            <VBox.margin>
-                <Insets top="8.0" />
-            </VBox.margin>
-        </Button>
-
-        <Label fx:id="messageLabel" styleClass="error-label" />
-    </VBox>
-</HBox>
+</StackPane>
