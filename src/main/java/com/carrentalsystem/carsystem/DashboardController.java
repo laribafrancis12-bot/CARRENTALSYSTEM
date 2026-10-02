@@ -22,6 +22,8 @@ import java.util.Locale;
 
 public class DashboardController {
 
+    @FXML private javafx.scene.control.Button vehiclesBtn;
+    @FXML private javafx.scene.control.Button accountsBtn;
     @FXML private Label dateLabel;
     @FXML private Label totalVehiclesLabel;
     @FXML private Label availableLabel;
@@ -37,8 +39,10 @@ public class DashboardController {
     @FXML
     public void initialize() {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");
-        dateLabel.setText(LocalDate.now().format(fmt) + " \u00b7 Logged in as Admin");
+        String who = Session.username == null ? "Admin" : Session.username;
+        dateLabel.setText(LocalDate.now().format(fmt) + " \u00b7 Logged in as " + who);
 
+        applyRoleRestrictions();
         loadStats();
         loadRevenue();
         loadDueList();
@@ -167,6 +171,29 @@ public class DashboardController {
         return row;
     }
 
+    private void applyRoleRestrictions() {
+        boolean admin = Session.isAdmin();
+        vehiclesBtn.setVisible(admin);
+        vehiclesBtn.setManaged(admin);
+        accountsBtn.setVisible(admin);
+        accountsBtn.setManaged(admin);
+    }
+
+    @FXML
+    private void onAccountsClick() {
+        if (!Session.isAdmin()) return;
+        try {
+            javafx.stage.Stage stage = (javafx.stage.Stage) dateLabel.getScene().getWindow();
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                    HelloApplication.class.getResource("accounts-view.fxml"));
+            javafx.scene.Scene scene = new javafx.scene.Scene(loader.load());
+            stage.setScene(scene);
+            stage.setTitle("Car Rental System - Accounts");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @FXML
     private void onDashboardClick() {
         // Already here
@@ -188,16 +215,30 @@ public class DashboardController {
 
     @FXML
     private void onRentalsClick() {
-        // TODO: switch to rentals-view.fxml once it's built
+        goToRentals();
     }
 
     @FXML
     private void onNewRentalClick() {
-        // TODO: open the New rental popup
+        goToRentals();
+    }
+
+    private void goToRentals() {
+        try {
+            javafx.stage.Stage stage = (javafx.stage.Stage) dateLabel.getScene().getWindow();
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
+                    HelloApplication.class.getResource("rentals-view.fxml"));
+            javafx.scene.Scene scene = new javafx.scene.Scene(loader.load());
+            stage.setScene(scene);
+            stage.setTitle("Car Rental System - Rentals");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     private void onLogoutClick() {
+        Session.clear();
         try {
             javafx.stage.Stage stage = (javafx.stage.Stage) dateLabel.getScene().getWindow();
             javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(

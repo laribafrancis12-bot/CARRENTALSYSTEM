@@ -11,93 +11,99 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<StackPane prefHeight="560.0" prefWidth="860.0" styleClass="app-root" stylesheets="@style.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carrentalsystem.carsystem.VehiclesController">
+<StackPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.carrentalsystem.carsystem.VehiclesController"
+           prefHeight="720.0" prefWidth="1100.0"
+           stylesheets="@style.css" styleClass="app-root">
 
     <!-- Main page -->
     <BorderPane fx:id="pageRoot">
         <left>
-            <VBox prefWidth="78.0" spacing="4.0" styleClass="rail">
-                <padding><Insets bottom="16.0" top="16.0" /></padding>
-                <Label styleClass="rail-logo" text="🚗" />
-                <Button maxWidth="Infinity" onAction="#onDashboardClick" styleClass="rail-btn" text="Dashboard" />
-                <Button maxWidth="Infinity" onAction="#onVehiclesClick" styleClass="rail-btn-active" text="Vehicles" />
-                <Button maxWidth="Infinity" onAction="#onRentalsClick" styleClass="rail-btn" text="Rentals" />
-                <VBox prefHeight="348.0" prefWidth="142.0" VBox.vgrow="ALWAYS" />
-                <Button maxWidth="Infinity" onAction="#onLogoutClick" styleClass="rail-btn" text="Log out" />
+            <VBox prefWidth="150.0" spacing="6.0" styleClass="rail">
+                <padding><Insets top="20.0" bottom="20.0" left="10.0" right="10.0"/></padding>
+                <Label text="&#128663;" styleClass="rail-logo"/>
+                <Button text="Dashboard" styleClass="rail-btn" maxWidth="Infinity" onAction="#onDashboardClick"/>
+                <Button fx:id="vehiclesBtn" text="Vehicles" styleClass="rail-btn-active" maxWidth="Infinity" onAction="#onVehiclesClick"/>
+                <Button text="Rentals" styleClass="rail-btn" maxWidth="Infinity" onAction="#onRentalsClick"/>
+                <Button fx:id="accountsBtn" text="Accounts" styleClass="rail-btn" maxWidth="Infinity" onAction="#onAccountsClick"/>
+                <VBox VBox.vgrow="ALWAYS"/>
+                <Button text="Log out" styleClass="rail-btn" maxWidth="Infinity" onAction="#onLogoutClick"/>
             </VBox>
         </left>
 
         <center>
-            <VBox spacing="12.0">
-                <padding><Insets bottom="18.0" left="20.0" right="20.0" top="18.0" /></padding>
+            <VBox spacing="14.0">
+                <padding><Insets top="24.0" bottom="24.0" left="28.0" right="28.0"/></padding>
 
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                     <VBox HBox.hgrow="ALWAYS">
-                        <Label styleClass="page-title" text="Vehicles" />
-                        <Label fx:id="countLabel" styleClass="page-subtitle" text="0 in your fleet" />
+                        <Label text="Vehicles" styleClass="page-title"/>
+                        <Label fx:id="countLabel" text="0 in your fleet" styleClass="page-subtitle"/>
                     </VBox>
-                    <Button onAction="#onAddVehicleClick" styleClass="cta-button" text="+ Add vehicle" />
+                    <Button text="+ Add vehicle" styleClass="cta-button" onAction="#onAddVehicleClick"/>
                 </HBox>
 
-                <TextField fx:id="searchField" maxWidth="260.0" promptText="Search plate no. or model" styleClass="field-input" />
+                <TextField fx:id="searchField" promptText="Search plate no. or model" maxWidth="320.0"
+                           prefHeight="38.0" styleClass="field-input"/>
 
-                <ScrollPane fitToWidth="true" prefHeight="422.0" prefWidth="696.0" styleClass="plain-scroll" VBox.vgrow="ALWAYS">
-                    <VBox fx:id="vehicleListContainer" spacing="8.0" />
+                <ScrollPane fitToWidth="true" styleClass="plain-scroll" VBox.vgrow="ALWAYS">
+                    <VBox fx:id="vehicleListContainer" spacing="8.0"/>
                 </ScrollPane>
             </VBox>
         </center>
     </BorderPane>
 
     <!-- Add vehicle overlay (hidden until Add vehicle is clicked) -->
-    <StackPane fx:id="addVehicleOverlay" managed="false" styleClass="modal-overlay" visible="false">
-        <VBox maxWidth="380.0" spacing="10.0" styleClass="modal-card">
-            <padding><Insets bottom="20.0" left="24.0" right="24.0" top="20.0" /></padding>
+    <StackPane fx:id="addVehicleOverlay" styleClass="modal-overlay" visible="false" managed="false">
+        <VBox styleClass="modal-card" spacing="14.0" maxWidth="500.0">
+            <padding><Insets top="26.0" bottom="26.0" left="30.0" right="30.0"/></padding>
 
-            <HBox alignment="CENTER_LEFT" spacing="10.0">
-                <VBox alignment="CENTER" maxHeight="38.0" maxWidth="38.0" minHeight="38.0" minWidth="38.0" styleClass="modal-icon">
-                    <Label styleClass="modal-icon-label" text="🚗" />
+            <HBox alignment="CENTER_LEFT" spacing="12.0">
+                <VBox styleClass="modal-icon" alignment="CENTER" minWidth="44.0" minHeight="44.0"
+                      maxWidth="44.0" maxHeight="44.0">
+                    <Label text="&#128663;" styleClass="modal-icon-label"/>
                 </VBox>
                 <VBox HBox.hgrow="ALWAYS">
-                    <Label styleClass="modal-title" text="Add vehicle" />
-                    <Label styleClass="page-subtitle" text="It will appear as available" />
+                    <Label text="Add vehicle" styleClass="modal-title"/>
+                    <Label text="It will appear as available" styleClass="page-subtitle"/>
                 </VBox>
-                <Button onAction="#onCancelAddVehicle" styleClass="modal-close" text="X" />
+                <Button text="X" styleClass="modal-close" onAction="#onCancelAddVehicle"/>
             </HBox>
 
-            <HBox spacing="10.0">
-                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
-                    <Label styleClass="field-label" text="Plate number" />
-                    <TextField fx:id="plateField" promptText="ABC 1234" styleClass="field-input" />
+            <HBox spacing="14.0">
+                <VBox HBox.hgrow="ALWAYS" spacing="4.0">
+                    <Label text="Plate number" styleClass="field-label"/>
+                    <TextField fx:id="plateField" promptText="ABC 1234" prefHeight="38.0" styleClass="field-input"/>
                 </VBox>
-                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
-                    <Label styleClass="field-label" text="Model" />
-                    <TextField fx:id="modelField" promptText="Toyota Vios" styleClass="field-input" />
-                </VBox>
-            </HBox>
-
-            <HBox spacing="10.0">
-                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
-                    <Label styleClass="field-label" text="Type" />
-                    <ComboBox fx:id="typeCombo" maxWidth="Infinity" styleClass="field-input" />
-                </VBox>
-                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
-                    <Label styleClass="field-label" text="Seats" />
-                    <ComboBox fx:id="seatsCombo" maxWidth="Infinity" styleClass="field-input" />
-                </VBox>
-                <VBox spacing="3.0" HBox.hgrow="ALWAYS">
-                    <Label styleClass="field-label" text="Rate/day" />
-                    <TextField fx:id="rateField" promptText="1500" styleClass="field-input" />
+                <VBox HBox.hgrow="ALWAYS" spacing="4.0">
+                    <Label text="Model" styleClass="field-label"/>
+                    <TextField fx:id="modelField" promptText="Toyota Vios" prefHeight="38.0" styleClass="field-input"/>
                 </VBox>
             </HBox>
 
-            <Label styleClass="field-label" text="Status" />
-            <ComboBox fx:id="statusCombo" maxWidth="Infinity" styleClass="field-input" />
+            <HBox spacing="14.0">
+                <VBox HBox.hgrow="ALWAYS" minWidth="120.0" spacing="4.0">
+                    <Label text="Type" styleClass="field-label"/>
+                    <ComboBox fx:id="typeCombo" maxWidth="Infinity" prefWidth="140.0" prefHeight="38.0" styleClass="field-input"/>
+                </VBox>
+                <VBox HBox.hgrow="ALWAYS" minWidth="100.0" spacing="4.0">
+                    <Label text="Seats" styleClass="field-label"/>
+                    <ComboBox fx:id="seatsCombo" maxWidth="Infinity" prefWidth="110.0" prefHeight="38.0" styleClass="field-input"/>
+                </VBox>
+                <VBox HBox.hgrow="ALWAYS" minWidth="120.0" spacing="4.0">
+                    <Label text="Rate/day" styleClass="field-label"/>
+                    <TextField fx:id="rateField" promptText="1500" prefHeight="38.0" styleClass="field-input"/>
+                </VBox>
+            </HBox>
 
-            <Label fx:id="formMessageLabel" styleClass="error-label" wrapText="true" />
+            <Label text="Status" styleClass="field-label"/>
+            <ComboBox fx:id="statusCombo" maxWidth="Infinity" prefHeight="38.0" styleClass="field-input"/>
 
-            <HBox alignment="CENTER_RIGHT" spacing="8.0">
-                <Button onAction="#onCancelAddVehicle" styleClass="ghost-button" text="Cancel" />
-                <Button onAction="#onSaveVehicleClick" styleClass="cta-button" text="Save vehicle" />
+            <Label fx:id="formMessageLabel" styleClass="error-label" wrapText="true"/>
+
+            <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                <Button text="Cancel" styleClass="ghost-button" onAction="#onCancelAddVehicle"/>
+                <Button text="Save vehicle" styleClass="cta-button" onAction="#onSaveVehicleClick"/>
             </HBox>
         </VBox>
     </StackPane>

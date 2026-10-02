@@ -23,6 +23,8 @@ import java.sql.SQLException;
 
 public class VehiclesController {
 
+    @FXML private Button vehiclesBtn;
+    @FXML private Button accountsBtn;
     @FXML private StackPane addVehicleOverlay;
     @FXML private VBox vehicleListContainer;
     @FXML private TextField searchField;
@@ -38,6 +40,14 @@ public class VehiclesController {
 
     @FXML
     public void initialize() {
+        if (!Session.isAdmin()) {
+            // Staff should never land here, but guard it anyway in case the screen is reached directly.
+            switchScene("dashboard-view.fxml", "Car Rental System - Dashboard");
+            return;
+        }
+        accountsBtn.setVisible(true);
+        accountsBtn.setManaged(true);
+
         typeCombo.setItems(FXCollections.observableArrayList("Sedan", "MPV", "Pickup", "Van"));
         seatsCombo.setItems(FXCollections.observableArrayList(4, 5, 7, 12, 15));
         statusCombo.setItems(FXCollections.observableArrayList("Available", "Rented", "Maintenance"));
@@ -84,7 +94,7 @@ public class VehiclesController {
 
         } catch (SQLException e) {
             e.printStackTrace();
-            countLabel.setText("Could not load vehicles");
+            countLabel.setText("Could not load vehicles: " + e.getMessage());
         }
     }
 
@@ -189,12 +199,19 @@ public class VehiclesController {
     }
 
     @FXML
+    private void onAccountsClick() {
+        if (!Session.isAdmin()) return;
+        switchScene("accounts-view.fxml", "Car Rental System - Accounts");
+    }
+
+    @FXML
     private void onRentalsClick() {
-        // TODO: switch to rentals-view.fxml once it's built
+        switchScene("rentals-view.fxml", "Car Rental System - Rentals");
     }
 
     @FXML
     private void onLogoutClick() {
+        Session.clear();
         switchScene("login-view.fxml", "Car Rental System - Login");
     }
 

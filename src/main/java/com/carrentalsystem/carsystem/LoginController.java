@@ -1,14 +1,19 @@
 package com.carrentalsystem.carsystem;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class LoginController {
 
@@ -20,7 +25,6 @@ public class LoginController {
 
     @FXML
     public void initialize() {
-        // Keep the hidden and visible password fields in sync as the user types
         passwordVisibleField.textProperty().bindBidirectional(passwordField.textProperty());
     }
 
@@ -40,30 +44,41 @@ public class LoginController {
 
         if (username.isEmpty() || password.isEmpty()) {
             showMessage("Enter your username and password", false);
+            return;
+        }
 
-        } else if (username.equals("admin") && password.equals("1234")) {
+        String sql = "SELECT role FROM users WHERE username = ? AND password = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            showMessage("Login successful", true);
+            stmt.setString(1, username);
+            stmt.setString(2, password);
 
-            try {
-                FXMLLoader loader = new FXMLLoader(
-                        getClass().getResource("dashboard-view.fxml")
-                );
-
-                Parent dashboardRoot = loader.load();
-
-                Stage stage = (Stage) usernameField.getScene().getWindow();
-
-                stage.setScene(new Scene(dashboardRoot));
-                stage.setTitle("Car Rental System - Dashboard");
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                showMessage("Could not open dashboard", false);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Session.username = username;
+                    Session.role = rs.getString("role");
+                    goToDashboard();
+                } else {
+                    showMessage("Invalid username or password", false);
+                }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showMessage("Could not reach the database", false);
+        }
+    }
 
-        } else {
-            showMessage("Invalid username or password", false);
+    private void goToDashboard() {
+        try {
+            Stage stage = (Stage) usernameField.getScene().getWindow();
+            FXMLLoader loader = new FXMLLoader(HelloApplication.class.getResource("dashboard-view.fxml"));
+            Scene scene = new Scene(loader.load());
+            stage.setScene(scene);
+            stage.setTitle("Car Rental System - Dashboard");
+        } catch (IOException e) {
+            e.printStackTrace();
+            showMessage("Could not open the dashboard", false);
         }
     }
 

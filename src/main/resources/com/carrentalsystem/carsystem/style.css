@@ -1,4 +1,9 @@
-/* ==== Login screen: forest green + terracotta ==== */
+/* =========================================================
+   RentApp — full stylesheet (forest green + terracotta theme)
+   This file replaces style.css completely.
+   ========================================================= */
+
+/* ---- Login screen ---- */
 
 .login-root {
     -fx-background-color: #F7F1E8;
@@ -58,6 +63,8 @@
     -fx-font-size: 12px;
 }
 
+/* ---- Shared form fields (used on every screen) ---- */
+
 .field-label {
     -fx-text-fill: #7A7264;
     -fx-font-size: 11px;
@@ -68,7 +75,7 @@
     -fx-border-color: #D8CDB9;
     -fx-border-radius: 12;
     -fx-background-radius: 12;
-    -fx-padding: 9 10;
+    -fx-padding: 10 12;
     -fx-font-size: 13px;
 }
 
@@ -100,9 +107,7 @@
     -fx-font-size: 12px;
 }
 
-/* ---- Add everything below to the end of your existing style.css ---- */
-
-/* ==== Dashboard: append everything below to the end of style.css ==== */
+/* ---- App shell: rail + page (dashboard, vehicles, rentals, receipt, accounts) ---- */
 
 .app-root {
     -fx-background-color: #F7F1E8;
@@ -115,18 +120,19 @@
 
 .rail-logo {
     -fx-text-fill: white;
-    -fx-font-size: 22px;
+    -fx-font-size: 28px;
     -fx-alignment: center;
-    -fx-padding: 0 0 10 0;
+    -fx-padding: 0 0 16 0;
 }
 
 .rail-btn {
     -fx-background-color: transparent;
     -fx-text-fill: #B9CCC4;
-    -fx-font-size: 11px;
-    -fx-padding: 8 4;
-    -fx-background-radius: 10;
+    -fx-font-size: 13px;
+    -fx-padding: 12 8;
+    -fx-background-radius: 12;
     -fx-cursor: hand;
+    -fx-alignment: center-left;
 }
 
 .rail-btn:hover {
@@ -137,20 +143,21 @@
     -fx-background-color: #C4532A;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-font-size: 11px;
-    -fx-padding: 8 4;
-    -fx-background-radius: 10;
+    -fx-font-size: 13px;
+    -fx-padding: 12 8;
+    -fx-background-radius: 12;
+    -fx-alignment: center-left;
 }
 
 .page-title {
-    -fx-font-size: 20px;
+    -fx-font-size: 24px;
     -fx-font-weight: bold;
     -fx-text-fill: #1F2A26;
 }
 
 .page-subtitle {
     -fx-text-fill: #7A7264;
-    -fx-font-size: 12px;
+    -fx-font-size: 13px;
 }
 
 .cta-button {
@@ -159,104 +166,30 @@
     -fx-font-weight: bold;
     -fx-background-radius: 12;
     -fx-cursor: hand;
-    -fx-padding: 8 14;
+    -fx-padding: 11 18;
+    -fx-font-size: 13px;
 }
 
 .cta-button:hover {
     -fx-background-color: #9C4322;
 }
 
-.stat-card {
+.ghost-button {
     -fx-background-color: white;
-    -fx-border-color: #E8DFD0;
-    -fx-border-radius: 16;
-    -fx-background-radius: 16;
-    -fx-padding: 12;
-}
-
-.stat-label {
-    -fx-text-fill: #7A7264;
-    -fx-font-size: 11px;
-}
-
-.stat-value {
-    -fx-font-size: 20px;
-    -fx-font-weight: bold;
     -fx-text-fill: #1F3D36;
-}
-
-.stat-value-green {
-    -fx-font-size: 20px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #1F5A45;
-}
-
-.stat-value-amber {
-    -fx-font-size: 20px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #7A4B00;
-}
-
-.stat-value-red {
-    -fx-font-size: 20px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #9A2A12;
+    -fx-border-color: #D8CDB9;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 10 16;
+    -fx-cursor: hand;
+    -fx-font-size: 13px;
 }
 
 .section-label {
-    -fx-font-size: 13px;
+    -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-text-fill: #1F2A26;
 }
-
-.revenue-total {
-    -fx-font-size: 26px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #1F3D36;
-}
-
-.revenue-chip {
-    -fx-background-color: #DCE8E3;
-    -fx-text-fill: #1F3D36;
-    -fx-background-radius: 10;
-    -fx-padding: 3 10;
-    -fx-font-size: 11px;
-}
-
-.due-card {
-    -fx-background-color: #F7F1E8;
-    -fx-background-radius: 10;
-    -fx-padding: 8;
-}
-
-.due-name {
-    -fx-font-size: 12px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #1F2A26;
-}
-
-.due-detail {
-    -fx-text-fill: #7A7264;
-    -fx-font-size: 11px;
-}
-
-.due-badge-today {
-    -fx-background-color: #FBEBC9;
-    -fx-text-fill: #7A4B00;
-    -fx-background-radius: 10;
-    -fx-padding: 3 9;
-    -fx-font-size: 11px;
-}
-
-.due-badge-overdue {
-    -fx-background-color: #FBE0D8;
-    -fx-text-fill: #9A2A12;
-    -fx-background-radius: 10;
-    -fx-padding: 3 9;
-    -fx-font-size: 11px;
-}
-
-/* ==== Vehicles screen + popup overlay: append to the end of style.css ==== */
 
 .plain-scroll {
     -fx-background-color: transparent;
@@ -266,31 +199,135 @@
     -fx-background-color: transparent;
 }
 
+/* ---- Dashboard stat cards ---- */
+
+.stat-card {
+    -fx-background-color: white;
+    -fx-border-color: #E8DFD0;
+    -fx-border-radius: 16;
+    -fx-background-radius: 16;
+    -fx-padding: 16;
+}
+
+.stat-label {
+    -fx-text-fill: #7A7264;
+    -fx-font-size: 11px;
+}
+
+.stat-value {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F3D36;
+}
+
+.stat-value-green {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F5A45;
+}
+
+.stat-value-amber {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #7A4B00;
+}
+
+.stat-value-red {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #9A2A12;
+}
+
+.revenue-total {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F3D36;
+}
+
+.revenue-chip {
+    -fx-background-color: #DCE8E3;
+    -fx-text-fill: #1F3D36;
+    -fx-background-radius: 10;
+    -fx-padding: 4 12;
+    -fx-font-size: 12px;
+}
+
+/* ---- Row cards used on Dashboard due-list, Vehicles list, Rentals board, Accounts list ---- */
+
+.due-card {
+    -fx-background-color: #F7F1E8;
+    -fx-background-radius: 12;
+    -fx-padding: 10;
+}
+
+.due-name {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1F2A26;
+}
+
+.due-detail {
+    -fx-text-fill: #7A7264;
+    -fx-font-size: 12px;
+}
+
+.due-badge-today {
+    -fx-background-color: #FBEBC9;
+    -fx-text-fill: #7A4B00;
+    -fx-background-radius: 10;
+    -fx-padding: 4 10;
+    -fx-font-size: 12px;
+}
+
+.due-badge-overdue {
+    -fx-background-color: #FBE0D8;
+    -fx-text-fill: #9A2A12;
+    -fx-background-radius: 10;
+    -fx-padding: 4 10;
+    -fx-font-size: 12px;
+}
+
 .badge-green {
     -fx-background-color: #E1EDE6;
     -fx-text-fill: #1F5A45;
     -fx-background-radius: 10;
-    -fx-padding: 3 10;
-    -fx-font-size: 11px;
+    -fx-padding: 4 10;
+    -fx-font-size: 12px;
 }
 
 .badge-blue {
     -fx-background-color: #DCE8E3;
     -fx-text-fill: #1F3D36;
     -fx-background-radius: 10;
-    -fx-padding: 3 10;
-    -fx-font-size: 11px;
+    -fx-padding: 4 10;
+    -fx-font-size: 12px;
 }
 
 .badge-gray {
     -fx-background-color: #EFE7DA;
     -fx-text-fill: #4A443A;
     -fx-background-radius: 10;
-    -fx-padding: 3 10;
-    -fx-font-size: 11px;
+    -fx-padding: 4 10;
+    -fx-font-size: 12px;
 }
 
-/* ---- Popup overlay used by Add vehicle / New rental ---- */
+.badge-red {
+    -fx-background-color: #FBE0D8;
+    -fx-text-fill: #9A2A12;
+    -fx-background-radius: 10;
+    -fx-padding: 4 10;
+    -fx-font-size: 12px;
+}
+
+/* ---- Rentals board columns ---- */
+
+.board-col {
+    -fx-background-color: #EFE7DA;
+    -fx-background-radius: 16;
+    -fx-padding: 12;
+}
+
+/* ---- Popups: Add vehicle / New rental / Add staff / Change password ---- */
 
 .modal-overlay {
     -fx-background-color: rgba(31, 42, 38, 0.55);
@@ -309,11 +346,11 @@
 
 .modal-icon-label {
     -fx-text-fill: white;
-    -fx-font-size: 18px;
+    -fx-font-size: 20px;
 }
 
 .modal-title {
-    -fx-font-size: 16px;
+    -fx-font-size: 17px;
     -fx-font-weight: bold;
     -fx-text-fill: #1F2A26;
 }
@@ -322,15 +359,85 @@
     -fx-background-color: transparent;
     -fx-text-fill: #7A7264;
     -fx-cursor: hand;
+    -fx-font-size: 13px;
+}
+
+.total-box {
+    -fx-background-color: #1F3D36;
+    -fx-background-radius: 14;
+}
+
+.total-breakdown {
+    -fx-text-fill: #B9CCC4;
     -fx-font-size: 12px;
 }
 
-.ghost-button {
+.total-amount {
+    -fx-text-fill: white;
+    -fx-font-size: 19px;
+    -fx-font-weight: bold;
+}
+
+/* ---- Receipt ticket ---- */
+
+.ticket-card {
     -fx-background-color: white;
+    -fx-border-color: #E8DFD0;
+    -fx-border-radius: 18;
+    -fx-background-radius: 18;
+}
+
+.ticket-head {
+    -fx-background-color: #1F3D36;
+    -fx-background-radius: 18 18 0 0;
+}
+
+.ticket-brand {
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.ticket-brand-sub {
+    -fx-text-fill: #B9CCC4;
+    -fx-font-size: 12px;
+}
+
+.ticket-body {
+    -fx-border-color: transparent transparent #E0D6C4 transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-border-style: dashed;
+}
+
+.ticket-key {
+    -fx-text-fill: #7A7264;
+    -fx-font-size: 13px;
+}
+
+.ticket-val {
+    -fx-text-fill: #1F2A26;
+    -fx-font-size: 13px;
+}
+
+.ticket-total {
+    -fx-background-color: #FBEBE2;
+    -fx-background-radius: 0 0 18 18;
+}
+
+.ticket-total-label {
+    -fx-text-fill: #1F2A26;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.ticket-total-amount {
     -fx-text-fill: #1F3D36;
-    -fx-border-color: #D8CDB9;
-    -fx-border-radius: 12;
-    -fx-background-radius: 12;
-    -fx-padding: 8 14;
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+}
+
+.receipt-icon {
+    -fx-text-fill: #1F3D36;
+    -fx-font-size: 18px;
     -fx-cursor: hand;
 }
