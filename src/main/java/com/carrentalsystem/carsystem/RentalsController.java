@@ -1,39 +1,60 @@
 package com.carrentalsystem.carsystem;
 
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class RentalsController {
 
-    @FXML private javafx.scene.control.Button vehiclesBtn;
-    @FXML private javafx.scene.control.Button accountsBtn;
+    private static final DateTimeFormatter TABLE_DATE = DateTimeFormatter.ofPattern("MMM d, yyyy");
+
+    /** Which pill is selected: All, Active, Due or Returned. */
+    private String currentFilter = "All";
+
+    @FXML private Button vehiclesBtn;
+    @FXML private Button accountsBtn;
     @FXML private StackPane newRentalOverlay;
     @FXML private TextField searchField;
     @FXML private Label countLabel;
-    @FXML private Label activeCountLabel;
-    @FXML private Label dueCountLabel;
-    @FXML private Label returnedCountLabel;
-    @FXML private VBox activeColumn;
-    @FXML private VBox dueColumn;
-    @FXML private VBox returnedColumn;
+
+    @FXML private Button filterAllBtn;
+    @FXML private Button filterActiveBtn;
+    @FXML private Button filterDueBtn;
+    @FXML private Button filterReturnedBtn;
+
+    @FXML private TableView<RentalRow> rentalTable;
+    @FXML private TableColumn<RentalRow, Integer> idCol;
+    @FXML private TableColumn<RentalRow, String> customerCol;
+    @FXML private TableColumn<RentalRow, String> contactCol;
+    @FXML private TableColumn<RentalRow, String> vehicleCol;
+    @FXML private TableColumn<RentalRow, LocalDate> rentDateCol;
+    @FXML private TableColumn<RentalRow, LocalDate> returnDateCol;
+    @FXML private TableColumn<RentalRow, Double> totalCol;
+    @FXML private TableColumn<RentalRow, String> statusCol;
+    @FXML private TableColumn<RentalRow, Void> actionsCol;
 
     @FXML private TextField customerNameField;
     @FXML private TextField contactField;
@@ -64,103 +85,278 @@ public class RentalsController {
         returnDatePicker.valueProperty().addListener((o, a, b) -> updateTotal());
         vehicleCombo.valueProperty().addListener((o, a, b) -> updateTotal());
 
+        // The search box was never connected before; now the board filters as you type.
+        searchField.textProperty().addListener((o, a, b) -> loadBoard(b));
+
+        setUpTable();
+        DatabaseConnection.refreshOverdue();
         loadBoard("");
     }
 
-    private void loadBoard(String search) {
-        activeColumn.getChildren().clear();
-        dueColumn.getChildren().clear();
-        returnedColumn.getChildren().clear();
+    // ---- Board ----
 
+    /** Gives a column a share of the table width (with a minimum), so the table fills the window. */
+    private void sizeColumn(TableColumn<RentalRow, ?> col, double share, double minWidth) {
+        col.setMinWidth(minWidth);
+        // minus 24px so the vertical scrollbar never forces a horizontal one
+        col.prefWidthProperty().bind(rentalTable.widthProperty().subtract(24).multiply(share));
+    }
+
+    private void setUpTable() {
+        rentalTable.setPlaceholder(new Label("No rentals found"));
+
+        sizeColumn(idCol, 0.065, 72);
+        sizeColumn(customerCol, 0.145, 105);
+        sizeColumn(contactCol, 0.11, 100);
+        sizeColumn(vehicleCol, 0.15, 135);
+        sizeColumn(rentDateCol, 0.10, 95);
+        sizeColumn(returnDateCol, 0.10, 95);
+        sizeColumn(totalCol, 0.09, 80);
+        sizeColumn(statusCol, 0.10, 110);
+        sizeColumn(actionsCol, 0.14, 190);
+
+        idCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().id));
+        idCol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Integer value, boolean empty) {
+                super.updateItem(value, empty);
+                setText(empty || value == null ? null : "#" + value);
+            }
+        });
+
+        customerCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().customer));
+        contactCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().contact));
+        vehicleCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().vehicle));
+
+        rentDateCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().rentDate));
+        rentDateCol.setCellFactory(col -> dateCell());
+        returnDateCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().returnDate));
+        returnDateCol.setCellFactory(col -> dateCell());
+
+        totalCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().total));
+        totalCol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double value, boolean empty) {
+                super.updateItem(value, empty);
+                setText(empty || value == null ? null : "\u20b1" + String.format("%,.0f", value));
+            }
+        });
+
+        statusCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().status));
+        statusCol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String value, boolean empty) {
+                super.updateItem(value, empty);
+                if (empty || value == null) {
+                    setGraphic(null);
+                    setText(null);
+                    return;
+                }
+                Label badge = new Label(value);
+                switch (value) {
+                    case "Returned" -> badge.getStyleClass().add("badge-green");
+                    case "Overdue" -> badge.getStyleClass().add("badge-red");
+                    case "Due today" -> badge.getStyleClass().add("badge-amber");
+                    default -> badge.getStyleClass().add("badge-blue");
+                }
+                setGraphic(badge);
+                setText(null);
+            }
+        });
+
+        actionsCol.setSortable(false);
+        actionsCol.setCellFactory(col -> new TableCell<>() {
+            private final Button receiptBtn = new Button("Receipt");
+            private final Button returnBtn = new Button("Return");
+            private final HBox box = new HBox(6, receiptBtn, returnBtn);
+
+            {
+                receiptBtn.getStyleClass().addAll("ghost-button", "table-btn");
+                returnBtn.getStyleClass().addAll("ghost-button", "table-btn");
+                receiptBtn.setOnAction(e -> {
+                    RentalRow row = rowAtIndex();
+                    if (row != null) openReceipt(row.id);
+                });
+                returnBtn.setOnAction(e -> {
+                    RentalRow row = rowAtIndex();
+                    if (row != null) confirmReturn(row);
+                });
+            }
+
+            private RentalRow rowAtIndex() {
+                int i = getIndex();
+                return (i >= 0 && i < getTableView().getItems().size()) ? getTableView().getItems().get(i) : null;
+            }
+
+            @Override
+            protected void updateItem(Void value, boolean empty) {
+                super.updateItem(value, empty);
+                RentalRow row = empty ? null : rowAtIndex();
+                if (row == null) {
+                    setGraphic(null);
+                    return;
+                }
+                // Rentals that are already returned only keep the Receipt button.
+                boolean stillOut = !"Returned".equals(row.status);
+                returnBtn.setVisible(stillOut);
+                returnBtn.setManaged(stillOut);
+                setGraphic(box);
+            }
+        });
+    }
+
+    /** Asks for confirmation, then marks the rental Returned and the vehicle Available. */
+    private void confirmReturn(RentalRow row) {
+        LocalDate today = LocalDate.now();
+        String agreed = row.returnDate.format(TABLE_DATE);
+        String timing;
+        if (today.isBefore(row.returnDate)) {
+            timing = "Early return (agreed return date: " + agreed + ").";
+        } else if (today.isAfter(row.returnDate)) {
+            timing = "Late return (agreed return date: " + agreed + ").";
+        } else {
+            timing = "Returned on the agreed date (" + agreed + ").";
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                row.vehicle + "\n" + timing + "\n\n"
+                        + "The rental will be marked as Returned and the vehicle will be available again. "
+                        + "The amount charged stays \u20b1" + String.format("%,.0f", row.total) + ".",
+                ButtonType.YES, ButtonType.NO);
+        confirm.setHeaderText(null);
+        confirm.setTitle("Mark as returned");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.YES) {
+            return;
+        }
+
+        try {
+            DatabaseConnection.markReturned(row.id);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            Alert error = new Alert(Alert.AlertType.ERROR, "Could not mark this rental as returned. Try again.");
+            error.setHeaderText(null);
+            error.showAndWait();
+        }
+        loadBoard(searchField.getText());
+    }
+
+    private TableCell<RentalRow, LocalDate> dateCell() {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(LocalDate value, boolean empty) {
+                super.updateItem(value, empty);
+                setText(empty || value == null ? null : value.format(TABLE_DATE));
+            }
+        };
+    }
+
+    /** Reloads the table from the database, applying the search box and the selected filter pill. */
+    private void loadBoard(String search) {
         String sql =
-                "SELECT r.rental_id, c.full_name, c.contact_no, v.model, r.rent_date, r.return_date, " +
-                        "r.total_amount, r.status " +
+                "SELECT r.rental_id, c.full_name, c.contact_no, v.model, v.plate_no, " +
+                        "r.rent_date, r.return_date, r.total_amount, r.status " +
                         "FROM rentals r " +
                         "JOIN customers c ON r.customer_id = c.customer_id " +
                         "JOIN vehicles v ON r.vehicle_id = v.vehicle_id " +
-                        "WHERE c.full_name LIKE ? OR v.model LIKE ? " +
-                        "ORDER BY r.rent_date DESC";
+                        "WHERE (c.full_name LIKE ? OR v.model LIKE ? OR v.plate_no LIKE ?) " +
+                        "ORDER BY r.rent_date DESC, r.rental_id DESC";
 
-        int active = 0, due = 0, returned = 0;
+        List<RentalRow> all = new ArrayList<>();
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            String like = "%" + (search == null ? "" : search) + "%";
+            String like = "%" + (search == null ? "" : search.trim()) + "%";
             stmt.setString(1, like);
             stmt.setString(2, like);
+            stmt.setString(3, like);
+
+            LocalDate today = LocalDate.now();
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    String status = rs.getString("status");
+                    String dbStatus = rs.getString("status");
                     LocalDate returnDate = rs.getDate("return_date").toLocalDate();
-                    boolean dueToday = returnDate.isEqual(LocalDate.now());
 
-                    HBox card = buildRentalCard(
+                    String status;
+                    if ("Returned".equals(dbStatus)) {
+                        status = "Returned";
+                    } else if ("Overdue".equals(dbStatus) || returnDate.isBefore(today)) {
+                        status = "Overdue";
+                    } else if (returnDate.isEqual(today)) {
+                        status = "Due today";
+                    } else {
+                        status = "Active";
+                    }
+
+                    String contact = rs.getString("contact_no");
+                    all.add(new RentalRow(
                             rs.getInt("rental_id"),
                             rs.getString("full_name"),
-                            rs.getString("contact_no"),
-                            rs.getString("model"),
+                            contact == null ? "" : contact,
+                            rs.getString("model") + " \u00b7 " + rs.getString("plate_no"),
                             rs.getDate("rent_date").toLocalDate(),
                             returnDate,
                             rs.getDouble("total_amount"),
                             status
-                    );
-
-                    if ("Returned".equals(status)) {
-                        returnedColumn.getChildren().add(card);
-                        returned++;
-                    } else if ("Overdue".equals(status) || dueToday) {
-                        dueColumn.getChildren().add(card);
-                        due++;
-                    } else {
-                        activeColumn.getChildren().add(card);
-                        active++;
-                    }
+                    ));
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            countLabel.setText("Could not load rentals: " + e.getMessage());
+            return;
         }
 
-        activeCountLabel.setText(String.valueOf(active));
-        dueCountLabel.setText(String.valueOf(due));
-        returnedCountLabel.setText(String.valueOf(returned));
+        int active = 0, due = 0, returned = 0;
+        ObservableList<RentalRow> visible = FXCollections.observableArrayList();
+        for (RentalRow row : all) {
+            switch (row.status) {
+                case "Returned" -> returned++;
+                case "Overdue", "Due today" -> due++;
+                default -> active++;
+            }
+            if (matchesFilter(row)) {
+                visible.add(row);
+            }
+        }
+
+        rentalTable.setItems(visible);
+        filterAllBtn.setText("All (" + all.size() + ")");
+        filterActiveBtn.setText("Active (" + active + ")");
+        filterDueBtn.setText("Due or overdue (" + due + ")");
+        filterReturnedBtn.setText("Returned (" + returned + ")");
         countLabel.setText((active + due) + " cars currently out");
     }
 
-    private HBox buildRentalCard(int rentalId, String customerName, String contact, String vehicleModel,
-                                 LocalDate rentDate, LocalDate returnDate, double total, String status) {
-        Label rentalNo = new Label("#" + rentalId);
-        rentalNo.getStyleClass().add("due-detail");
-
-        Label customer = new Label(customerName);
-        customer.getStyleClass().add("due-name");
-
-        Label contactLabel = new Label(contact == null ? "" : contact);
-        contactLabel.getStyleClass().add("due-detail");
-
-        Label vehicle = new Label(vehicleModel);
-        vehicle.getStyleClass().add("due-detail");
-
-        Label dates = new Label(rentDate + " \u2192 " + returnDate);
-        dates.getStyleClass().add("due-detail");
-
-        Label totalLabel = new Label("\u20b1" + String.format("%,.0f", total));
-        totalLabel.getStyleClass().add("due-name");
-
-        VBox info = new VBox(3, rentalNo, customer, contactLabel, vehicle, dates, totalLabel);
-        HBox.setHgrow(info, Priority.ALWAYS);
-
-        Label receiptIcon = new Label("\uD83E\uDDFE"); // receipt emoji
-        receiptIcon.getStyleClass().add("receipt-icon");
-        receiptIcon.setOnMouseClicked(e -> openReceipt(rentalId));
-
-        HBox card = new HBox(10, info, receiptIcon);
-        card.getStyleClass().add("due-card");
-        card.setAlignment(Pos.CENTER_LEFT);
-        return card;
+    private boolean matchesFilter(RentalRow row) {
+        return switch (currentFilter) {
+            case "Active" -> row.status.equals("Active");
+            case "Due" -> row.status.equals("Overdue") || row.status.equals("Due today");
+            case "Returned" -> row.status.equals("Returned");
+            default -> true;
+        };
     }
+
+    // ---- Filter pills ----
+
+    @FXML private void onFilterAll() { setFilter("All", filterAllBtn); }
+    @FXML private void onFilterActive() { setFilter("Active", filterActiveBtn); }
+    @FXML private void onFilterDue() { setFilter("Due", filterDueBtn); }
+    @FXML private void onFilterReturned() { setFilter("Returned", filterReturnedBtn); }
+
+    private void setFilter(String filter, Button activeBtn) {
+        currentFilter = filter;
+        filterAllBtn.getStyleClass().setAll("pill");
+        filterActiveBtn.getStyleClass().setAll("pill");
+        filterDueBtn.getStyleClass().setAll("pill");
+        filterReturnedBtn.getStyleClass().setAll("pill");
+        activeBtn.getStyleClass().setAll("pill-active");
+        loadBoard(searchField.getText());
+    }
+
+    // ---- New rental form ----
 
     private void updateTotal() {
         VehicleOption vehicle = vehicleCombo.getValue();
@@ -175,13 +371,12 @@ public class RentalsController {
 
         long days = ChronoUnit.DAYS.between(rent, ret);
         double total = days * vehicle.rate;
-        totalBreakdownLabel.setText(days + " days \u00d7 \u20b1" + String.format("%,.0f", vehicle.rate));
+        totalBreakdownLabel.setText(days + (days == 1 ? " day" : " days") + " \u00d7 \u20b1" + String.format("%,.0f", vehicle.rate));
         totalAmountLabel.setText("\u20b1" + String.format("%,.2f", total));
     }
 
     @FXML
     private void onNewRentalClick() {
-        loadAvailableVehicles();
         customerNameField.clear();
         contactField.clear();
         licenseField.clear();
@@ -189,6 +384,7 @@ public class RentalsController {
         returnDatePicker.setValue(LocalDate.now().plusDays(1));
         paymentCombo.getSelectionModel().selectFirst();
         formMessageLabel.setText("");
+        loadAvailableVehicles();   // after clearing the message, so "no vehicles" can show
         newRentalOverlay.setVisible(true);
         newRentalOverlay.setManaged(true);
     }
@@ -201,7 +397,8 @@ public class RentalsController {
 
     private void loadAvailableVehicles() {
         ObservableList<VehicleOption> options = FXCollections.observableArrayList();
-        String sql = "SELECT vehicle_id, model, plate_no, rate_per_day FROM vehicles WHERE status='Available'";
+        String sql = "SELECT vehicle_id, model, plate_no, rate_per_day FROM vehicles " +
+                "WHERE status='Available' ORDER BY model ASC";
 
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
@@ -217,9 +414,13 @@ public class RentalsController {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            formMessageLabel.setText("Could not load vehicles: " + e.getMessage());
         }
         vehicleCombo.setItems(options);
         vehicleCombo.getSelectionModel().clearSelection();
+        if (options.isEmpty() && formMessageLabel.getText().isEmpty()) {
+            formMessageLabel.setText("No vehicles are available right now.");
+        }
         updateTotal();
     }
 
@@ -240,70 +441,85 @@ public class RentalsController {
 
         long days = ChronoUnit.DAYS.between(rent, ret);
         double total = days * vehicle.rate;
+        int rentalId;
 
         try (Connection conn = DatabaseConnection.getConnection()) {
             conn.setAutoCommit(false);
-
-            int customerId;
-            String customerSql = "INSERT INTO customers (full_name, contact_no, license_no) VALUES (?, ?, ?)";
-            try (PreparedStatement stmt = conn.prepareStatement(customerSql, Statement.RETURN_GENERATED_KEYS)) {
-                stmt.setString(1, name);
-                stmt.setString(2, contact);
-                stmt.setString(3, license);
-                stmt.executeUpdate();
-                try (ResultSet keys = stmt.getGeneratedKeys()) {
-                    keys.next();
-                    customerId = keys.getInt(1);
+            try {
+                // 1. Claim the vehicle first. If someone else already rented it, stop here.
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "UPDATE vehicles SET status='Rented' WHERE vehicle_id=? AND status='Available'")) {
+                    stmt.setInt(1, vehicle.id);
+                    if (stmt.executeUpdate() == 0) {
+                        conn.rollback();
+                        formMessageLabel.setText("That vehicle was just rented out. Pick another one.");
+                        loadAvailableVehicles();
+                        return;
+                    }
                 }
+
+                // 2. Customer
+                int customerId;
+                String customerSql = "INSERT INTO customers (full_name, contact_no, license_no) VALUES (?, ?, ?)";
+                try (PreparedStatement stmt = conn.prepareStatement(customerSql, Statement.RETURN_GENERATED_KEYS)) {
+                    stmt.setString(1, name);
+                    stmt.setString(2, contact);
+                    stmt.setString(3, license);
+                    stmt.executeUpdate();
+                    try (ResultSet keys = stmt.getGeneratedKeys()) {
+                        keys.next();
+                        customerId = keys.getInt(1);
+                    }
+                }
+
+                // 3. Rental (id read straight from the insert)
+                String rentalSql = "INSERT INTO rentals (customer_id, vehicle_id, rent_date, return_date, " +
+                        "total_amount, payment_method, created_by, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'Active')";
+                try (PreparedStatement stmt = conn.prepareStatement(rentalSql, Statement.RETURN_GENERATED_KEYS)) {
+                    stmt.setInt(1, customerId);
+                    stmt.setInt(2, vehicle.id);
+                    stmt.setDate(3, Date.valueOf(rent));
+                    stmt.setDate(4, Date.valueOf(ret));
+                    stmt.setDouble(5, total);
+                    stmt.setString(6, payment);
+                    stmt.setString(7, Session.username);
+                    stmt.executeUpdate();
+                    try (ResultSet keys = stmt.getGeneratedKeys()) {
+                        keys.next();
+                        rentalId = keys.getInt(1);
+                    }
+                }
+
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();   // nothing is half-saved
+                throw e;
             }
-
-            String rentalSql = "INSERT INTO rentals (customer_id, vehicle_id, rent_date, return_date, " +
-                    "total_amount, payment_method, status) VALUES (?, ?, ?, ?, ?, ?, 'Active')";
-            try (PreparedStatement stmt = conn.prepareStatement(rentalSql)) {
-                stmt.setInt(1, customerId);
-                stmt.setInt(2, vehicle.id);
-                stmt.setDate(3, Date.valueOf(rent));
-                stmt.setDate(4, Date.valueOf(ret));
-                stmt.setDouble(5, total);
-                stmt.setString(6, payment);
-                stmt.executeUpdate();
-            }
-
-            try (PreparedStatement stmt = conn.prepareStatement(
-                    "UPDATE vehicles SET status='Rented' WHERE vehicle_id=?")) {
-                stmt.setInt(1, vehicle.id);
-                stmt.executeUpdate();
-            }
-
-            conn.commit();
-
-            int rentalId;
-            try (PreparedStatement idStmt = conn.prepareStatement("SELECT LAST_INSERT_ID()");
-                 ResultSet idRs = idStmt.executeQuery()) {
-                idRs.next();
-                rentalId = idRs.getInt(1);
-            }
-
-            onCancelNewRental();
-            openReceipt(rentalId);
 
         } catch (SQLException e) {
             e.printStackTrace();
-            formMessageLabel.setText("Could not save this rental. Try again.");
+            // Show the real reason so a schema problem is obvious instead of a generic message.
+            formMessageLabel.setText("Could not save this rental: " + e.getMessage());
+            return;
         }
+
+        onCancelNewRental();
+        openReceipt(rentalId);
     }
 
     private void openReceipt(int rentalId) {
         try {
-            Stage stage = (Stage) countLabel.getScene().getWindow();
-            FXMLLoader loader = new FXMLLoader(HelloApplication.class.getResource("receipt-view.fxml"));
-            Scene scene = new Scene(loader.load());
-            ReceiptController controller = loader.getController();
+            ReceiptController controller = Navigator.show(
+                    (Stage) countLabel.getScene().getWindow(),
+                    "receipt-view.fxml", "Car Rental System - Receipt");
             controller.setRentalId(rentalId);
-            stage.setScene(scene);
-            stage.setTitle("Car Rental System - Receipt");
         } catch (IOException e) {
             e.printStackTrace();
+            Alert error = new Alert(Alert.AlertType.ERROR,
+                    "The rental was saved, but the receipt screen could not be opened:\n" + e.getMessage());
+            error.setHeaderText(null);
+            error.setTitle("Receipt");
+            error.showAndWait();
         }
     }
 
@@ -332,19 +548,50 @@ public class RentalsController {
 
     @FXML
     private void onLogoutClick() {
-        Session.clear();
-        switchScene("login-view.fxml", "Car Rental System - Login");
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Are you sure you want to log out?", ButtonType.YES, ButtonType.NO);
+        confirm.setHeaderText(null);
+        confirm.setTitle("Log out");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.YES) {
+            Session.clear();
+            try {
+                Navigator.showLogin((Stage) countLabel.getScene().getWindow());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void switchScene(String fxmlFile, String title) {
         try {
-            Stage stage = (Stage) countLabel.getScene().getWindow();
-            FXMLLoader loader = new FXMLLoader(HelloApplication.class.getResource(fxmlFile));
-            Scene scene = new Scene(loader.load());
-            stage.setScene(scene);
-            stage.setTitle(title);
+            Navigator.show((Stage) countLabel.getScene().getWindow(), fxmlFile, title);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    /** Backs one row of the rentals table. */
+    public static class RentalRow {
+        final int id;
+        final String customer;
+        final String contact;
+        final String vehicle;
+        final LocalDate rentDate;
+        final LocalDate returnDate;
+        final double total;
+        final String status;
+
+        RentalRow(int id, String customer, String contact, String vehicle,
+                  LocalDate rentDate, LocalDate returnDate, double total, String status) {
+            this.id = id;
+            this.customer = customer;
+            this.contact = contact;
+            this.vehicle = vehicle;
+            this.rentDate = rentDate;
+            this.returnDate = returnDate;
+            this.total = total;
+            this.status = status;
         }
     }
 

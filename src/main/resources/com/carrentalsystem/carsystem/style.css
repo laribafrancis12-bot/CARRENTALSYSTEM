@@ -1,19 +1,22 @@
 /* =========================================================
-   RentApp — full stylesheet (forest green + terracotta theme)
-   This file replaces style.css completely.
+   RentApp — full dark theme (black + red)
+   Replaces style.css completely. Same class names as before,
+   so no FXML changes are needed — just this file.
    ========================================================= */
 
-/* ---- Login screen ---- */
+/* ---- Login screen (kept smaller/standalone, same dark look) ---- */
 
 .login-root {
-    -fx-background-color: #F7F1E8;
+    -fx-background-color: #0D0E12;
     -fx-font-family: "Segoe UI";
 }
 
 .login-hero {
-    -fx-background-color: #1F3D36;
+    -fx-background-color: #15161B;
     -fx-background-radius: 0 0 60 60;
     -fx-padding: 24 20 10 20;
+    -fx-border-color: transparent transparent #D4302B transparent;
+    -fx-border-width: 0 0 3 0;
 }
 
 .login-hero-title {
@@ -23,18 +26,18 @@
 }
 
 .login-hero-subtitle {
-    -fx-text-fill: #B9CCC4;
+    -fx-text-fill: #8A8D96;
     -fx-font-size: 12px;
 }
 
 .login-badge {
-    -fx-background-color: #C4532A;
+    -fx-background-color: #D4302B;
     -fx-background-radius: 30;
     -fx-min-width: 60;
     -fx-min-height: 60;
     -fx-max-width: 60;
     -fx-max-height: 60;
-    -fx-border-color: #F7F1E8;
+    -fx-border-color: #0D0E12;
     -fx-border-width: 5;
     -fx-border-radius: 30;
 }
@@ -45,141 +48,148 @@
 }
 
 .login-card {
-    -fx-background-color: white;
+    -fx-background-color: #15161B;
     -fx-background-radius: 20;
-    -fx-border-color: #E8DFD0;
+    -fx-border-color: #26272E;
     -fx-border-radius: 20;
-    -fx-effect: dropshadow(gaussian, rgba(31,42,38,0.15), 14, 0, 0, 4);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 16, 0, 0, 6);
 }
 
 .login-title {
     -fx-font-size: 18px;
     -fx-font-weight: bold;
-    -fx-text-fill: #1F2A26;
+    -fx-text-fill: white;
 }
 
 .login-subtitle {
-    -fx-text-fill: #7A7264;
+    -fx-text-fill: #8A8D96;
     -fx-font-size: 12px;
 }
 
 /* ---- Shared form fields (used on every screen) ---- */
 
 .field-label {
-    -fx-text-fill: #7A7264;
+    -fx-text-fill: #8A8D96;
     -fx-font-size: 11px;
 }
 
 .field-input {
-    -fx-background-color: white;
-    -fx-border-color: #D8CDB9;
-    -fx-border-radius: 12;
-    -fx-background-radius: 12;
+    -fx-background-color: #1C1D23;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #6B6E78;
+    -fx-border-color: #2E2F37;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
     -fx-padding: 10 12;
     -fx-font-size: 13px;
 }
 
 .field-input:focused {
-    -fx-border-color: #C4532A;
+    -fx-border-color: #D4302B;
 }
 
 .field-checkbox {
-    -fx-text-fill: #7A7264;
+    -fx-text-fill: #8A8D96;
     -fx-font-size: 12px;
 }
 
 .login-button {
-    -fx-background-color: #C4532A;
+    -fx-background-color: #D4302B;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-background-radius: 12;
+    -fx-background-radius: 10;
     -fx-cursor: hand;
     -fx-padding: 10 0;
     -fx-font-size: 13px;
 }
 
 .login-button:hover {
-    -fx-background-color: #9C4322;
+    -fx-background-color: #A8231E;
 }
 
 .error-label {
-    -fx-text-fill: #9A2A12;
+    -fx-text-fill: #F27A6F;
     -fx-font-size: 12px;
 }
 
-/* ---- App shell: rail + page (dashboard, vehicles, rentals, receipt, accounts) ---- */
+/* ---- App shell: sidebar + page ---- */
 
 .app-root {
-    -fx-background-color: #F7F1E8;
+    -fx-background-color: #0D0E12;
     -fx-font-family: "Segoe UI";
 }
 
 .rail {
-    -fx-background-color: #1F3D36;
+    -fx-background-color: #15161B;
+    -fx-border-color: transparent #D4302B transparent transparent;
+    -fx-border-width: 0 3 0 0;
+    -fx-pref-width: 150;
+    -fx-min-width: 150;
+    -fx-max-width: 150;
 }
 
 .rail-logo {
-    -fx-text-fill: white;
-    -fx-font-size: 28px;
+    -fx-text-fill: #D4302B;
+    -fx-font-size: 26px;
     -fx-alignment: center;
     -fx-padding: 0 0 16 0;
 }
 
 .rail-btn {
     -fx-background-color: transparent;
-    -fx-text-fill: #B9CCC4;
+    -fx-text-fill: #8A8D96;
     -fx-font-size: 13px;
-    -fx-padding: 12 8;
-    -fx-background-radius: 12;
+    -fx-padding: 12 10;
+    -fx-background-radius: 8;
     -fx-cursor: hand;
     -fx-alignment: center-left;
 }
 
 .rail-btn:hover {
-    -fx-background-color: #2A4B43;
+    -fx-background-color: #1F2026;
 }
 
 .rail-btn-active {
-    -fx-background-color: #C4532A;
+    -fx-background-color: #D4302B;
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-font-size: 13px;
-    -fx-padding: 12 8;
-    -fx-background-radius: 12;
+    -fx-padding: 12 10;
+    -fx-background-radius: 8;
     -fx-alignment: center-left;
 }
 
 .page-title {
-    -fx-font-size: 24px;
+    -fx-font-size: 22px;
     -fx-font-weight: bold;
-    -fx-text-fill: #1F2A26;
+    -fx-text-fill: white;
 }
 
 .page-subtitle {
-    -fx-text-fill: #7A7264;
+    -fx-text-fill: #8A8D96;
     -fx-font-size: 13px;
 }
 
 .cta-button {
-    -fx-background-color: #C4532A;
+    -fx-background-color: #D4302B;
     -fx-text-fill: white;
     -fx-font-weight: bold;
-    -fx-background-radius: 12;
+    -fx-background-radius: 8;
     -fx-cursor: hand;
     -fx-padding: 11 18;
     -fx-font-size: 13px;
 }
 
 .cta-button:hover {
-    -fx-background-color: #9C4322;
+    -fx-background-color: #A8231E;
 }
 
 .ghost-button {
-    -fx-background-color: white;
-    -fx-text-fill: #1F3D36;
-    -fx-border-color: #D8CDB9;
-    -fx-border-radius: 12;
-    -fx-background-radius: 12;
+    -fx-background-color: #1C1D23;
+    -fx-text-fill: white;
+    -fx-border-color: #2E2F37;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
     -fx-padding: 10 16;
     -fx-cursor: hand;
     -fx-font-size: 13px;
@@ -188,7 +198,7 @@
 .section-label {
     -fx-font-size: 14px;
     -fx-font-weight: bold;
-    -fx-text-fill: #1F2A26;
+    -fx-text-fill: white;
 }
 
 .plain-scroll {
@@ -199,122 +209,157 @@
     -fx-background-color: transparent;
 }
 
+/* ---- Filter pills (Vehicles screen) ---- */
+
+.pill {
+    -fx-background-color: #1C1D23;
+    -fx-text-fill: #C9CBD3;
+    -fx-background-radius: 16;
+    -fx-padding: 6 14;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}
+
+.pill:hover {
+    -fx-background-color: #26272E;
+}
+
+.pill-active {
+    -fx-background-color: #D4302B;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 16;
+    -fx-padding: 6 14;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}
+
 /* ---- Dashboard stat cards ---- */
 
 .stat-card {
-    -fx-background-color: white;
-    -fx-border-color: #E8DFD0;
-    -fx-border-radius: 16;
-    -fx-background-radius: 16;
+    -fx-background-color: #15161B;
+    -fx-border-color: #26272E;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
     -fx-padding: 16;
 }
 
 .stat-label {
-    -fx-text-fill: #7A7264;
+    -fx-text-fill: #8A8D96;
     -fx-font-size: 11px;
 }
 
 .stat-value {
     -fx-font-size: 22px;
     -fx-font-weight: bold;
-    -fx-text-fill: #1F3D36;
+    -fx-text-fill: white;
 }
 
 .stat-value-green {
     -fx-font-size: 22px;
     -fx-font-weight: bold;
-    -fx-text-fill: #1F5A45;
+    -fx-text-fill: #4CAF66;
 }
 
 .stat-value-amber {
     -fx-font-size: 22px;
     -fx-font-weight: bold;
-    -fx-text-fill: #7A4B00;
+    -fx-text-fill: #E2A93B;
 }
 
 .stat-value-red {
     -fx-font-size: 22px;
     -fx-font-weight: bold;
-    -fx-text-fill: #9A2A12;
+    -fx-text-fill: #E8463F;
 }
 
 .revenue-total {
-    -fx-font-size: 28px;
+    -fx-font-size: 30px;
     -fx-font-weight: bold;
-    -fx-text-fill: #1F3D36;
+    -fx-text-fill: white;
 }
 
 .revenue-chip {
-    -fx-background-color: #DCE8E3;
-    -fx-text-fill: #1F3D36;
-    -fx-background-radius: 10;
-    -fx-padding: 4 12;
+    -fx-background-color: #1C1D23;
+    -fx-text-fill: #C9CBD3;
+    -fx-background-radius: 8;
+    -fx-padding: 5 12;
     -fx-font-size: 12px;
 }
 
-/* ---- Row cards used on Dashboard due-list, Vehicles list, Rentals board, Accounts list ---- */
+/* ---- Row cards used on Dashboard due-list, Rentals board, Accounts list ---- */
 
 .due-card {
-    -fx-background-color: #F7F1E8;
-    -fx-background-radius: 12;
+    -fx-background-color: #1C1D23;
+    -fx-background-radius: 10;
     -fx-padding: 10;
+    -fx-border-color: transparent transparent transparent #D4302B;
+    -fx-border-width: 0 0 0 3;
 }
 
 .due-name {
     -fx-font-size: 13px;
     -fx-font-weight: bold;
-    -fx-text-fill: #1F2A26;
+    -fx-text-fill: white;
 }
 
 .due-detail {
-    -fx-text-fill: #7A7264;
+    -fx-text-fill: #8A8D96;
     -fx-font-size: 12px;
 }
 
 .due-badge-today {
-    -fx-background-color: #FBEBC9;
-    -fx-text-fill: #7A4B00;
-    -fx-background-radius: 10;
+    -fx-background-color: #3A2E12;
+    -fx-text-fill: #E2A93B;
+    -fx-background-radius: 8;
     -fx-padding: 4 10;
     -fx-font-size: 12px;
 }
 
 .due-badge-overdue {
-    -fx-background-color: #FBE0D8;
-    -fx-text-fill: #9A2A12;
-    -fx-background-radius: 10;
+    -fx-background-color: #3A1512;
+    -fx-text-fill: #E8463F;
+    -fx-background-radius: 8;
     -fx-padding: 4 10;
     -fx-font-size: 12px;
 }
 
 .badge-green {
-    -fx-background-color: #E1EDE6;
-    -fx-text-fill: #1F5A45;
-    -fx-background-radius: 10;
+    -fx-background-color: #123A1E;
+    -fx-text-fill: #4CAF66;
+    -fx-background-radius: 8;
     -fx-padding: 4 10;
     -fx-font-size: 12px;
 }
 
 .badge-blue {
-    -fx-background-color: #DCE8E3;
-    -fx-text-fill: #1F3D36;
-    -fx-background-radius: 10;
+    -fx-background-color: #13233E;
+    -fx-text-fill: #5B8DEF;
+    -fx-background-radius: 8;
     -fx-padding: 4 10;
     -fx-font-size: 12px;
 }
 
 .badge-gray {
-    -fx-background-color: #EFE7DA;
-    -fx-text-fill: #4A443A;
-    -fx-background-radius: 10;
+    -fx-background-color: #1C1D23;
+    -fx-text-fill: #C9CBD3;
+    -fx-background-radius: 8;
     -fx-padding: 4 10;
     -fx-font-size: 12px;
 }
 
 .badge-red {
-    -fx-background-color: #FBE0D8;
-    -fx-text-fill: #9A2A12;
-    -fx-background-radius: 10;
+    -fx-background-color: #3A1512;
+    -fx-text-fill: #E8463F;
+    -fx-background-radius: 8;
+    -fx-padding: 4 10;
+    -fx-font-size: 12px;
+}
+
+.badge-amber {
+    -fx-background-color: #3A2E12;
+    -fx-text-fill: #E2A93B;
+    -fx-background-radius: 8;
     -fx-padding: 4 10;
     -fx-font-size: 12px;
 }
@@ -322,26 +367,83 @@
 /* ---- Rentals board columns ---- */
 
 .board-col {
-    -fx-background-color: #EFE7DA;
-    -fx-background-radius: 16;
+    -fx-background-color: #15161B;
+    -fx-background-radius: 12;
     -fx-padding: 12;
+    -fx-border-color: #26272E;
+}
+
+/* ---- Vehicles table ---- */
+
+.data-table {
+    -fx-background-color: #15161B;
+    -fx-border-color: #26272E;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-table-cell-border-color: transparent;
+}
+
+.data-table .column-header-background {
+    -fx-background-color: #1C1D23;
+    -fx-background-radius: 10 10 0 0;
+}
+
+.data-table .column-header {
+    -fx-background-color: transparent;
+}
+
+.data-table .column-header .label {
+    -fx-text-fill: #8A8D96;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.data-table .table-row-cell {
+    -fx-background-color: #15161B;
+    -fx-border-color: transparent transparent #212229 transparent;
+}
+
+.data-table .table-row-cell:odd {
+    -fx-background-color: #18191F;
+}
+
+.data-table .table-row-cell:selected {
+    -fx-background-color: #2A1715;
+}
+
+.data-table .table-cell {
+    -fx-text-fill: #E7E8EC;
+    -fx-font-size: 12px;
+    -fx-alignment: center-left;
+    -fx-padding: 10;
+}
+
+.data-table .placeholder .label {
+    -fx-text-fill: #8A8D96;
+}
+
+/* Plate number text, used via a style class on that one column's cells */
+.plate-text {
+    -fx-text-fill: #E8463F;
+    -fx-font-weight: bold;
 }
 
 /* ---- Popups: Add vehicle / New rental / Add staff / Change password ---- */
 
 .modal-overlay {
-    -fx-background-color: rgba(31, 42, 38, 0.55);
+    -fx-background-color: rgba(0, 0, 0, 0.65);
 }
 
 .modal-card {
-    -fx-background-color: #F7F1E8;
-    -fx-background-radius: 20;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 20, 0, 0, 6);
+    -fx-background-color: #15161B;
+    -fx-background-radius: 16;
+    -fx-border-color: #26272E;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 20, 0, 0, 6);
 }
 
 .modal-icon {
-    -fx-background-color: #C4532A;
-    -fx-background-radius: 12;
+    -fx-background-color: #D4302B;
+    -fx-background-radius: 10;
 }
 
 .modal-icon-label {
@@ -352,92 +454,424 @@
 .modal-title {
     -fx-font-size: 17px;
     -fx-font-weight: bold;
-    -fx-text-fill: #1F2A26;
+    -fx-text-fill: white;
 }
 
 .modal-close {
     -fx-background-color: transparent;
-    -fx-text-fill: #7A7264;
+    -fx-text-fill: #8A8D96;
     -fx-cursor: hand;
     -fx-font-size: 13px;
 }
 
 .total-box {
-    -fx-background-color: #1F3D36;
-    -fx-background-radius: 14;
+    -fx-background-color: #1C1D23;
+    -fx-background-radius: 10;
 }
 
 .total-breakdown {
-    -fx-text-fill: #B9CCC4;
+    -fx-text-fill: #8A8D96;
     -fx-font-size: 12px;
 }
 
 .total-amount {
-    -fx-text-fill: white;
+    -fx-text-fill: #E8463F;
     -fx-font-size: 19px;
     -fx-font-weight: bold;
 }
 
-/* ---- Receipt ticket ---- */
+/* ---- Receipt ---- */
 
 .ticket-card {
-    -fx-background-color: white;
-    -fx-border-color: #E8DFD0;
-    -fx-border-radius: 18;
-    -fx-background-radius: 18;
+    -fx-background-color: #15161B;
+    -fx-border-color: #26272E;
+    -fx-border-radius: 14;
+    -fx-background-radius: 14;
 }
 
 .ticket-head {
-    -fx-background-color: #1F3D36;
-    -fx-background-radius: 18 18 0 0;
+    -fx-background-color: #1C1D23;
+    -fx-background-radius: 14 14 0 0;
+    -fx-border-color: transparent transparent #D4302B transparent;
+    -fx-border-width: 0 0 3 0;
 }
 
 .ticket-brand {
     -fx-text-fill: white;
-    -fx-font-size: 16px;
+    -fx-font-size: 18px;
     -fx-font-weight: bold;
 }
 
 .ticket-brand-sub {
-    -fx-text-fill: #B9CCC4;
+    -fx-text-fill: #D4302B;
     -fx-font-size: 12px;
+    -fx-font-weight: bold;
 }
 
-.ticket-body {
-    -fx-border-color: transparent transparent #E0D6C4 transparent;
-    -fx-border-width: 0 0 2 0;
-    -fx-border-style: dashed;
+.ticket-section-box {
+    -fx-background-color: #1C1D23;
+    -fx-background-radius: 10;
 }
 
 .ticket-key {
-    -fx-text-fill: #7A7264;
-    -fx-font-size: 13px;
+    -fx-text-fill: #8A8D96;
+    -fx-font-size: 10px;
 }
 
 .ticket-val {
-    -fx-text-fill: #1F2A26;
+    -fx-text-fill: white;
     -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.ticket-row {
+    -fx-text-fill: #E7E8EC;
+    -fx-font-size: 12px;
+}
+
+.ticket-row-muted {
+    -fx-text-fill: #8A8D96;
+    -fx-font-size: 12px;
 }
 
 .ticket-total {
-    -fx-background-color: #FBEBE2;
-    -fx-background-radius: 0 0 18 18;
+    -fx-background-color: #2A1715;
+    -fx-background-radius: 10;
 }
 
 .ticket-total-label {
-    -fx-text-fill: #1F2A26;
-    -fx-font-size: 14px;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
     -fx-font-weight: bold;
 }
 
 .ticket-total-amount {
-    -fx-text-fill: #1F3D36;
+    -fx-text-fill: #E8463F;
     -fx-font-size: 24px;
     -fx-font-weight: bold;
 }
 
+.ticket-payment-box {
+    -fx-background-color: #1C1D23;
+    -fx-background-radius: 10;
+}
+
 .receipt-icon {
-    -fx-text-fill: #1F3D36;
+    -fx-text-fill: #D4302B;
     -fx-font-size: 18px;
     -fx-cursor: hand;
+}
+
+/* =========================================================
+   Responsive layout
+   Navigator adds the "compact" class to the screen root when
+   the window is narrower than 1100px.
+   ========================================================= */
+
+.page-content {
+    -fx-padding: 24 28 24 28;
+}
+
+.compact .rail {
+    -fx-pref-width: 108;
+    -fx-min-width: 108;
+    -fx-max-width: 108;
+}
+
+.compact .rail-logo { -fx-font-size: 20px; }
+
+.compact .rail-btn,
+.compact .rail-btn-active {
+    -fx-font-size: 12px;
+    -fx-padding: 10 6;
+}
+
+.compact .page-content { -fx-padding: 14 16 14 16; }
+.compact .page-title { -fx-font-size: 18px; }
+.compact .revenue-total { -fx-font-size: 24px; }
+.compact .stat-card { -fx-padding: 12; }
+.compact .board-col { -fx-padding: 8; }
+
+/* =========================================================
+   Receipt paper (black + red, printed on white)
+   ========================================================= */
+
+.rc-paper {
+    -fx-background-color: white;
+}
+
+/* header band */
+.rc-head {
+    -fx-background-color: #15161B;
+    -fx-padding: 26 32 26 32;
+    -fx-border-color: #D4302B transparent transparent transparent;
+    -fx-border-width: 5 0 0 0;
+}
+
+.rc-logo-box {
+    -fx-background-color: #D4302B;
+    -fx-background-radius: 10;
+}
+
+.rc-logo-icon {
+    -fx-text-fill: white;
+    -fx-font-size: 22px;
+}
+
+.rc-brand {
+    -fx-text-fill: white;
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-font-style: italic;
+}
+
+.rc-brand-sub {
+    -fx-text-fill: #8A8D96;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.rc-title {
+    -fx-text-fill: white;
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-font-style: italic;
+}
+
+.rc-title-sub {
+    -fx-text-fill: #8A8D96;
+    -fx-font-size: 11px;
+}
+
+/* receipt no / date / status row */
+.rc-meta {
+    -fx-padding: 22 32 20 32;
+    -fx-border-color: transparent transparent #E5E7EB transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.rc-key {
+    -fx-text-fill: #6B6E78;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.rc-val {
+    -fx-text-fill: #15161B;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.rc-val-mono {
+    -fx-text-fill: #15161B;
+    -fx-font-family: "Consolas";
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.rc-sub {
+    -fx-text-fill: #8A8D96;
+    -fx-font-size: 10px;
+}
+
+.rc-paid {
+    -fx-background-color: #E3F5E8;
+    -fx-text-fill: #1E7F3E;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 14;
+    -fx-padding: 5 12 5 12;
+}
+
+/* sections and cards */
+.rc-section {
+    -fx-padding: 20 32 0 32;
+}
+
+.rc-section-pay {
+    -fx-padding: 22 32 22 32;
+}
+
+.rc-card {
+    -fx-background-color: #F3F4F6;
+    -fx-background-radius: 10;
+    -fx-padding: 16;
+}
+
+.rc-card-sm {
+    -fx-background-color: #F3F4F6;
+    -fx-background-radius: 10;
+    -fx-padding: 12 14 12 14;
+}
+
+.rc-card-title {
+    -fx-text-fill: #15161B;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+/* dark payment box */
+.rc-pay-box {
+    -fx-background-color: #15161B;
+    -fx-background-radius: 12;
+    -fx-padding: 20;
+}
+
+.rc-pay-title {
+    -fx-text-fill: #E8463F;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.rc-pay-icon {
+    -fx-background-color: #D4302B;
+    -fx-background-radius: 10;
+}
+
+.rc-pay-key {
+    -fx-text-fill: #8A8D96;
+    -fx-font-size: 10px;
+}
+
+.rc-pay-val {
+    -fx-text-fill: white;
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+}
+
+.rc-pay-line {
+    -fx-background-color: #2E2F37;
+}
+
+.rc-pay-note {
+    -fx-text-fill: #8A8D96;
+    -fx-font-size: 11px;
+}
+
+/* totals */
+.rc-totals {
+    -fx-padding: 0 0 0 24;
+    -fx-border-color: transparent transparent transparent #E5E7EB;
+    -fx-border-width: 0 0 0 1;
+}
+
+.rc-row {
+    -fx-text-fill: #3B3D45;
+    -fx-font-size: 13px;
+}
+
+.rc-row-val {
+    -fx-text-fill: #15161B;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.rc-line {
+    -fx-background-color: #15161B;
+}
+
+.rc-total-label {
+    -fx-text-fill: #15161B;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.rc-total-amount {
+    -fx-text-fill: #D4302B;
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+}
+
+/* footer */
+.rc-footer {
+    -fx-padding: 20 32 28 32;
+    -fx-border-color: #E5E7EB transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.rc-thanks {
+    -fx-text-fill: #15161B;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-font-style: italic;
+}
+
+.rc-fine {
+    -fx-text-fill: #8A8D96;
+    -fx-font-size: 10px;
+}
+
+.rc-sign-name {
+    -fx-text-fill: #15161B;
+    -fx-font-size: 16px;
+    -fx-font-style: italic;
+    -fx-font-weight: bold;
+    -fx-padding: 22 0 6 0;
+}
+
+.rc-sign-cap {
+    -fx-text-fill: #6B6E78;
+    -fx-font-size: 9px;
+    -fx-font-weight: bold;
+    -fx-border-color: #15161B transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 5 0 0 0;
+}
+
+/* =========================================================
+   Table polish (Rentals + Vehicles)
+   ========================================================= */
+
+/* smaller buttons inside table rows so rows stay slim */
+.table-btn {
+    -fx-padding: 6 12 6 12;
+    -fx-font-size: 12px;
+}
+
+/* headers line up with the left-aligned cell text */
+.data-table .column-header .label {
+    -fx-alignment: center-left;
+    -fx-padding: 0 0 0 10;
+}
+
+/* empty strip at the end of the header row (where the scrollbar sits) */
+.data-table .column-header-background .filler {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.data-table .corner {
+    -fx-background-color: #1C1D23;
+}
+
+/* dark scrollbars inside tables */
+.data-table .scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.data-table .scroll-bar .track {
+    -fx-background-color: #15161B;
+    -fx-border-color: transparent;
+    -fx-background-radius: 6;
+}
+
+.data-table .scroll-bar .thumb {
+    -fx-background-color: #2E2F37;
+    -fx-background-radius: 6;
+}
+
+.data-table .scroll-bar .thumb:hover {
+    -fx-background-color: #3A3B44;
+}
+
+.data-table .scroll-bar .increment-button,
+.data-table .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.data-table .scroll-bar .increment-arrow,
+.data-table .scroll-bar .decrement-arrow {
+    -fx-shape: " ";
+    -fx-padding: 0;
 }

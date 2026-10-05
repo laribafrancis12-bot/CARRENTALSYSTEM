@@ -6,6 +6,8 @@
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
@@ -20,7 +22,7 @@
     <!-- Main page -->
     <BorderPane fx:id="pageRoot">
         <left>
-            <VBox prefWidth="150.0" spacing="6.0" styleClass="rail">
+            <VBox spacing="6.0" styleClass="rail">
                 <padding><Insets top="20.0" bottom="20.0" left="10.0" right="10.0"/></padding>
                 <Label text="&#128663;" styleClass="rail-logo"/>
                 <Button text="Dashboard" styleClass="rail-btn" maxWidth="Infinity" onAction="#onDashboardClick"/>
@@ -33,53 +35,39 @@
         </left>
 
         <center>
-            <VBox spacing="14.0">
-                <padding><Insets top="24.0" bottom="24.0" left="28.0" right="28.0"/></padding>
+            <VBox spacing="14.0" styleClass="page-content" maxWidth="1500.0" BorderPane.alignment="TOP_CENTER">
 
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                     <VBox HBox.hgrow="ALWAYS">
                         <Label text="Rentals" styleClass="page-title"/>
                         <Label fx:id="countLabel" text="0 cars currently out" styleClass="page-subtitle"/>
                     </VBox>
+                    <TextField fx:id="searchField" promptText="Search customer, plate or model" prefWidth="280.0" maxWidth="280.0"
+                               prefHeight="36.0" styleClass="field-input"/>
                     <Button text="+ New rental" styleClass="cta-button" onAction="#onNewRentalClick"/>
                 </HBox>
 
-                <TextField fx:id="searchField" promptText="Search customer or plate no." maxWidth="320.0"
-                           prefHeight="38.0" styleClass="field-input"/>
-
-                <HBox spacing="12.0" VBox.vgrow="ALWAYS">
-
-                    <VBox styleClass="board-col" spacing="8.0" HBox.hgrow="ALWAYS">
-                        <HBox alignment="CENTER_LEFT">
-                            <Label text="Active" styleClass="section-label" HBox.hgrow="ALWAYS"/>
-                            <Label fx:id="activeCountLabel" text="0" styleClass="badge-blue"/>
-                        </HBox>
-                        <ScrollPane fitToWidth="true" styleClass="plain-scroll" VBox.vgrow="ALWAYS">
-                            <VBox fx:id="activeColumn" spacing="8.0"/>
-                        </ScrollPane>
-                    </VBox>
-
-                    <VBox styleClass="board-col" spacing="8.0" HBox.hgrow="ALWAYS">
-                        <HBox alignment="CENTER_LEFT">
-                            <Label text="Due or overdue" styleClass="section-label" HBox.hgrow="ALWAYS"/>
-                            <Label fx:id="dueCountLabel" text="0" styleClass="badge-red"/>
-                        </HBox>
-                        <ScrollPane fitToWidth="true" styleClass="plain-scroll" VBox.vgrow="ALWAYS">
-                            <VBox fx:id="dueColumn" spacing="8.0"/>
-                        </ScrollPane>
-                    </VBox>
-
-                    <VBox styleClass="board-col" spacing="8.0" HBox.hgrow="ALWAYS">
-                        <HBox alignment="CENTER_LEFT">
-                            <Label text="Returned" styleClass="section-label" HBox.hgrow="ALWAYS"/>
-                            <Label fx:id="returnedCountLabel" text="0" styleClass="badge-green"/>
-                        </HBox>
-                        <ScrollPane fitToWidth="true" styleClass="plain-scroll" VBox.vgrow="ALWAYS">
-                            <VBox fx:id="returnedColumn" spacing="8.0"/>
-                        </ScrollPane>
-                    </VBox>
-
+                <HBox spacing="8.0">
+                    <Button fx:id="filterAllBtn" text="All" styleClass="pill-active" onAction="#onFilterAll"/>
+                    <Button fx:id="filterActiveBtn" text="Active" styleClass="pill" onAction="#onFilterActive"/>
+                    <Button fx:id="filterDueBtn" text="Due or overdue" styleClass="pill" onAction="#onFilterDue"/>
+                    <Button fx:id="filterReturnedBtn" text="Returned" styleClass="pill" onAction="#onFilterReturned"/>
                 </HBox>
+
+                <!-- One table for every rental, like the Vehicles screen -->
+                <TableView fx:id="rentalTable" styleClass="data-table" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="idCol" text="Rental #" prefWidth="70.0"/>
+                        <TableColumn fx:id="customerCol" text="Customer" prefWidth="190.0"/>
+                        <TableColumn fx:id="contactCol" text="Contact" prefWidth="115.0"/>
+                        <TableColumn fx:id="vehicleCol" text="Vehicle" prefWidth="245.0"/>
+                        <TableColumn fx:id="rentDateCol" text="Rent date" prefWidth="105.0"/>
+                        <TableColumn fx:id="returnDateCol" text="Return date" prefWidth="105.0"/>
+                        <TableColumn fx:id="totalCol" text="Total" prefWidth="95.0"/>
+                        <TableColumn fx:id="statusCol" text="Status" prefWidth="105.0"/>
+                        <TableColumn fx:id="actionsCol" text="Actions" prefWidth="190.0"/>
+                    </columns>
+                </TableView>
             </VBox>
         </center>
     </BorderPane>

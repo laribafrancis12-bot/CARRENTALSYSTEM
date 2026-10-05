@@ -19,7 +19,7 @@
     <!-- Main page -->
     <BorderPane fx:id="pageRoot">
         <left>
-            <VBox prefWidth="150.0" spacing="6.0" styleClass="rail">
+            <VBox spacing="6.0" styleClass="rail">
                 <padding><Insets top="20.0" bottom="20.0" left="10.0" right="10.0"/></padding>
                 <Label text="&#128663;" styleClass="rail-logo"/>
                 <Button text="Dashboard" styleClass="rail-btn" maxWidth="Infinity" onAction="#onDashboardClick"/>
@@ -32,8 +32,7 @@
         </left>
 
         <center>
-            <VBox spacing="12.0">
-                <padding><Insets top="18.0" bottom="18.0" left="20.0" right="20.0"/></padding>
+            <VBox spacing="12.0" styleClass="page-content" maxWidth="1500.0" BorderPane.alignment="TOP_CENTER">
 
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                     <VBox HBox.hgrow="ALWAYS">
@@ -52,7 +51,7 @@
 
     <!-- Add staff overlay -->
     <StackPane fx:id="addStaffOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="10.0" maxWidth="360.0">
+        <VBox styleClass="modal-card" spacing="10.0" maxWidth="360.0" maxHeight="520.0">
             <padding><Insets top="20.0" bottom="20.0" left="24.0" right="24.0"/></padding>
 
             <HBox alignment="CENTER_LEFT">
@@ -80,7 +79,7 @@
 
     <!-- Change password overlay -->
     <StackPane fx:id="changePasswordOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="10.0" maxWidth="340.0">
+        <VBox styleClass="modal-card" spacing="10.0" maxWidth="340.0" maxHeight="480.0">
             <padding><Insets top="20.0" bottom="20.0" left="24.0" right="24.0"/></padding>
 
             <HBox alignment="CENTER_LEFT">
@@ -90,6 +89,9 @@
 
             <Label text="New password" styleClass="field-label"/>
             <PasswordField fx:id="changePasswordField" promptText="New password" styleClass="field-input"/>
+
+            <Label text="Confirm password" styleClass="field-label"/>
+            <PasswordField fx:id="confirmChangePasswordField" promptText="Re-enter new password" styleClass="field-input"/>
 
             <Label fx:id="changePasswordMessageLabel" styleClass="error-label" wrapText="true"/>
 

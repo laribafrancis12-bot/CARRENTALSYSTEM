@@ -14,7 +14,7 @@
            prefHeight="640.0" prefWidth="480.0"
            stylesheets="@style.css" styleClass="login-root">
 
-    <VBox alignment="TOP_CENTER" spacing="0.0">
+    <VBox alignment="TOP_CENTER" spacing="0.0" maxWidth="480.0" maxHeight="640.0">
 
         <!-- Curved green header -->
         <VBox alignment="CENTER" styleClass="login-hero" prefHeight="150.0">

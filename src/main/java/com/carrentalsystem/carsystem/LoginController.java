@@ -71,11 +71,8 @@ public class LoginController {
 
     private void goToDashboard() {
         try {
-            Stage stage = (Stage) usernameField.getScene().getWindow();
-            FXMLLoader loader = new FXMLLoader(HelloApplication.class.getResource("dashboard-view.fxml"));
-            Scene scene = new Scene(loader.load());
-            stage.setScene(scene);
-            stage.setTitle("Car Rental System - Dashboard");
+            Navigator.show((Stage) usernameField.getScene().getWindow(),
+                    "dashboard-view.fxml", "Car Rental System - Dashboard");
         } catch (IOException e) {
             e.printStackTrace();
             showMessage("Could not open the dashboard", false);
@@ -84,6 +81,6 @@ public class LoginController {
 
     private void showMessage(String text, boolean success) {
         messageLabel.setText(text);
-        messageLabel.setStyle(success ? "-fx-text-fill: #1F5A45;" : "-fx-text-fill: #9A2A12;");
+        messageLabel.setStyle(success ? "-fx-text-fill: #4CAF66;" : "-fx-text-fill: #F27A6F;");
     }
 }

@@ -3,8 +3,10 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1"
@@ -13,7 +15,7 @@
             stylesheets="@style.css" styleClass="app-root">
 
     <left>
-        <VBox prefWidth="150.0" spacing="6.0" styleClass="rail">
+        <VBox spacing="6.0" styleClass="rail">
             <padding><Insets top="20.0" bottom="20.0" left="10.0" right="10.0"/></padding>
             <Label text="&#128663;" styleClass="rail-logo"/>
             <Button text="Dashboard" styleClass="rail-btn" maxWidth="Infinity" onAction="#onDashboardClick"/>
@@ -26,46 +28,171 @@
     </left>
 
     <center>
-        <VBox alignment="TOP_CENTER" spacing="12.0">
-            <padding><Insets top="18.0" bottom="18.0" left="20.0" right="20.0"/></padding>
+        <!-- The receipt is a fixed-width sheet. On a small window the page scrolls; on a big one it stays centered. -->
+        <ScrollPane fitToWidth="true" styleClass="plain-scroll">
+            <VBox alignment="TOP_CENTER" spacing="14.0" styleClass="page-content">
 
-            <HBox maxWidth="340.0" alignment="CENTER_LEFT">
-                <Button text="&#8592; Back to rentals" styleClass="modal-close" onAction="#onBackClick"/>
-            </HBox>
-
-            <VBox styleClass="ticket-card" maxWidth="340.0">
-
-                <VBox styleClass="ticket-head" alignment="CENTER">
-                    <padding><Insets top="14.0" bottom="14.0"/></padding>
-                    <Label text="RentApp" styleClass="ticket-brand"/>
-                    <Label fx:id="receiptNoLabel" text="Official rental receipt \u00b7 R-0000" styleClass="ticket-brand-sub"/>
-                </VBox>
-
-                <VBox styleClass="ticket-body" spacing="7.0">
-                    <padding><Insets top="14.0" bottom="14.0" left="18.0" right="18.0"/></padding>
-
-                    <HBox><Label text="Customer" styleClass="ticket-key" HBox.hgrow="ALWAYS"/><Label fx:id="customerLabel" styleClass="ticket-val"/></HBox>
-                    <HBox><Label text="Contact" styleClass="ticket-key" HBox.hgrow="ALWAYS"/><Label fx:id="contactLabel" styleClass="ticket-val"/></HBox>
-                    <HBox><Label text="Vehicle" styleClass="ticket-key" HBox.hgrow="ALWAYS"/><Label fx:id="vehicleLabel" styleClass="ticket-val"/></HBox>
-                    <HBox><Label text="Rented on" styleClass="ticket-key" HBox.hgrow="ALWAYS"/><Label fx:id="rentedOnLabel" styleClass="ticket-val"/></HBox>
-                    <HBox><Label text="Return by" styleClass="ticket-key" HBox.hgrow="ALWAYS"/><Label fx:id="returnByLabel" styleClass="ticket-val"/></HBox>
-                    <HBox><Label text="Rate" styleClass="ticket-key" HBox.hgrow="ALWAYS"/><Label fx:id="rateLabel" styleClass="ticket-val"/></HBox>
-                    <HBox><Label text="Payment" styleClass="ticket-key" HBox.hgrow="ALWAYS"/><Label fx:id="paymentLabel" styleClass="ticket-val"/></HBox>
-                </VBox>
-
-                <HBox styleClass="ticket-total" alignment="CENTER_LEFT">
-                    <padding><Insets top="14.0" bottom="14.0" left="18.0" right="18.0"/></padding>
-                    <Label text="Total paid" styleClass="ticket-total-label" HBox.hgrow="ALWAYS"/>
-                    <Label fx:id="totalPaidLabel" text="\u20b10.00" styleClass="ticket-total-amount"/>
+                <HBox maxWidth="760.0" minWidth="760.0" alignment="CENTER_LEFT" spacing="10.0">
+                    <Button text="&#8592; Back to rentals" styleClass="modal-close" onAction="#onBackClick"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="Save as PDF" styleClass="ghost-button" onAction="#onSavePdfClick"/>
+                    <Button text="Print receipt" styleClass="cta-button" onAction="#onPrintClick"/>
                 </HBox>
+
+                <!-- ============ THE RECEIPT PAPER (this is what gets printed / saved) ============ -->
+                <VBox fx:id="receiptPaper" styleClass="rc-paper" minWidth="760.0" prefWidth="760.0" maxWidth="760.0">
+
+                    <!-- Header -->
+                    <HBox styleClass="rc-head" alignment="CENTER_LEFT">
+                        <HBox spacing="14.0" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                            <VBox styleClass="rc-logo-box" alignment="CENTER"
+                                  minWidth="46.0" minHeight="46.0" maxWidth="46.0" maxHeight="46.0">
+                                <Label text="&#128663;" styleClass="rc-logo-icon"/>
+                            </VBox>
+                            <VBox spacing="2.0">
+                                <Label text="RENTAPP" styleClass="rc-brand"/>
+                                <Label text="CAR RENTAL MANAGEMENT" styleClass="rc-brand-sub"/>
+                            </VBox>
+                        </HBox>
+                        <VBox alignment="CENTER_RIGHT" spacing="4.0">
+                            <Label text="PAYMENT RECEIPT" styleClass="rc-title"/>
+                            <Label text="Official proof of payment" styleClass="rc-title-sub"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Receipt no / issue date / status -->
+                    <HBox styleClass="rc-meta" spacing="20.0">
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                            <Label text="RECEIPT NO." styleClass="rc-key"/>
+                            <Label fx:id="receiptNoLabel" text="RA-0000-0000-000" styleClass="rc-val-mono"/>
+                        </VBox>
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                            <Label text="ISSUE DATE" styleClass="rc-key"/>
+                            <Label fx:id="issueDateLabel" text="-" styleClass="rc-val"/>
+                        </VBox>
+                        <VBox spacing="5.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                            <Label text="PAYMENT STATUS" styleClass="rc-key"/>
+                            <Label text="&#10003;  PAID" styleClass="rc-paid"/>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Customer + vehicle cards -->
+                    <HBox styleClass="rc-section" spacing="16.0">
+                        <VBox styleClass="rc-card" spacing="12.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                            <Label text="&#128100;  CUSTOMER" styleClass="rc-card-title"/>
+                            <HBox spacing="16.0">
+                                <VBox spacing="3.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                                    <Label text="FULL NAME" styleClass="rc-key"/>
+                                    <Label fx:id="customerLabel" text="-" styleClass="rc-val" wrapText="true"/>
+                                </VBox>
+                                <VBox spacing="3.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                                    <Label text="DRIVER'S LICENSE" styleClass="rc-key"/>
+                                    <Label fx:id="licenseLabel" text="-" styleClass="rc-val-mono" wrapText="true"/>
+                                </VBox>
+                            </HBox>
+                            <VBox spacing="3.0">
+                                <Label text="CONTACT NO." styleClass="rc-key"/>
+                                <Label fx:id="contactLabel" text="-" styleClass="rc-val"/>
+                            </VBox>
+                        </VBox>
+
+                        <VBox styleClass="rc-card" spacing="12.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                            <Label text="&#128663;  RENTED VEHICLE" styleClass="rc-card-title"/>
+                            <HBox spacing="16.0">
+                                <VBox spacing="3.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                                    <Label text="MODEL &amp; MAKE" styleClass="rc-key"/>
+                                    <Label fx:id="vehicleLabel" text="-" styleClass="rc-val" wrapText="true"/>
+                                </VBox>
+                                <VBox spacing="3.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                                    <Label text="PLATE NO." styleClass="rc-key"/>
+                                    <Label fx:id="plateLabel" text="-" styleClass="rc-val-mono"/>
+                                </VBox>
+                            </HBox>
+                            <VBox spacing="3.0">
+                                <Label text="VEHICLE TYPE" styleClass="rc-key"/>
+                                <Label fx:id="vehicleTypeLabel" text="-" styleClass="rc-val"/>
+                            </VBox>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Rental summary -->
+                    <VBox styleClass="rc-section" spacing="10.0">
+                        <Label text="RENTAL SUMMARY" styleClass="rc-card-title"/>
+                        <HBox spacing="12.0">
+                            <VBox styleClass="rc-card-sm" spacing="3.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                                <Label text="RENTAL DATE" styleClass="rc-key"/>
+                                <Label fx:id="rentedOnLabel" text="-" styleClass="rc-val"/>
+                                <Label text="Pick-up" styleClass="rc-sub"/>
+                            </VBox>
+                            <VBox styleClass="rc-card-sm" spacing="3.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                                <Label text="RETURN DATE" styleClass="rc-key"/>
+                                <Label fx:id="returnByLabel" text="-" styleClass="rc-val"/>
+                                <Label text="Drop-off" styleClass="rc-sub"/>
+                            </VBox>
+                            <VBox styleClass="rc-card-sm" spacing="3.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                                <Label text="DURATION" styleClass="rc-key"/>
+                                <Label fx:id="durationLabel" text="-" styleClass="rc-val"/>
+                                <Label fx:id="durationHoursLabel" text="-" styleClass="rc-sub"/>
+                            </VBox>
+                            <VBox styleClass="rc-card-sm" spacing="3.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                                <Label text="DAILY RATE" styleClass="rc-key"/>
+                                <Label fx:id="rateLabel" text="-" styleClass="rc-val"/>
+                                <Label text="Per day" styleClass="rc-sub"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+
+                    <!-- Payment box + totals -->
+                    <HBox styleClass="rc-section-pay" spacing="24.0" alignment="TOP_LEFT">
+                        <VBox styleClass="rc-pay-box" spacing="14.0" minWidth="300.0" prefWidth="300.0" maxWidth="300.0">
+                            <Label text="PAYMENT" styleClass="rc-pay-title"/>
+                            <HBox spacing="12.0" alignment="CENTER_LEFT">
+                                <VBox styleClass="rc-pay-icon" alignment="CENTER"
+                                      minWidth="44.0" minHeight="44.0" maxWidth="44.0" maxHeight="44.0">
+                                    <Label text="&#128181;" styleClass="rc-logo-icon"/>
+                                </VBox>
+                                <VBox spacing="2.0">
+                                    <Label text="PAYMENT METHOD" styleClass="rc-pay-key"/>
+                                    <Label fx:id="paymentLabel" text="-" styleClass="rc-pay-val"/>
+                                </VBox>
+                            </HBox>
+                            <Region styleClass="rc-pay-line" minHeight="1.0" prefHeight="1.0" maxHeight="1.0"/>
+                            <Label fx:id="paymentNoteLabel" text="-" styleClass="rc-pay-note" wrapText="true"/>
+                        </VBox>
+
+                        <VBox styleClass="rc-totals" spacing="11.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                            <HBox>
+                                <Label text="Subtotal" styleClass="rc-row" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Label fx:id="subtotalLabel" text="-" styleClass="rc-row-val"/>
+                            </HBox>
+                            <HBox>
+                                <Label text="Service fee" styleClass="rc-row" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Label fx:id="serviceFeeLabel" text="-" styleClass="rc-row-val"/>
+                            </HBox>
+                            <HBox>
+                                <Label text="Discount" styleClass="rc-row" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Label fx:id="discountLabel" text="-" styleClass="rc-row-val"/>
+                            </HBox>
+                            <Region styleClass="rc-line" minHeight="2.0" prefHeight="2.0" maxHeight="2.0"/>
+                            <HBox alignment="CENTER_LEFT">
+                                <Label text="Total paid" styleClass="rc-total-label" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                                <Label fx:id="totalPaidLabel" text="-" styleClass="rc-total-amount"/>
+                            </HBox>
+                        </VBox>
+                    </HBox>
+
+                    <!-- Footer -->
+                    <HBox styleClass="rc-footer" alignment="BOTTOM_LEFT" spacing="24.0">
+                        <VBox spacing="6.0" HBox.hgrow="ALWAYS" prefWidth="0.0">
+                            <Label text="THANK YOU FOR CHOOSING RENTAPP." styleClass="rc-thanks"/>
+                            <Label text="This receipt was generated by the RentApp desktop management system. Keep a copy for your records."
+                                   styleClass="rc-fine" wrapText="true"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <Label fx:id="statusMessageLabel" styleClass="page-subtitle" wrapText="true" maxWidth="760.0"/>
             </VBox>
-
-            <HBox alignment="CENTER" spacing="8.0">
-                <Button text="Save as PDF" styleClass="ghost-button" onAction="#onSavePdfClick"/>
-                <Button text="Print receipt" styleClass="cta-button" onAction="#onPrintClick"/>
-            </HBox>
-
-            <Label fx:id="statusMessageLabel" styleClass="page-subtitle"/>
-        </VBox>
+        </ScrollPane>
     </center>
 </BorderPane>

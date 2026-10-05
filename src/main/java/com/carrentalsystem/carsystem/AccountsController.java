@@ -1,10 +1,13 @@
 package com.carrentalsystem.carsystem;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -16,6 +19,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.sql.*;
+import java.util.Optional;
 
 public class AccountsController {
 
@@ -31,6 +35,7 @@ public class AccountsController {
 
     @FXML private Label changePasswordTitleLabel;
     @FXML private PasswordField changePasswordField;
+    @FXML private PasswordField confirmChangePasswordField;
     @FXML private Label changePasswordMessageLabel;
 
     /** Which account the change-password popup is currently targeting. */
@@ -39,8 +44,8 @@ public class AccountsController {
     @FXML
     public void initialize() {
         if (!Session.isAdmin()) {
-            // Staff should never land here, but guard it in case the screen is reached directly.
-            switchScene("dashboard-view.fxml", "Car Rental System - Dashboard");
+            // The scene isn't attached yet during initialize(), so wait until it is.
+            Platform.runLater(() -> switchScene("dashboard-view.fxml", "Car Rental System - Dashboard"));
             return;
         }
         loadAccounts();
@@ -96,7 +101,7 @@ public class AccountsController {
 
             Button deleteBtn = new Button("Delete");
             deleteBtn.getStyleClass().add("ghost-button");
-            deleteBtn.setOnAction(e -> deleteAccount(username));
+            deleteBtn.setOnAction(e -> confirmAndDelete(username));
 
             row.getChildren().addAll(changePwBtn, deleteBtn);
         } else if (isSelf) {
@@ -106,6 +111,14 @@ public class AccountsController {
         }
 
         return row;
+    }
+
+    /** Simple OK dialog used for success / error messages. */
+    private void showInfo(String title, String message) {
+        Alert info = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.OK);
+        info.setHeaderText(null);
+        info.setTitle(title);
+        info.showAndWait();
     }
 
     // ---- Add staff ----
@@ -136,6 +149,10 @@ public class AccountsController {
             addStaffMessageLabel.setText("Fill in a username and password.");
             return;
         }
+        if (password.length() < 6) {
+            addStaffMessageLabel.setText("Password must be at least 6 characters.");
+            return;
+        }
         if (!password.equals(confirm)) {
             addStaffMessageLabel.setText("Passwords don't match.");
             return;
@@ -151,6 +168,7 @@ public class AccountsController {
 
             onCancelAddStaff();
             loadAccounts();
+            showInfo("Account created", "Staff account \"" + username + "\" was created successfully.");
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -164,6 +182,7 @@ public class AccountsController {
         targetUsername = username;
         changePasswordTitleLabel.setText("Change password \u00b7 " + username);
         changePasswordField.clear();
+        confirmChangePasswordField.clear();
         changePasswordMessageLabel.setText("");
         changePasswordOverlay.setVisible(true);
         changePasswordOverlay.setManaged(true);
@@ -178,8 +197,28 @@ public class AccountsController {
     @FXML
     private void onSavePasswordClick() {
         String newPassword = changePasswordField.getText();
-        if (newPassword.isEmpty()) {
-            changePasswordMessageLabel.setText("Enter a new password.");
+        String confirmPassword = confirmChangePasswordField.getText();
+
+        if (newPassword.isEmpty() || confirmPassword.isEmpty()) {
+            changePasswordMessageLabel.setText("Enter and confirm the new password.");
+            return;
+        }
+        if (newPassword.length() < 6) {
+            changePasswordMessageLabel.setText("Password must be at least 6 characters.");
+            return;
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            changePasswordMessageLabel.setText("Passwords don't match.");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Are you sure you want to change the password for \"" + targetUsername + "\"?",
+                ButtonType.YES, ButtonType.NO);
+        confirm.setHeaderText(null);
+        confirm.setTitle("Change password");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.YES) {
             return;
         }
 
@@ -192,6 +231,8 @@ public class AccountsController {
             stmt.executeUpdate();
 
             onCancelChangePassword();
+            showInfo("Password changed",
+                    "The password for \"" + targetUsername + "\" was changed successfully.");
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -201,17 +242,37 @@ public class AccountsController {
 
     // ---- Delete ----
 
+    private void confirmAndDelete(String username) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Are you sure you want to delete this account?\n\n"
+                        + "Username: " + username + "\n"
+                        + "This cannot be undone.",
+                ButtonType.YES, ButtonType.NO);
+        confirm.setHeaderText(null);
+        confirm.setTitle("Delete account");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.YES) {
+            deleteAccount(username);
+        }
+    }
+
     private void deleteAccount(String username) {
-        String sql = "DELETE FROM users WHERE username = ?";
+        // "AND role = 'staff'" is a safety net so an admin account can never be deleted from here.
+        String sql = "DELETE FROM users WHERE username = ? AND role = 'staff'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, username);
-            stmt.executeUpdate();
+            int deleted = stmt.executeUpdate();
             loadAccounts();
+
+            if (deleted > 0) {
+                showInfo("Account deleted", "The account \"" + username + "\" was deleted.");
+            }
 
         } catch (SQLException e) {
             e.printStackTrace();
+            showInfo("Error", "Could not delete the account. Try again.");
         }
     }
 
@@ -240,16 +301,20 @@ public class AccountsController {
     @FXML
     private void onLogoutClick() {
         Session.clear();
-        switchScene("login-view.fxml", "Car Rental System - Login");
+        goToLogin();
     }
 
     private void switchScene(String fxmlFile, String title) {
         try {
-            Stage stage = (Stage) countLabel.getScene().getWindow();
-            FXMLLoader loader = new FXMLLoader(HelloApplication.class.getResource(fxmlFile));
-            Scene scene = new Scene(loader.load());
-            stage.setScene(scene);
-            stage.setTitle(title);
+            Navigator.show((Stage) countLabel.getScene().getWindow(), fxmlFile, title);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void goToLogin() {
+        try {
+            Navigator.showLogin((Stage) countLabel.getScene().getWindow());
         } catch (IOException e) {
             e.printStackTrace();
         }
