@@ -34,9 +34,9 @@ public class DatabaseConnection {
             }
 
             // If these columns were created as ENUM, values like "Overdue" or "SUV" would be rejected.
-            widenIfEnum(conn, meta, "vehicles", "status", "VARCHAR(20) DEFAULT 'Available'");
-            widenIfEnum(conn, meta, "vehicles", "type", "VARCHAR(30)");
-            widenIfEnum(conn, meta, "rentals", "status", "VARCHAR(20) DEFAULT 'Active'");
+            widenIfEnum(conn, meta, "vehicles", "status", "VARCHAR(50) DEFAULT 'Available'");
+            widenIfEnum(conn, meta, "vehicles", "type", "VARCHAR(50)");
+            widenIfEnum(conn, meta, "rentals", "status", "VARCHAR(50) DEFAULT 'Active'");
         } catch (SQLException e) {
             e.printStackTrace();
         }

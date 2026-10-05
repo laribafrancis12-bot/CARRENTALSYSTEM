@@ -75,7 +75,7 @@ public class RentalsController {
         accountsBtn.setVisible(admin);
         accountsBtn.setManaged(admin);
 
-        paymentCombo.setItems(FXCollections.observableArrayList("Cash", "GCash", "Card"));
+        paymentCombo.setItems(FXCollections.observableArrayList("Cash"));
         paymentCombo.getSelectionModel().selectFirst();
 
         rentDatePicker.setValue(LocalDate.now());

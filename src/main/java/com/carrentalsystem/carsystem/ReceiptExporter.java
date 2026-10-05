@@ -20,13 +20,7 @@ import java.util.Locale;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
-/**
- * Turns the on-screen receipt into something you can print or save as a PDF.
- *
- * The receipt is captured as a sharp (3x) picture, so the paper looks exactly the same
- * on screen, on a printer and in the PDF. No extra libraries are needed: the PDF file is
- * written directly by savePdf().
- */
+
 public final class ReceiptExporter {
 
     /** 3x gives crisp text when printed or zoomed in the PDF. */

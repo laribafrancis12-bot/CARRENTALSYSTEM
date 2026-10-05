@@ -875,3 +875,66 @@
     -fx-shape: " ";
     -fx-padding: 0;
 }
+.field-input.combo-box-base > .list-cell {
+    -fx-text-fill: white;
+    -fx-background-color: transparent;
+}
+
+.field-input .list-cell .text {
+    -fx-fill: white;
+}
+
+/* DatePicker's own editable text field (the date you see when closed) */
+.field-input.date-picker > .text-field {
+    -fx-text-fill: white;
+    -fx-background-color: transparent;
+    -fx-prompt-text-fill: #6B6E78;
+}
+
+/* The arrow button icon */
+.field-input .arrow-button .arrow {
+    -fx-background-color: #8A8D96;
+}
+
+/* The dropdown list itself (the popup with the options) */
+.combo-box-popup .list-view,
+.date-picker-popup {
+    -fx-background-color: #1C1D23;
+    -fx-border-color: #2E2F37;
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-background-color: #1C1D23;
+    -fx-text-fill: white;
+    -fx-padding: 8 12;
+}
+
+.combo-box-popup .list-view .list-cell:hover,
+.combo-box-popup .list-view .list-cell:filled:selected {
+    -fx-background-color: #D4302B;
+    -fx-text-fill: white;
+}
+
+/* DatePicker's calendar popup: day numbers and month/year header */
+.date-picker-popup .month-year-pane {
+    -fx-background-color: #15161B;
+}
+
+.date-picker-popup .day-cell {
+    -fx-background-color: #1C1D23;
+    -fx-text-fill: white;
+}
+
+.date-picker-popup .day-cell:hover {
+    -fx-background-color: #D4302B;
+}
+
+.date-picker-popup .selected {
+    -fx-background-color: #D4302B;
+    -fx-text-fill: white;
+}
+
+.date-picker-popup > * > .spinner > .button > .left-arrow,
+.date-picker-popup > * > .spinner > .button > .right-arrow {
+    -fx-background-color: white;
+}
