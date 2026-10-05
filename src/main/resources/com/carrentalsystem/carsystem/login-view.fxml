@@ -18,8 +18,8 @@
 
         <!-- Curved green header -->
         <VBox alignment="CENTER" styleClass="login-hero" prefHeight="150.0">
-            <Label text="RentApp" styleClass="login-hero-title"/>
-            <Label text="Vehicle rental management" styleClass="login-hero-subtitle"/>
+            <Label text="RenTastic" styleClass="login-hero-title"/>
+            <Label text="Car rental management" styleClass="login-hero-subtitle"/>
         </VBox>
 
         <!-- Badge overlapping the header/card boundary -->
