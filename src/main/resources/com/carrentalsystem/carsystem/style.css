@@ -875,66 +875,94 @@
     -fx-shape: " ";
     -fx-padding: 0;
 }
-.field-input.combo-box-base > .list-cell {
-    -fx-text-fill: white;
+
+
+/* =========================================================
+   Inline validation (message under the field)
+   ========================================================= */
+
+.field-input.field-invalid,
+.field-input.field-invalid:focused {
+    -fx-border-color: #F27A6F;
+}
+
+/* =========================================================
+   Dashboard charts (dark theme)
+   ========================================================= */
+
+.chart {
     -fx-background-color: transparent;
 }
 
-.field-input .list-cell .text {
-    -fx-fill: white;
+.chart-content {
+    -fx-padding: 4;
 }
 
-/* DatePicker's own editable text field (the date you see when closed) */
-.field-input.date-picker > .text-field {
-    -fx-text-fill: white;
+.chart-plot-background {
     -fx-background-color: transparent;
-    -fx-prompt-text-fill: #6B6E78;
 }
 
-/* The arrow button icon */
-.field-input .arrow-button .arrow {
-    -fx-background-color: #8A8D96;
+.chart-vertical-grid-lines {
+    -fx-stroke: transparent;
 }
 
-/* The dropdown list itself (the popup with the options) */
-.combo-box-popup .list-view,
-.date-picker-popup {
-    -fx-background-color: #1C1D23;
+.chart-horizontal-grid-lines {
+    -fx-stroke: #26272E;
+}
+
+.chart-vertical-zero-line,
+.chart-horizontal-zero-line {
+    -fx-stroke: #2E2F37;
+}
+
+.chart .axis {
+    -fx-tick-label-fill: #8A8D96;
+    -fx-font-size: 11px;
+}
+
+.chart .axis-tick-mark,
+.chart .axis-minor-tick-mark {
+    -fx-stroke: #2E2F37;
+}
+
+.chart .axis:top, .chart .axis:bottom, .chart .axis:left, .chart .axis:right {
     -fx-border-color: #2E2F37;
 }
 
-.combo-box-popup .list-view .list-cell {
-    -fx-background-color: #1C1D23;
-    -fx-text-fill: white;
-    -fx-padding: 8 12;
+.chart-legend {
+    -fx-background-color: transparent;
 }
 
-.combo-box-popup .list-view .list-cell:hover,
-.combo-box-popup .list-view .list-cell:filled:selected {
-    -fx-background-color: #D4302B;
-    -fx-text-fill: white;
+.chart-legend-item {
+    -fx-text-fill: #C9CBD3;
+    -fx-font-size: 11px;
 }
 
-/* DatePicker's calendar popup: day numbers and month/year header */
-.date-picker-popup .month-year-pane {
-    -fx-background-color: #15161B;
+.chart-pie-label {
+    -fx-fill: white;
 }
 
-.date-picker-popup .day-cell {
-    -fx-background-color: #1C1D23;
-    -fx-text-fill: white;
+.chart-pie {
+    -fx-border-color: #15161B;
 }
 
-.date-picker-popup .day-cell:hover {
-    -fx-background-color: #D4302B;
+/* Pie: Available, Rented, Overdue, Maintenance, then anything else */
+.default-color0.chart-pie { -fx-pie-color: #4CAF66; }
+.default-color1.chart-pie { -fx-pie-color: #5B8DEF; }
+.default-color2.chart-pie { -fx-pie-color: #E8463F; }
+.default-color3.chart-pie { -fx-pie-color: #E2A93B; }
+.default-color4.chart-pie { -fx-pie-color: #9B7BE8; }
+
+/* Bars and line */
+.default-color0.chart-bar {
+    -fx-bar-fill: #D4302B;
 }
 
-.date-picker-popup .selected {
-    -fx-background-color: #D4302B;
-    -fx-text-fill: white;
+.default-color0.chart-series-line {
+    -fx-stroke: #D4302B;
+    -fx-stroke-width: 2.5px;
 }
 
-.date-picker-popup > * > .spinner > .button > .left-arrow,
-.date-picker-popup > * > .spinner > .button > .right-arrow {
-    -fx-background-color: white;
+.default-color0.chart-line-symbol {
+    -fx-background-color: #D4302B, #0D0E12;
 }

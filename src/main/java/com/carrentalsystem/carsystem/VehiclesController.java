@@ -19,6 +19,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 public class VehiclesController {
 
@@ -48,6 +50,11 @@ public class VehiclesController {
     @FXML private ComboBox<String> typeCombo;
     @FXML private ComboBox<Integer> seatsCombo;
     @FXML private TextField rateField;
+    @FXML private Label plateErrorLabel;
+    @FXML private Label modelErrorLabel;
+    @FXML private Label typeErrorLabel;
+    @FXML private Label seatsErrorLabel;
+    @FXML private Label rateErrorLabel;
     @FXML private ComboBox<String> statusCombo;
 
     private String currentFilter = "All";
@@ -68,6 +75,17 @@ public class VehiclesController {
         // A new car can only start as Available or in Maintenance. "Rented" is set by the system when a rental is made.
         statusCombo.setItems(FXCollections.observableArrayList("Available", "Maintenance"));
         statusCombo.getSelectionModel().selectFirst();
+
+        // Warnings are written in code and appear right under the field that has the problem.
+        FormValidation.live(plateField, plateErrorLabel, c -> FormValidation.plate(plateField.getText(), c));
+        FormValidation.live(modelField, modelErrorLabel, c -> FormValidation.vehicleModel(modelField.getText(), c));
+        FormValidation.live(rateField, rateErrorLabel, c -> FormValidation.rate(rateField.getText(), c));
+        typeCombo.valueProperty().addListener((o, a, b) -> {
+            if (b != null) FormValidation.clear(typeCombo, typeErrorLabel);
+        });
+        seatsCombo.valueProperty().addListener((o, a, b) -> {
+            if (b != null) FormValidation.clear(seatsCombo, seatsErrorLabel);
+        });
 
         plateCol.setCellValueFactory(d -> d.getValue().plate);
         plateCol.setCellFactory(col -> new TableCell<>() {
@@ -116,9 +134,8 @@ public class VehiclesController {
             }
         });
         actionsCol.setCellFactory(col -> new TableCell<>() {
-            // "Rented" is not offered: the system sets it when a rental is created.
-            private final ComboBox<String> statusChanger = new ComboBox<>(
-                    FXCollections.observableArrayList("Available", "Overdue", "Maintenance"));
+            // The choices depend on the car's current status (see statusChoices).
+            private final ComboBox<String> statusChanger = new ComboBox<>();
             private final Button deleteBtn = new Button("Delete");
             private final HBox box = new HBox(8, statusChanger, deleteBtn);
             private boolean resetting = false;
@@ -138,6 +155,8 @@ public class VehiclesController {
                     VehicleRow row = rowAtIndex();
                     if (row != null) confirmAndDelete(row);
                 });
+                // Table cells are reused for other rows, so the choices are rebuilt when the row changes.
+                indexProperty().addListener((o, a, b) -> refreshChoices());
             }
 
             private VehicleRow rowAtIndex() {
@@ -145,13 +164,23 @@ public class VehiclesController {
                 return (i >= 0 && i < getTableView().getItems().size()) ? getTableView().getItems().get(i) : null;
             }
 
+            private void refreshChoices() {
+                VehicleRow row = rowAtIndex();
+                List<String> choices = new ArrayList<>();
+                if (row != null) {
+                    choices.addAll(statusChoices(row.status.get()));
+                }
+                resetting = true;
+                statusChanger.getItems().setAll(choices);
+                statusChanger.setValue(null);
+                statusChanger.setDisable(choices.isEmpty());
+                resetting = false;
+            }
+
             @Override
             protected void updateItem(Void value, boolean empty) {
                 super.updateItem(value, empty);
-                // Table cells are reused for other rows, so clear the old selection.
-                resetting = true;
-                statusChanger.setValue(null);
-                resetting = false;
+                refreshChoices();
                 setGraphic(empty ? null : box);
             }
         });
@@ -160,6 +189,22 @@ public class VehiclesController {
 
         DatabaseConnection.refreshOverdue();
         loadVehicles();
+    }
+
+    /**
+     * What a car can be changed to, depending on its current status:
+     * Rented -> Overdue, Available -> Maintenance, Maintenance -> Available,
+     * Overdue -> Available (the car was brought back).
+     */
+    private static List<String> statusChoices(String current) {
+        if (current == null) return List.of();
+        return switch (current) {
+            case "Rented" -> List.of("Overdue");
+            case "Available" -> List.of("Maintenance");
+            case "Maintenance" -> List.of("Available");
+            case "Overdue" -> List.of("Available");
+            default -> List.of();
+        };
     }
 
     private void loadVehicles() {
@@ -198,7 +243,7 @@ public class VehiclesController {
             countLabel.setText(rows.size() + " in your fleet");
         } catch (SQLException e) {
             e.printStackTrace();
-            countLabel.setText("Could not load vehicles: " + e.getMessage());
+            countLabel.setText("Could not load the vehicles. Check the database connection.");
         }
 
         vehicleTable.setItems(rows);
@@ -282,7 +327,7 @@ public class VehiclesController {
 
     @FXML
     private void onAddVehicleClick() {
-        formMessageLabel.setText("");
+        clearFormErrors();
         addVehicleOverlay.setVisible(true);
         addVehicleOverlay.setManaged(true);
     }
@@ -295,50 +340,76 @@ public class VehiclesController {
         typeCombo.getSelectionModel().clearSelection();
         seatsCombo.getSelectionModel().clearSelection();
         statusCombo.getSelectionModel().selectFirst();
-        formMessageLabel.setText("");
+        clearFormErrors();
         addVehicleOverlay.setVisible(false);
         addVehicleOverlay.setManaged(false);
     }
 
+    private void clearFormErrors() {
+        FormValidation.clear(plateField, plateErrorLabel);
+        FormValidation.clear(modelField, modelErrorLabel);
+        FormValidation.clear(typeCombo, typeErrorLabel);
+        FormValidation.clear(seatsCombo, seatsErrorLabel);
+        FormValidation.clear(rateField, rateErrorLabel);
+        formMessageLabel.setText("");
+    }
+
     @FXML
     private void onSaveVehicleClick() {
-        String plate = plateField.getText().trim();
+        String plate = plateField.getText().trim().toUpperCase();
         String model = modelField.getText().trim();
         String type = typeCombo.getValue();
         Integer seats = seatsCombo.getValue();
         String rateText = rateField.getText().trim();
         String status = statusCombo.getValue();
 
-        if (plate.isEmpty() || model.isEmpty() || type == null || seats == null || rateText.isEmpty()) {
-            formMessageLabel.setText("Please fill in every field.");
+        // Check every field so all the problems show at once, each under its own field.
+        boolean ok = FormValidation.show(plateField, plateErrorLabel, FormValidation.plate(plate, true));
+        ok &= FormValidation.show(modelField, modelErrorLabel, FormValidation.vehicleModel(model, true));
+        ok &= FormValidation.show(typeCombo, typeErrorLabel, type == null ? "Select a body type." : null);
+        ok &= FormValidation.show(seatsCombo, seatsErrorLabel, seats == null ? "Select the number of seats." : null);
+        ok &= FormValidation.show(rateField, rateErrorLabel, FormValidation.rate(rateText, true));
+        if (!ok) {
+            formMessageLabel.setText("Please fix the fields marked in red.");
             return;
         }
+        formMessageLabel.setText("");
 
-        double rate;
-        try {
-            rate = Double.parseDouble(rateText);
-        } catch (NumberFormatException e) {
-            formMessageLabel.setText("Rate must be a number.");
-            return;
+        // Store plates the same way every time: ABC 1234
+        if (plate.length() == 7 && !plate.contains(" ")) {
+            plate = plate.substring(0, 3) + " " + plate.substring(3);
         }
+        double rate = Double.parseDouble(rateText);
 
-        String sql = "INSERT INTO vehicles (plate_no, model, type, rate_per_day, status) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            // Checked here in code, so the message is ours and sits under the plate field.
+            try (PreparedStatement check = conn.prepareStatement(
+                    "SELECT 1 FROM vehicles WHERE UPPER(plate_no) = ?")) {
+                check.setString(1, plate);
+                try (ResultSet rs = check.executeQuery()) {
+                    if (rs.next()) {
+                        FormValidation.show(plateField, plateErrorLabel, "That plate number is already registered.");
+                        return;
+                    }
+                }
+            }
 
-            stmt.setString(1, plate);
-            stmt.setString(2, model);
-            stmt.setString(3, type);
-            stmt.setDouble(4, rate);
-            stmt.setString(5, status);
-            stmt.executeUpdate();
+            String sql = "INSERT INTO vehicles (plate_no, model, type, rate_per_day, status) VALUES (?, ?, ?, ?, ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, plate);
+                stmt.setString(2, model);
+                stmt.setString(3, type);
+                stmt.setDouble(4, rate);
+                stmt.setString(5, status);
+                stmt.executeUpdate();
+            }
 
             onCancelAddVehicle();
             loadVehicles();
 
         } catch (SQLException e) {
             e.printStackTrace();
-            formMessageLabel.setText("Could not save: " + e.getMessage());
+            formMessageLabel.setText("Could not save the vehicle. Please try again.");
         }
     }
 
@@ -357,6 +428,11 @@ public class VehiclesController {
     @FXML
     private void onRentalsClick() {
         switchScene("rentals-view.fxml", "Car Rental System - Rentals");
+    }
+
+    @FXML
+    private void onHistoryClick() {
+        switchScene("history-view.fxml", "Car Rental System - History");
     }
 
     @FXML

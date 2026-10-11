@@ -26,6 +26,7 @@
                 <Button text="Dashboard" styleClass="rail-btn" maxWidth="Infinity" onAction="#onDashboardClick"/>
                 <Button fx:id="vehiclesBtn" text="Vehicles" styleClass="rail-btn-active" maxWidth="Infinity" onAction="#onVehiclesClick"/>
                 <Button text="Rentals" styleClass="rail-btn" maxWidth="Infinity" onAction="#onRentalsClick"/>
+                <Button text="History" styleClass="rail-btn" maxWidth="Infinity" onAction="#onHistoryClick"/>
                 <Button fx:id="accountsBtn" text="Accounts" styleClass="rail-btn" maxWidth="Infinity" onAction="#onAccountsClick"/>
                 <VBox VBox.vgrow="ALWAYS"/>
                 <Button text="Log out" styleClass="rail-btn" maxWidth="Infinity" onAction="#onLogoutClick"/>
@@ -89,28 +90,33 @@
             </HBox>
 
             <HBox spacing="14.0">
-                <VBox HBox.hgrow="ALWAYS" spacing="4.0">
+                <VBox HBox.hgrow="ALWAYS" prefWidth="0.0" spacing="4.0">
                     <Label text="Plate number" styleClass="field-label"/>
                     <TextField fx:id="plateField" promptText="ABC 1234" prefHeight="38.0" styleClass="field-input"/>
+                    <Label fx:id="plateErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                 </VBox>
-                <VBox HBox.hgrow="ALWAYS" spacing="4.0">
+                <VBox HBox.hgrow="ALWAYS" prefWidth="0.0" spacing="4.0">
                     <Label text="Model" styleClass="field-label"/>
                     <TextField fx:id="modelField" promptText="Toyota Vios" prefHeight="38.0" styleClass="field-input"/>
+                    <Label fx:id="modelErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                 </VBox>
             </HBox>
 
             <HBox spacing="14.0">
-                <VBox HBox.hgrow="ALWAYS" minWidth="120.0" spacing="4.0">
+                <VBox HBox.hgrow="ALWAYS" minWidth="120.0" prefWidth="0.0" spacing="4.0">
                     <Label text="Type" styleClass="field-label"/>
                     <ComboBox fx:id="typeCombo" maxWidth="Infinity" prefWidth="140.0" prefHeight="38.0" styleClass="field-input"/>
+                    <Label fx:id="typeErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                 </VBox>
-                <VBox HBox.hgrow="ALWAYS" minWidth="100.0" spacing="4.0">
+                <VBox HBox.hgrow="ALWAYS" minWidth="100.0" prefWidth="0.0" spacing="4.0">
                     <Label text="Seats" styleClass="field-label"/>
                     <ComboBox fx:id="seatsCombo" maxWidth="Infinity" prefWidth="110.0" prefHeight="38.0" styleClass="field-input"/>
+                    <Label fx:id="seatsErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                 </VBox>
-                <VBox HBox.hgrow="ALWAYS" minWidth="120.0" spacing="4.0">
+                <VBox HBox.hgrow="ALWAYS" minWidth="120.0" prefWidth="0.0" spacing="4.0">
                     <Label text="Rate/day" styleClass="field-label"/>
                     <TextField fx:id="rateField" promptText="1500" prefHeight="38.0" styleClass="field-input"/>
+                    <Label fx:id="rateErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                 </VBox>
             </HBox>
 

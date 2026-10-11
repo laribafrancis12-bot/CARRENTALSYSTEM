@@ -1,0 +1,330 @@
+package com.carrentalsystem.carsystem;
+
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.Optional;
+
+/**
+ * History: every rental that has been returned. A rental moves here from the Rentals
+ * screen as soon as it is marked as returned.
+ */
+public class HistoryController {
+
+    private static final DateTimeFormatter TABLE_DATE = DateTimeFormatter.ofPattern("MMM d, yyyy");
+
+    @FXML private Button vehiclesBtn;
+    @FXML private Button accountsBtn;
+    @FXML private TextField searchField;
+    @FXML private Label countLabel;
+
+    @FXML private TableView<HistoryRow> historyTable;
+    @FXML private TableColumn<HistoryRow, Integer> idCol;
+    @FXML private TableColumn<HistoryRow, String> customerCol;
+    @FXML private TableColumn<HistoryRow, String> contactCol;
+    @FXML private TableColumn<HistoryRow, String> addressCol;
+    @FXML private TableColumn<HistoryRow, String> vehicleCol;
+    @FXML private TableColumn<HistoryRow, LocalDate> rentDateCol;
+    @FXML private TableColumn<HistoryRow, LocalDate> returnedOnCol;
+    @FXML private TableColumn<HistoryRow, String> timingCol;
+    @FXML private TableColumn<HistoryRow, Double> totalCol;
+    @FXML private TableColumn<HistoryRow, Void> actionsCol;
+
+    @FXML
+    public void initialize() {
+        boolean admin = Session.isAdmin();
+        vehiclesBtn.setVisible(admin);
+        vehiclesBtn.setManaged(admin);
+        accountsBtn.setVisible(admin);
+        accountsBtn.setManaged(admin);
+
+        setUpTable();
+        searchField.textProperty().addListener((o, a, b) -> loadHistory(b));
+        loadHistory("");
+    }
+
+    // ---- Table ----
+
+    private void sizeColumn(TableColumn<HistoryRow, ?> col, double share, double minWidth) {
+        col.setMinWidth(minWidth);
+        // minus 24px so the vertical scrollbar never forces a horizontal one
+        col.prefWidthProperty().bind(historyTable.widthProperty().subtract(24).multiply(share));
+    }
+
+    private void setUpTable() {
+        historyTable.setPlaceholder(new Label("No completed rentals yet"));
+
+        sizeColumn(idCol, 0.06, 72);
+        sizeColumn(customerCol, 0.12, 110);
+        sizeColumn(contactCol, 0.10, 100);
+        sizeColumn(addressCol, 0.15, 130);
+        sizeColumn(vehicleCol, 0.14, 130);
+        sizeColumn(rentDateCol, 0.09, 95);
+        sizeColumn(returnedOnCol, 0.09, 95);
+        sizeColumn(timingCol, 0.10, 100);
+        sizeColumn(totalCol, 0.07, 80);
+        sizeColumn(actionsCol, 0.08, 95);
+
+        idCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().id));
+        idCol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Integer value, boolean empty) {
+                super.updateItem(value, empty);
+                setText(empty || value == null ? null : "#" + value);
+            }
+        });
+
+        customerCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().customer));
+        contactCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().contact));
+        addressCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().address));
+        vehicleCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().vehicle));
+
+        rentDateCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().rentDate));
+        rentDateCol.setCellFactory(col -> dateCell());
+        returnedOnCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().returnedOn));
+        returnedOnCol.setCellFactory(col -> dateCell());
+
+        timingCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().timing));
+        timingCol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String value, boolean empty) {
+                super.updateItem(value, empty);
+                if (empty || value == null || value.isEmpty()) {
+                    setGraphic(null);
+                    setText(empty ? null : "\u2014");
+                    return;
+                }
+                Label badge = new Label(value);
+                if (value.startsWith("Late")) {
+                    badge.getStyleClass().add("badge-red");
+                } else if (value.equals("Early")) {
+                    badge.getStyleClass().add("badge-blue");
+                } else {
+                    badge.getStyleClass().add("badge-green");
+                }
+                setText(null);
+                setGraphic(badge);
+            }
+        });
+
+        totalCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().total));
+        totalCol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double value, boolean empty) {
+                super.updateItem(value, empty);
+                setText(empty || value == null ? null : "\u20b1" + String.format("%,.0f", value));
+            }
+        });
+
+        actionsCol.setSortable(false);
+        actionsCol.setCellFactory(col -> new TableCell<>() {
+            private final Button receiptBtn = new Button("Receipt");
+
+            {
+                receiptBtn.getStyleClass().addAll("ghost-button", "table-btn");
+                receiptBtn.setOnAction(e -> {
+                    int i = getIndex();
+                    if (i >= 0 && i < getTableView().getItems().size()) {
+                        openReceipt(getTableView().getItems().get(i).id);
+                    }
+                });
+            }
+
+            @Override
+            protected void updateItem(Void value, boolean empty) {
+                super.updateItem(value, empty);
+                setGraphic(empty ? null : receiptBtn);
+            }
+        });
+    }
+
+    private TableCell<HistoryRow, LocalDate> dateCell() {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(LocalDate value, boolean empty) {
+                super.updateItem(value, empty);
+                // Older records were returned before the system saved the return date.
+                setText(empty ? null : (value == null ? "\u2014" : value.format(TABLE_DATE)));
+            }
+        };
+    }
+
+    private void loadHistory(String search) {
+        String sql =
+                "SELECT r.rental_id, c.full_name, c.contact_no, c.address, v.model, v.plate_no, " +
+                        "r.rent_date, r.return_date, r.returned_on, r.total_amount " +
+                        "FROM rentals r " +
+                        "JOIN customers c ON r.customer_id = c.customer_id " +
+                        "JOIN vehicles v ON r.vehicle_id = v.vehicle_id " +
+                        "WHERE r.status = 'Returned' " +
+                        "AND (c.full_name LIKE ? OR c.contact_no LIKE ? OR v.model LIKE ? OR v.plate_no LIKE ?) " +
+                        "ORDER BY COALESCE(r.returned_on, r.return_date) DESC, r.rental_id DESC";
+
+        ObservableList<HistoryRow> rows = FXCollections.observableArrayList();
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            String like = "%" + (search == null ? "" : search.trim()) + "%";
+            for (int i = 1; i <= 4; i++) {
+                stmt.setString(i, like);
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate agreedReturn = rs.getDate("return_date").toLocalDate();
+                    java.sql.Date ro = rs.getDate("returned_on");
+                    LocalDate returnedOn = ro == null ? null : ro.toLocalDate();
+
+                    String timing = "";
+                    if (returnedOn != null) {
+                        if (returnedOn.isBefore(agreedReturn)) {
+                            timing = "Early";
+                        } else if (returnedOn.isAfter(agreedReturn)) {
+                            long late = ChronoUnit.DAYS.between(agreedReturn, returnedOn);
+                            timing = "Late (" + late + (late == 1 ? " day)" : " days)");
+                        } else {
+                            timing = "On time";
+                        }
+                    }
+
+                    String contact = rs.getString("contact_no");
+                    String address = rs.getString("address");
+                    rows.add(new HistoryRow(
+                            rs.getInt("rental_id"),
+                            rs.getString("full_name"),
+                            contact == null || contact.isBlank() ? "\u2014" : contact,
+                            address == null || address.isBlank() ? "\u2014" : address,
+                            rs.getString("model") + " \u00b7 " + rs.getString("plate_no"),
+                            rs.getDate("rent_date").toLocalDate(),
+                            returnedOn,
+                            timing,
+                            rs.getDouble("total_amount")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            countLabel.setText("Could not load the history. Check the database connection.");
+            return;
+        }
+
+        historyTable.setItems(rows);
+        countLabel.setText(rows.size() + " completed rental" + (rows.size() == 1 ? "" : "s"));
+    }
+
+    private void openReceipt(int rentalId) {
+        try {
+            ReceiptController controller = Navigator.show(
+                    (Stage) countLabel.getScene().getWindow(),
+                    "receipt-view.fxml", "Car Rental System - Receipt");
+            controller.setRentalId(rentalId);
+            controller.setBackToHistory();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Alert error = new Alert(Alert.AlertType.ERROR, "The receipt screen could not be opened.");
+            error.setHeaderText(null);
+            error.setTitle("Receipt");
+            error.showAndWait();
+        }
+    }
+
+    // ---- Navigation ----
+
+    @FXML
+    private void onDashboardClick() {
+        switchScene("dashboard-view.fxml", "Car Rental System - Dashboard");
+    }
+
+    @FXML
+    private void onVehiclesClick() {
+        if (!Session.isAdmin()) return;
+        switchScene("vehicles-view.fxml", "Car Rental System - Vehicles");
+    }
+
+    @FXML
+    private void onRentalsClick() {
+        switchScene("rentals-view.fxml", "Car Rental System - Rentals");
+    }
+
+    @FXML
+    private void onHistoryClick() {
+        // Already here
+    }
+
+    @FXML
+    private void onAccountsClick() {
+        if (!Session.isAdmin()) return;
+        switchScene("accounts-view.fxml", "Car Rental System - Accounts");
+    }
+
+    @FXML
+    private void onLogoutClick() {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Are you sure you want to log out?", ButtonType.YES, ButtonType.NO);
+        confirm.setHeaderText(null);
+        confirm.setTitle("Log out");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.YES) {
+            Session.clear();
+            try {
+                Navigator.showLogin((Stage) countLabel.getScene().getWindow());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void switchScene(String fxmlFile, String title) {
+        try {
+            Navigator.show((Stage) countLabel.getScene().getWindow(), fxmlFile, title);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** Backs one row of the history table. */
+    public static class HistoryRow {
+        final int id;
+        final String customer;
+        final String contact;
+        final String address;
+        final String vehicle;
+        final LocalDate rentDate;
+        final LocalDate returnedOn;   // null for records returned before this date was saved
+        final String timing;          // Early, On time, Late (n days) or empty
+        final double total;
+
+        HistoryRow(int id, String customer, String contact, String address, String vehicle,
+                   LocalDate rentDate, LocalDate returnedOn, String timing, double total) {
+            this.id = id;
+            this.customer = customer;
+            this.contact = contact;
+            this.address = address;
+            this.vehicle = vehicle;
+            this.rentDate = rentDate;
+            this.returnedOn = returnedOn;
+            this.timing = timing;
+            this.total = total;
+        }
+    }
+}

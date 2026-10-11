@@ -22,23 +22,34 @@ public class DatabaseConnection {
     public static void ensureSchema() {
         try (Connection conn = getConnection()) {
             DatabaseMetaData meta = conn.getMetaData();
-            boolean exists;
-            try (ResultSet rs = meta.getColumns(conn.getCatalog(), null, "rentals", "created_by")) {
-                exists = rs.next();
-            }
-            if (!exists) {
-                try (Statement st = conn.createStatement()) {
-                    st.executeUpdate("ALTER TABLE rentals ADD COLUMN created_by VARCHAR(50) NULL");
-                    System.out.println("Added missing column rentals.created_by");
-                }
-            }
+            addColumnIfMissing(conn, meta, "rentals", "created_by", "VARCHAR(50) NULL");
+            addColumnIfMissing(conn, meta, "rentals", "returned_on", "DATE NULL");          // when the car actually came back
+            addColumnIfMissing(conn, meta, "customers", "address", "VARCHAR(150) NULL");   // customer address
+            addColumnIfMissing(conn, meta, "customers", "id_type", "VARCHAR(30) NULL");    // valid ID shown by the customer
+            addColumnIfMissing(conn, meta, "customers", "id_number", "VARCHAR(30) NULL");
+            addColumnIfMissing(conn, meta, "users", "active", "TINYINT(1) NOT NULL DEFAULT 1"); // 0 = deactivated
+
 
             // If these columns were created as ENUM, values like "Overdue" or "SUV" would be rejected.
-            widenIfEnum(conn, meta, "vehicles", "status", "VARCHAR(50) DEFAULT 'Available'");
-            widenIfEnum(conn, meta, "vehicles", "type", "VARCHAR(50)");
-            widenIfEnum(conn, meta, "rentals", "status", "VARCHAR(50) DEFAULT 'Active'");
+            widenIfEnum(conn, meta, "vehicles", "status", "VARCHAR(20) DEFAULT 'Available'");
+            widenIfEnum(conn, meta, "vehicles", "type", "VARCHAR(30)");
+            widenIfEnum(conn, meta, "rentals", "status", "VARCHAR(20) DEFAULT 'Active'");
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void addColumnIfMissing(Connection conn, DatabaseMetaData meta,
+                                           String table, String column, String definition) throws SQLException {
+        boolean exists;
+        try (ResultSet rs = meta.getColumns(conn.getCatalog(), null, table, column)) {
+            exists = rs.next();
+        }
+        if (!exists) {
+            try (Statement st = conn.createStatement()) {
+                st.executeUpdate("ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition);
+                System.out.println("Added missing column " + table + "." + column);
+            }
         }
     }
 
@@ -102,7 +113,7 @@ public class DatabaseConnection {
                         vehicleId = rs.getInt(1);
                     }
                 }
-                run(conn, "UPDATE rentals SET status='Returned' WHERE rental_id = ?", rentalId);
+                run(conn, "UPDATE rentals SET status='Returned', returned_on=CURDATE() WHERE rental_id = ?", rentalId);
                 // Only free it if it is still out; a car sent to Maintenance stays in Maintenance.
                 run(conn, "UPDATE vehicles SET status='Available' WHERE vehicle_id = ? "
                         + "AND status IN ('Rented','Overdue')", vehicleId);
@@ -125,7 +136,7 @@ public class DatabaseConnection {
             conn.setAutoCommit(false);
             try {
                 if ("Available".equals(newStatus)) {
-                    run(conn, "UPDATE rentals SET status='Returned' "
+                    run(conn, "UPDATE rentals SET status='Returned', returned_on=CURDATE() "
                             + "WHERE vehicle_id = ? AND status IN ('Active','Overdue')", vehicleId);
                 } else if ("Overdue".equals(newStatus)) {
                     run(conn, "UPDATE rentals SET status='Overdue' "

@@ -35,6 +35,9 @@ public class ReceiptController {
     @FXML private Label customerLabel;
     @FXML private Label licenseLabel;
     @FXML private Label contactLabel;
+    @FXML private Label addressLabel;
+    @FXML private Label validIdLabel;
+    @FXML private Button backBtn;
 
     @FXML private Label vehicleLabel;
     @FXML private Label plateLabel;
@@ -56,6 +59,9 @@ public class ReceiptController {
 
     @FXML private Label statusMessageLabel;
 
+    /** Where the Back button goes: "rentals" (default) or "history". */
+    private String backTarget = "rentals";
+
     /** Used for the default PDF file name. */
     private String receiptNo = "receipt";
 
@@ -68,6 +74,12 @@ public class ReceiptController {
         accountsBtn.setManaged(admin);
     }
 
+    /** Call this when the receipt was opened from the History screen. */
+    public void setBackToHistory() {
+        backTarget = "history";
+        backBtn.setText("\u2190 Back to history");
+    }
+
     /** Called right after this screen is loaded, before it's shown. */
     public void setRentalId(int rentalId) {
         loadReceipt(rentalId);
@@ -75,7 +87,7 @@ public class ReceiptController {
 
     private void loadReceipt(int rentalId) {
         String sql =
-                "SELECT r.rental_id, c.full_name, c.contact_no, c.license_no, " +
+                "SELECT r.rental_id, c.full_name, c.contact_no, c.license_no, c.address, c.id_type, c.id_number, " +
                         "v.model, v.plate_no, v.type, v.rate_per_day, " +
                         "r.rent_date, r.return_date, r.total_amount, r.payment_method " +
                         "FROM rentals r " +
@@ -114,6 +126,10 @@ public class ReceiptController {
                 customerLabel.setText(orDash(rs.getString("full_name")));
                 licenseLabel.setText(orDash(rs.getString("license_no")));
                 contactLabel.setText(orDash(rs.getString("contact_no")));
+                addressLabel.setText(orDash(rs.getString("address")));
+                String idType = rs.getString("id_type");
+                validIdLabel.setText(idType == null || idType.isBlank()
+                        ? "\u2014" : idType + " \u00b7 " + orDash(rs.getString("id_number")));
 
                 vehicleLabel.setText(orDash(rs.getString("model")));
                 plateLabel.setText(orDash(rs.getString("plate_no")));
@@ -136,7 +152,7 @@ public class ReceiptController {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            statusMessageLabel.setText("Could not load this receipt: " + e.getMessage());
+            statusMessageLabel.setText("Could not load this receipt. Check the database connection.");
         }
     }
 
@@ -171,7 +187,7 @@ public class ReceiptController {
             statusMessageLabel.setText("Saved: " + file.getAbsolutePath());
         } catch (IOException | RuntimeException e) {
             e.printStackTrace();
-            statusMessageLabel.setText("Could not save the PDF: " + e.getMessage());
+            statusMessageLabel.setText("Could not save the PDF. Make sure the file is not open in another program and try again.");
         }
     }
 
@@ -189,7 +205,11 @@ public class ReceiptController {
 
     @FXML
     private void onBackClick() {
-        onRentalsClick();
+        if ("history".equals(backTarget)) {
+            onHistoryClick();
+        } else {
+            onRentalsClick();
+        }
     }
 
     // ---- Navigation ----
@@ -207,6 +227,11 @@ public class ReceiptController {
     @FXML
     private void onRentalsClick() {
         switchScene("rentals-view.fxml", "Car Rental System - Rentals");
+    }
+
+    @FXML
+    private void onHistoryClick() {
+        switchScene("history-view.fxml", "Car Rental System - History");
     }
 
     @FXML

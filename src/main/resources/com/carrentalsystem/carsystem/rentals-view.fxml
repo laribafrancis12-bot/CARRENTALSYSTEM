@@ -28,6 +28,7 @@
                 <Button text="Dashboard" styleClass="rail-btn" maxWidth="Infinity" onAction="#onDashboardClick"/>
                 <Button fx:id="vehiclesBtn" text="Vehicles" styleClass="rail-btn" maxWidth="Infinity" onAction="#onVehiclesClick"/>
                 <Button text="Rentals" styleClass="rail-btn-active" maxWidth="Infinity" onAction="#onRentalsClick"/>
+                <Button text="History" styleClass="rail-btn" maxWidth="Infinity" onAction="#onHistoryClick"/>
                 <Button fx:id="accountsBtn" text="Accounts" styleClass="rail-btn" maxWidth="Infinity" onAction="#onAccountsClick"/>
                 <VBox VBox.vgrow="ALWAYS"/>
                 <Button text="Log out" styleClass="rail-btn" maxWidth="Infinity" onAction="#onLogoutClick"/>
@@ -51,7 +52,6 @@
                     <Button fx:id="filterAllBtn" text="All" styleClass="pill-active" onAction="#onFilterAll"/>
                     <Button fx:id="filterActiveBtn" text="Active" styleClass="pill" onAction="#onFilterActive"/>
                     <Button fx:id="filterDueBtn" text="Due or overdue" styleClass="pill" onAction="#onFilterDue"/>
-                    <Button fx:id="filterReturnedBtn" text="Returned" styleClass="pill" onAction="#onFilterReturned"/>
                 </HBox>
 
                 <!-- One table for every rental, like the Vehicles screen -->
@@ -74,7 +74,7 @@
 
     <!-- New rental overlay -->
     <StackPane fx:id="newRentalOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="10.0" maxWidth="560.0" maxHeight="640.0">
+        <VBox styleClass="modal-card" spacing="10.0" maxWidth="560.0" maxHeight="700.0">
             <padding><Insets top="26.0" bottom="26.0" left="30.0" right="30.0"/></padding>
 
             <HBox alignment="CENTER_LEFT">
@@ -82,42 +82,69 @@
                 <Button text="X" styleClass="modal-close" onAction="#onCancelNewRental"/>
             </HBox>
 
-            <ScrollPane fitToWidth="true" styleClass="plain-scroll" VBox.vgrow="ALWAYS">
+            <ScrollPane fx:id="formScroll" fitToWidth="true" styleClass="plain-scroll" VBox.vgrow="ALWAYS">
                 <VBox spacing="10.0">
                     <Label text="Customer" styleClass="section-label"/>
                     <HBox spacing="14.0">
-                        <VBox HBox.hgrow="ALWAYS" minWidth="180.0" spacing="4.0">
+                        <VBox HBox.hgrow="ALWAYS" minWidth="180.0" prefWidth="0.0" spacing="4.0">
                             <Label text="Full name" styleClass="field-label"/>
                             <TextField fx:id="customerNameField" promptText="Maria Santos" prefHeight="38.0" styleClass="field-input"/>
+                            <Label fx:id="nameErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                         </VBox>
-                        <VBox HBox.hgrow="ALWAYS" minWidth="160.0" spacing="4.0">
+                        <VBox HBox.hgrow="ALWAYS" minWidth="160.0" prefWidth="0.0" spacing="4.0">
                             <Label text="Contact number" styleClass="field-label"/>
-                            <TextField fx:id="contactField" promptText="09xx xxx xxxx" prefHeight="38.0" styleClass="field-input"/>
+                            <TextField fx:id="contactField" promptText="09171234567" prefHeight="38.0" styleClass="field-input"/>
+                            <Label fx:id="contactErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                         </VBox>
                     </HBox>
-                    <Label text="Driver's license no." styleClass="field-label"/>
-                    <TextField fx:id="licenseField" promptText="N01-23-456789" prefHeight="38.0" styleClass="field-input"/>
+                    <VBox spacing="4.0">
+                        <Label text="Address" styleClass="field-label"/>
+                        <TextField fx:id="addressField" promptText="House no., street, barangay, city" prefHeight="38.0" styleClass="field-input"/>
+                        <Label fx:id="addressErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
+                    </VBox>
+                    <VBox spacing="4.0">
+                        <Label text="Driver's license no." styleClass="field-label"/>
+                        <TextField fx:id="licenseField" promptText="N01-23-456789" prefHeight="38.0" styleClass="field-input"/>
+                        <Label fx:id="licenseErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
+                    </VBox>
+                    <HBox spacing="14.0">
+                        <VBox HBox.hgrow="ALWAYS" minWidth="160.0" prefWidth="0.0" spacing="4.0">
+                            <Label text="Valid ID type" styleClass="field-label"/>
+                            <ComboBox fx:id="idTypeCombo" promptText="Select ID type" maxWidth="Infinity" prefHeight="38.0" styleClass="field-input"/>
+                            <Label fx:id="idTypeErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
+                        </VBox>
+                        <VBox HBox.hgrow="ALWAYS" minWidth="160.0" prefWidth="0.0" spacing="4.0">
+                            <Label text="Valid ID number" styleClass="field-label"/>
+                            <TextField fx:id="idNumberField" promptText="e.g. 0123-4567890-1" prefHeight="38.0" styleClass="field-input"/>
+                            <Label fx:id="idNumberErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
+                        </VBox>
+                    </HBox>
 
                     <Label text="Vehicle and dates" styleClass="section-label">
                         <VBox.margin><Insets top="10.0"/></VBox.margin>
                     </Label>
-                    <Label text="Available vehicle" styleClass="field-label"/>
-                    <ComboBox fx:id="vehicleCombo" maxWidth="Infinity" prefHeight="38.0" styleClass="field-input"/>
+                    <VBox spacing="4.0">
+                        <Label text="Available vehicle" styleClass="field-label"/>
+                        <ComboBox fx:id="vehicleCombo" maxWidth="Infinity" prefHeight="38.0" styleClass="field-input"/>
+                        <Label fx:id="vehicleErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
+                    </VBox>
                     <HBox spacing="14.0">
-                        <VBox HBox.hgrow="ALWAYS" minWidth="160.0" spacing="4.0">
+                        <VBox HBox.hgrow="ALWAYS" minWidth="160.0" prefWidth="0.0" spacing="4.0">
                             <Label text="Rent date" styleClass="field-label"/>
                             <DatePicker fx:id="rentDatePicker" maxWidth="Infinity" prefHeight="38.0" styleClass="field-input"/>
+                            <Label fx:id="rentDateErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                         </VBox>
-                        <VBox HBox.hgrow="ALWAYS" minWidth="160.0" spacing="4.0">
+                        <VBox HBox.hgrow="ALWAYS" minWidth="160.0" prefWidth="0.0" spacing="4.0">
                             <Label text="Return date" styleClass="field-label"/>
                             <DatePicker fx:id="returnDatePicker" maxWidth="Infinity" prefHeight="38.0" styleClass="field-input"/>
+                            <Label fx:id="returnDateErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                         </VBox>
                     </HBox>
 
                     <Label text="Payment method" styleClass="field-label">
                         <VBox.margin><Insets top="8.0"/></VBox.margin>
                     </Label>
-                    <ComboBox fx:id="paymentCombo" maxWidth="Infinity" prefHeight="38.0" styleClass="field-input"/>
+                    <TextField fx:id="paymentField" text="Cash" editable="false" focusTraversable="false" maxWidth="Infinity" prefHeight="38.0" styleClass="field-input"/>
 
                     <HBox styleClass="total-box" alignment="CENTER_LEFT">
                         <padding><Insets top="12.0" bottom="12.0" left="14.0" right="14.0"/></padding>

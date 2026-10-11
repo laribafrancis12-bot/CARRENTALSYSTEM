@@ -2,7 +2,13 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.chart.BarChart?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -19,6 +25,7 @@
             <Button text="Dashboard" styleClass="rail-btn-active" maxWidth="Infinity" onAction="#onDashboardClick"/>
             <Button fx:id="vehiclesBtn" text="Vehicles" styleClass="rail-btn" maxWidth="Infinity" onAction="#onVehiclesClick"/>
             <Button text="Rentals" styleClass="rail-btn" maxWidth="Infinity" onAction="#onRentalsClick"/>
+            <Button text="History" styleClass="rail-btn" maxWidth="Infinity" onAction="#onHistoryClick"/>
             <Button fx:id="accountsBtn" text="Accounts" styleClass="rail-btn" maxWidth="Infinity" onAction="#onAccountsClick"/>
             <VBox VBox.vgrow="ALWAYS"/>
             <Button text="Log out" styleClass="rail-btn" maxWidth="Infinity" onAction="#onLogoutClick"/>
@@ -26,58 +33,99 @@
     </left>
 
     <center>
-        <VBox spacing="14.0" styleClass="page-content" maxWidth="1500.0" BorderPane.alignment="TOP_CENTER">
+        <!-- Scrolls when the charts don't fit the window -->
+        <ScrollPane fitToWidth="true" styleClass="plain-scroll">
+            <VBox spacing="14.0" styleClass="page-content" maxWidth="1500.0">
 
-            <HBox alignment="CENTER_LEFT" spacing="10.0">
-                <VBox HBox.hgrow="ALWAYS">
-                    <Label text="Dashboard" styleClass="page-title"/>
-                    <Label fx:id="dateLabel" text="Logged in as Admin" styleClass="page-subtitle"/>
-                </VBox>
-                <Button text="+ New rental" styleClass="cta-button" onAction="#onNewRentalClick"/>
-            </HBox>
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <VBox HBox.hgrow="ALWAYS">
+                        <Label text="Dashboard" styleClass="page-title"/>
+                        <Label fx:id="dateLabel" text="Logged in as Admin" styleClass="page-subtitle"/>
+                    </VBox>
+                    <Button text="+ New rental" styleClass="cta-button" onAction="#onNewRentalClick"/>
+                </HBox>
 
-            <!-- Stat cards -->
-            <HBox spacing="10.0">
-                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
-                    <Label text="Total vehicles" styleClass="stat-label"/>
-                    <Label fx:id="totalVehiclesLabel" text="0" styleClass="stat-value"/>
-                </VBox>
-                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
-                    <Label text="Available" styleClass="stat-label"/>
-                    <Label fx:id="availableLabel" text="0" styleClass="stat-value-green"/>
-                </VBox>
-                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
-                    <Label text="Rented out" styleClass="stat-label"/>
-                    <Label fx:id="rentedLabel" text="0" styleClass="stat-value-amber"/>
-                </VBox>
-                <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
-                    <Label text="Overdue" styleClass="stat-label"/>
-                    <Label fx:id="overdueLabel" text="0" styleClass="stat-value-red"/>
-                </VBox>
-            </HBox>
+                <!-- Stat cards -->
+                <HBox spacing="10.0">
+                    <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
+                        <Label text="Total vehicles" styleClass="stat-label"/>
+                        <Label fx:id="totalVehiclesLabel" text="0" styleClass="stat-value"/>
+                    </VBox>
+                    <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
+                        <Label text="Available" styleClass="stat-label"/>
+                        <Label fx:id="availableLabel" text="0" styleClass="stat-value-green"/>
+                    </VBox>
+                    <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
+                        <Label text="Rented out" styleClass="stat-label"/>
+                        <Label fx:id="rentedLabel" text="0" styleClass="stat-value-amber"/>
+                    </VBox>
+                    <VBox styleClass="stat-card" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
+                        <Label text="Overdue" styleClass="stat-label"/>
+                        <Label fx:id="overdueLabel" text="0" styleClass="stat-value-red"/>
+                    </VBox>
+                </HBox>
 
-            <!-- Revenue (admin: company total · staff: their own sales) + Due today -->
-            <HBox spacing="12.0" VBox.vgrow="ALWAYS">
+                <!-- Revenue (admin: company total · staff: their own sales) + Due today -->
+                <HBox spacing="12.0">
 
-                <VBox styleClass="stat-card" spacing="6.0" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
-                    <Label fx:id="revenueTitleLabel" text="Revenue" styleClass="section-label"/>
-                    <Label fx:id="revenueMonthLabel" text="₱10" styleClass="revenue-total"/>
-                    <Label fx:id="revenuePeriodLabel" text="This month" styleClass="page-subtitle"/>
-                    <HBox spacing="8.0">
-                        <Label fx:id="revenueTodayLabel" text="Today ₱10" styleClass="revenue-chip"/>
-                        <Label fx:id="revenueWeekLabel" text="This week ₱10" styleClass="revenue-chip"/>
-                    </HBox>
-                    <Label fx:id="rentalsCountLabel" text="" styleClass="page-subtitle">
-                        <VBox.margin><Insets top="6.0"/></VBox.margin>
-                    </Label>
+                    <VBox styleClass="stat-card" spacing="6.0" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
+                        <Label fx:id="revenueTitleLabel" text="Revenue" styleClass="section-label"/>
+                        <Label fx:id="revenueMonthLabel" text="₱10" styleClass="revenue-total"/>
+                        <Label fx:id="revenuePeriodLabel" text="This month" styleClass="page-subtitle"/>
+                        <HBox spacing="8.0">
+                            <Label fx:id="revenueTodayLabel" text="Today ₱10" styleClass="revenue-chip"/>
+                            <Label fx:id="revenueWeekLabel" text="This week ₱10" styleClass="revenue-chip"/>
+                            <Label fx:id="revenueYearLabel" text="This year ₱10" styleClass="revenue-chip"/>
+                        </HBox>
+                        <Label fx:id="rentalsCountLabel" text="" styleClass="page-subtitle">
+                            <VBox.margin><Insets top="6.0"/></VBox.margin>
+                        </Label>
+                    </VBox>
+
+                    <VBox styleClass="stat-card" spacing="6.0" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
+                        <Label text="Due today and overdue" styleClass="section-label"/>
+                        <VBox fx:id="dueListContainer" spacing="6.0" VBox.vgrow="ALWAYS"/>
+                    </VBox>
+
+                </HBox>
+
+                <!-- Charts -->
+                <HBox spacing="12.0">
+                    <VBox styleClass="stat-card" spacing="6.0" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
+                        <Label text="Fleet status" styleClass="section-label"/>
+                        <PieChart fx:id="fleetChart" animated="false" labelsVisible="false" legendSide="BOTTOM"
+                                  minHeight="270.0" prefHeight="270.0"/>
+                    </VBox>
+
+                    <VBox styleClass="stat-card" spacing="6.0" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
+                        <Label fx:id="revenueChartTitleLabel" text="Revenue - last 7 days" styleClass="section-label"/>
+                        <BarChart fx:id="revenueChart" animated="false" legendVisible="false"
+                                  minHeight="270.0" prefHeight="270.0">
+                            <xAxis><CategoryAxis/></xAxis>
+                            <yAxis><NumberAxis/></yAxis>
+                        </BarChart>
+                    </VBox>
+
+                    <VBox styleClass="stat-card" spacing="6.0" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
+                        <Label fx:id="monthlyChartTitleLabel" text="Rentals per month" styleClass="section-label"/>
+                        <LineChart fx:id="monthlyChart" animated="false" legendVisible="false"
+                                   minHeight="270.0" prefHeight="270.0">
+                            <xAxis><CategoryAxis/></xAxis>
+                            <yAxis><NumberAxis/></yAxis>
+                        </LineChart>
+                    </VBox>
+                </HBox>
+
+                <!-- Revenue for the whole year, month by month -->
+                <VBox styleClass="stat-card" spacing="6.0">
+                    <Label fx:id="yearChartTitleLabel" text="Revenue by month" styleClass="section-label"/>
+                    <BarChart fx:id="yearRevenueChart" animated="false" legendVisible="false"
+                              minHeight="260.0" prefHeight="260.0">
+                        <xAxis><CategoryAxis/></xAxis>
+                        <yAxis><NumberAxis/></yAxis>
+                    </BarChart>
                 </VBox>
-
-                <VBox styleClass="stat-card" spacing="6.0" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
-                    <Label text="Due today and overdue" styleClass="section-label"/>
-                    <VBox fx:id="dueListContainer" spacing="6.0" VBox.vgrow="ALWAYS"/>
-                </VBox>
-
-            </HBox>
-        </VBox>
+            </VBox>
+        </ScrollPane>
     </center>
 </BorderPane>

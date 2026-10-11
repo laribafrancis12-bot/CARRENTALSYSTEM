@@ -2,9 +2,7 @@ package com.carrentalsystem.carsystem;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -31,11 +29,16 @@ public class AccountsController {
     @FXML private TextField newUsernameField;
     @FXML private PasswordField newPasswordField;
     @FXML private PasswordField confirmPasswordField;
+    @FXML private Label newUsernameErrorLabel;
+    @FXML private Label newPasswordErrorLabel;
+    @FXML private Label confirmPasswordErrorLabel;
     @FXML private Label addStaffMessageLabel;
 
     @FXML private Label changePasswordTitleLabel;
     @FXML private PasswordField changePasswordField;
     @FXML private PasswordField confirmChangePasswordField;
+    @FXML private Label changePasswordErrorLabel;
+    @FXML private Label confirmChangePasswordErrorLabel;
     @FXML private Label changePasswordMessageLabel;
 
     /** Which account the change-password popup is currently targeting. */
@@ -48,14 +51,41 @@ public class AccountsController {
             Platform.runLater(() -> switchScene("dashboard-view.fxml", "Car Rental System - Dashboard"));
             return;
         }
+
+        // Warnings are written in code and appear right under the field that has the problem.
+        FormValidation.live(newUsernameField, newUsernameErrorLabel,
+                c -> FormValidation.username(newUsernameField.getText(), c));
+        FormValidation.live(newPasswordField, newPasswordErrorLabel,
+                c -> FormValidation.password(newPasswordField.getText(), c));
+        FormValidation.live(confirmPasswordField, confirmPasswordErrorLabel,
+                c -> FormValidation.confirmPassword(newPasswordField.getText(), confirmPasswordField.getText(), c));
+        newPasswordField.textProperty().addListener((o, a, b) -> {
+            if (!confirmPasswordField.getText().isEmpty()) {
+                FormValidation.show(confirmPasswordField, confirmPasswordErrorLabel,
+                        FormValidation.confirmPassword(b, confirmPasswordField.getText(), true));
+            }
+        });
+
+        FormValidation.live(changePasswordField, changePasswordErrorLabel,
+                c -> FormValidation.password(changePasswordField.getText(), c));
+        FormValidation.live(confirmChangePasswordField, confirmChangePasswordErrorLabel,
+                c -> FormValidation.confirmPassword(changePasswordField.getText(), confirmChangePasswordField.getText(), c));
+        changePasswordField.textProperty().addListener((o, a, b) -> {
+            if (!confirmChangePasswordField.getText().isEmpty()) {
+                FormValidation.show(confirmChangePasswordField, confirmChangePasswordErrorLabel,
+                        FormValidation.confirmPassword(b, confirmChangePasswordField.getText(), true));
+            }
+        });
+
         loadAccounts();
     }
 
     private void loadAccounts() {
         accountListContainer.getChildren().clear();
 
-        String sql = "SELECT username, role FROM users ORDER BY role DESC, username ASC";
-        int count = 0;
+        String sql = "SELECT username, role, active FROM users ORDER BY role DESC, active DESC, username ASC";
+        int activeStaff = 0;
+        int inactiveStaff = 0;
 
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
@@ -64,46 +94,68 @@ public class AccountsController {
             while (rs.next()) {
                 String username = rs.getString("username");
                 String role = rs.getString("role");
+                boolean active = rs.getBoolean("active");
                 if ("staff".equalsIgnoreCase(role)) {
-                    count++;
+                    if (active) {
+                        activeStaff++;
+                    } else {
+                        inactiveStaff++;
+                    }
                 }
-                accountListContainer.getChildren().add(buildAccountRow(username, role));
+                accountListContainer.getChildren().add(buildAccountRow(username, role, active));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            showInfo("Error", "Could not load the accounts. Check the database connection.");
         }
 
-        countLabel.setText(count + " staff account" + (count == 1 ? "" : "s"));
+        countLabel.setText(activeStaff + " active staff account" + (activeStaff == 1 ? "" : "s")
+                + (inactiveStaff > 0 ? " \u00b7 " + inactiveStaff + " inactive" : ""));
     }
 
-    private HBox buildAccountRow(String username, String role) {
+    private HBox buildAccountRow(String username, String role, boolean active) {
         Label nameLabel = new Label(username);
         nameLabel.getStyleClass().add("due-name");
 
         Label roleBadge = new Label(role.substring(0, 1).toUpperCase() + role.substring(1));
         roleBadge.getStyleClass().add("admin".equalsIgnoreCase(role) ? "badge-blue" : "badge-green");
 
-        VBox info = new VBox(4, nameLabel, roleBadge);
+        HBox badges = new HBox(6, roleBadge);
+        if (!active) {
+            Label inactiveBadge = new Label("Inactive");
+            inactiveBadge.getStyleClass().add("badge-gray");
+            badges.getChildren().add(inactiveBadge);
+            nameLabel.setOpacity(0.55);
+        }
+
+        VBox info = new VBox(4, nameLabel, badges);
         HBox.setHgrow(info, Priority.ALWAYS);
 
         HBox row = new HBox(10, info);
         row.getStyleClass().add("due-card");
         row.setAlignment(Pos.CENTER_LEFT);
 
-        // The owner's own admin account can't be edited or deleted from this screen.
+        // The owner's own admin account can't be edited or deactivated from this screen.
         boolean isSelf = username.equalsIgnoreCase(Session.username);
         boolean isAdminAccount = "admin".equalsIgnoreCase(role);
 
         if (!isSelf && !isAdminAccount) {
-            Button changePwBtn = new Button("Change password");
-            changePwBtn.getStyleClass().add("ghost-button");
-            changePwBtn.setOnAction(e -> openChangePassword(username));
+            if (active) {
+                Button changePwBtn = new Button("Change password");
+                changePwBtn.getStyleClass().add("ghost-button");
+                changePwBtn.setOnAction(e -> openChangePassword(username));
 
-            Button deleteBtn = new Button("Delete");
-            deleteBtn.getStyleClass().add("ghost-button");
-            deleteBtn.setOnAction(e -> confirmAndDelete(username));
+                Button deactivateBtn = new Button("Deactivate");
+                deactivateBtn.getStyleClass().add("ghost-button");
+                deactivateBtn.setOnAction(e -> confirmAndDeactivate(username));
 
-            row.getChildren().addAll(changePwBtn, deleteBtn);
+                row.getChildren().addAll(changePwBtn, deactivateBtn);
+            } else {
+                Button activateBtn = new Button("Activate");
+                activateBtn.getStyleClass().add("ghost-button");
+                activateBtn.setOnAction(e -> setActive(username, true));
+                row.getChildren().add(activateBtn);
+            }
         } else if (isSelf) {
             Label note = new Label("This is you");
             note.getStyleClass().add("due-detail");
@@ -128,7 +180,7 @@ public class AccountsController {
         newUsernameField.clear();
         newPasswordField.clear();
         confirmPasswordField.clear();
-        addStaffMessageLabel.setText("");
+        clearAddStaffErrors();
         addStaffOverlay.setVisible(true);
         addStaffOverlay.setManaged(true);
     }
@@ -139,32 +191,48 @@ public class AccountsController {
         addStaffOverlay.setManaged(false);
     }
 
+    private void clearAddStaffErrors() {
+        FormValidation.clear(newUsernameField, newUsernameErrorLabel);
+        FormValidation.clear(newPasswordField, newPasswordErrorLabel);
+        FormValidation.clear(confirmPasswordField, confirmPasswordErrorLabel);
+        addStaffMessageLabel.setText("");
+    }
+
     @FXML
     private void onCreateStaffClick() {
         String username = newUsernameField.getText().trim();
         String password = newPasswordField.getText();
         String confirm = confirmPasswordField.getText();
 
-        if (username.isEmpty() || password.isEmpty()) {
-            addStaffMessageLabel.setText("Fill in a username and password.");
+        boolean ok = FormValidation.show(newUsernameField, newUsernameErrorLabel, FormValidation.username(username, true));
+        ok &= FormValidation.show(newPasswordField, newPasswordErrorLabel, FormValidation.password(password, true));
+        ok &= FormValidation.show(confirmPasswordField, confirmPasswordErrorLabel,
+                FormValidation.confirmPassword(password, confirm, true));
+        if (!ok) {
             return;
         }
-        if (password.length() < 6) {
-            addStaffMessageLabel.setText("Password must be at least 6 characters.");
-            return;
-        }
-        if (!password.equals(confirm)) {
-            addStaffMessageLabel.setText("Passwords don't match.");
-            return;
-        }
+        addStaffMessageLabel.setText("");
 
-        String sql = "INSERT INTO users (username, password, role) VALUES (?, ?, 'staff')";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            // Checked here in code, so the message is ours and sits under the username field.
+            try (PreparedStatement check = conn.prepareStatement(
+                    "SELECT 1 FROM users WHERE LOWER(username) = LOWER(?)")) {
+                check.setString(1, username);
+                try (ResultSet rs = check.executeQuery()) {
+                    if (rs.next()) {
+                        FormValidation.show(newUsernameField, newUsernameErrorLabel,
+                                "That username is already taken. Choose a different one.");
+                        return;
+                    }
+                }
+            }
 
-            stmt.setString(1, username);
-            stmt.setString(2, password);
-            stmt.executeUpdate();
+            try (PreparedStatement stmt = conn.prepareStatement(
+                    "INSERT INTO users (username, password, role) VALUES (?, ?, 'staff')")) {
+                stmt.setString(1, username);
+                stmt.setString(2, password);
+                stmt.executeUpdate();
+            }
 
             onCancelAddStaff();
             loadAccounts();
@@ -172,7 +240,7 @@ public class AccountsController {
 
         } catch (SQLException e) {
             e.printStackTrace();
-            addStaffMessageLabel.setText("That username may already exist.");
+            addStaffMessageLabel.setText("Could not create the account. Please try again.");
         }
     }
 
@@ -183,6 +251,8 @@ public class AccountsController {
         changePasswordTitleLabel.setText("Change password \u00b7 " + username);
         changePasswordField.clear();
         confirmChangePasswordField.clear();
+        FormValidation.clear(changePasswordField, changePasswordErrorLabel);
+        FormValidation.clear(confirmChangePasswordField, confirmChangePasswordErrorLabel);
         changePasswordMessageLabel.setText("");
         changePasswordOverlay.setVisible(true);
         changePasswordOverlay.setManaged(true);
@@ -199,18 +269,14 @@ public class AccountsController {
         String newPassword = changePasswordField.getText();
         String confirmPassword = confirmChangePasswordField.getText();
 
-        if (newPassword.isEmpty() || confirmPassword.isEmpty()) {
-            changePasswordMessageLabel.setText("Enter and confirm the new password.");
+        boolean ok = FormValidation.show(changePasswordField, changePasswordErrorLabel,
+                FormValidation.password(newPassword, true));
+        ok &= FormValidation.show(confirmChangePasswordField, confirmChangePasswordErrorLabel,
+                FormValidation.confirmPassword(newPassword, confirmPassword, true));
+        if (!ok) {
             return;
         }
-        if (newPassword.length() < 6) {
-            changePasswordMessageLabel.setText("Password must be at least 6 characters.");
-            return;
-        }
-        if (!newPassword.equals(confirmPassword)) {
-            changePasswordMessageLabel.setText("Passwords don't match.");
-            return;
-        }
+        changePasswordMessageLabel.setText("");
 
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                 "Are you sure you want to change the password for \"" + targetUsername + "\"?",
@@ -236,43 +302,46 @@ public class AccountsController {
 
         } catch (SQLException e) {
             e.printStackTrace();
-            changePasswordMessageLabel.setText("Could not update the password.");
+            changePasswordMessageLabel.setText("Could not update the password. Please try again.");
         }
     }
 
-    // ---- Delete ----
+    // ---- Deactivate / activate (soft delete) ----
 
-    private void confirmAndDelete(String username) {
+    private void confirmAndDeactivate(String username) {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
-                "Are you sure you want to delete this account?\n\n"
-                        + "Username: " + username + "\n"
-                        + "This cannot be undone.",
+                "Deactivate the account \"" + username + "\"?\n\n"
+                        + "They will no longer be able to log in. Their rental records are kept, "
+                        + "and you can activate the account again at any time.",
                 ButtonType.YES, ButtonType.NO);
         confirm.setHeaderText(null);
-        confirm.setTitle("Delete account");
+        confirm.setTitle("Deactivate account");
         Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.YES) {
-            deleteAccount(username);
+            setActive(username, false);
         }
     }
 
-    private void deleteAccount(String username) {
-        // "AND role = 'staff'" is a safety net so an admin account can never be deleted from here.
-        String sql = "DELETE FROM users WHERE username = ? AND role = 'staff'";
+    private void setActive(String username, boolean active) {
+        // "AND role = 'staff'" is a safety net so an admin account can never be changed from here.
+        String sql = "UPDATE users SET active = ? WHERE username = ? AND role = 'staff'";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, username);
-            int deleted = stmt.executeUpdate();
+            stmt.setBoolean(1, active);
+            stmt.setString(2, username);
+            int changed = stmt.executeUpdate();
             loadAccounts();
 
-            if (deleted > 0) {
-                showInfo("Account deleted", "The account \"" + username + "\" was deleted.");
+            if (changed > 0) {
+                showInfo(active ? "Account activated" : "Account deactivated",
+                        active ? "The account \"" + username + "\" can log in again."
+                                : "The account \"" + username + "\" was deactivated.");
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
-            showInfo("Error", "Could not delete the account. Try again.");
+            showInfo("Error", "Could not update the account. Please try again.");
         }
     }
 
@@ -294,14 +363,26 @@ public class AccountsController {
     }
 
     @FXML
+    private void onHistoryClick() {
+        switchScene("history-view.fxml", "Car Rental System - History");
+    }
+
+    @FXML
     private void onAccountsClick() {
         // Already here
     }
 
     @FXML
     private void onLogoutClick() {
-        Session.clear();
-        goToLogin();
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Are you sure you want to log out?", ButtonType.YES, ButtonType.NO);
+        confirm.setHeaderText(null);
+        confirm.setTitle("Log out");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.YES) {
+            Session.clear();
+            goToLogin();
+        }
     }
 
     private void switchScene(String fxmlFile, String title) {

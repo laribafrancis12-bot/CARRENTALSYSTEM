@@ -4,12 +4,18 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.Separator;
+import javafx.scene.layout.GridPane;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -29,9 +35,12 @@ import java.util.Optional;
 
 public class RentalsController {
 
+    /** The only payment method: the field on the form is fixed and cannot be changed. */
+    private static final String PAYMENT_METHOD = "Cash";
+
     private static final DateTimeFormatter TABLE_DATE = DateTimeFormatter.ofPattern("MMM d, yyyy");
 
-    /** Which pill is selected: All, Active, Due or Returned. */
+    /** Which pill is selected: All, Active or Due. (Returned rentals live on the History screen.) */
     private String currentFilter = "All";
 
     @FXML private Button vehiclesBtn;
@@ -43,7 +52,6 @@ public class RentalsController {
     @FXML private Button filterAllBtn;
     @FXML private Button filterActiveBtn;
     @FXML private Button filterDueBtn;
-    @FXML private Button filterReturnedBtn;
 
     @FXML private TableView<RentalRow> rentalTable;
     @FXML private TableColumn<RentalRow, Integer> idCol;
@@ -62,10 +70,23 @@ public class RentalsController {
     @FXML private ComboBox<VehicleOption> vehicleCombo;
     @FXML private DatePicker rentDatePicker;
     @FXML private DatePicker returnDatePicker;
-    @FXML private ComboBox<String> paymentCombo;
+    @FXML private TextField paymentField;   // always "Cash"
     @FXML private Label totalBreakdownLabel;
     @FXML private Label totalAmountLabel;
     @FXML private Label formMessageLabel;
+    @FXML private ScrollPane formScroll;
+    @FXML private TextField addressField;
+    @FXML private ComboBox<String> idTypeCombo;
+    @FXML private TextField idNumberField;
+    @FXML private Label idTypeErrorLabel;
+    @FXML private Label idNumberErrorLabel;
+    @FXML private Label nameErrorLabel;
+    @FXML private Label contactErrorLabel;
+    @FXML private Label addressErrorLabel;
+    @FXML private Label licenseErrorLabel;
+    @FXML private Label vehicleErrorLabel;
+    @FXML private Label rentDateErrorLabel;
+    @FXML private Label returnDateErrorLabel;
 
     @FXML
     public void initialize() {
@@ -75,8 +96,6 @@ public class RentalsController {
         accountsBtn.setVisible(admin);
         accountsBtn.setManaged(admin);
 
-        paymentCombo.setItems(FXCollections.observableArrayList("Cash"));
-        paymentCombo.getSelectionModel().selectFirst();
 
         rentDatePicker.setValue(LocalDate.now());
         returnDatePicker.setValue(LocalDate.now().plusDays(1));
@@ -87,6 +106,48 @@ public class RentalsController {
 
         // The search box was never connected before; now the board filters as you type.
         searchField.textProperty().addListener((o, a, b) -> loadBoard(b));
+
+        // Warnings are written in code and appear right under the field that has the problem.
+        FormValidation.live(customerNameField, nameErrorLabel,
+                c -> FormValidation.personName(customerNameField.getText(), c));
+        FormValidation.live(contactField, contactErrorLabel,
+                c -> FormValidation.phone(contactField.getText(), c));
+        FormValidation.live(addressField, addressErrorLabel,
+                c -> FormValidation.address(addressField.getText(), c));
+        FormValidation.live(licenseField, licenseErrorLabel,
+                c -> FormValidation.license(licenseField.getText(), c));
+        vehicleCombo.valueProperty().addListener((o, a, b) -> {
+            if (b != null) FormValidation.clear(vehicleCombo, vehicleErrorLabel);
+        });
+        rentDatePicker.valueProperty().addListener((o, a, b) -> {
+            // If the return date is no longer after the new rent date, move it to the next day.
+            LocalDate ret = returnDatePicker.getValue();
+            if (b != null && (ret == null || !ret.isAfter(b))) {
+                returnDatePicker.setValue(b.plusDays(1));
+            }
+            validateDates();
+        });
+        returnDatePicker.valueProperty().addListener((o, a, b) -> validateDates());
+
+        // Wrong characters can't be typed at all: letters/spaces for the name, a fixed format for the license.
+        FormValidation.restrictName(customerNameField, nameErrorLabel);
+        FormValidation.restrictAddress(addressField, addressErrorLabel);
+        FormValidation.restrictLicense(licenseField, licenseErrorLabel);
+
+        idTypeCombo.setItems(FXCollections.observableArrayList(
+                "Passport", "UMID", "PhilSys National ID", "SSS ID", "PRC ID", "Postal ID", "Voter's ID", "PhilHealth ID"));
+        idTypeCombo.valueProperty().addListener((o, a, b) -> {
+            if (b != null) FormValidation.clear(idTypeCombo, idTypeErrorLabel);
+        });
+        FormValidation.live(idNumberField, idNumberErrorLabel,
+                c -> FormValidation.validIdNumber(idNumberField.getText(), c));
+        FormValidation.restrictIdNumber(idNumberField, idNumberErrorLabel);
+
+        paymentField.setText(PAYMENT_METHOD);
+        paymentField.setEditable(false);
+        paymentField.setFocusTraversable(false);
+
+        setUpDatePickers();
 
         setUpTable();
         DatabaseConnection.refreshOverdue();
@@ -220,7 +281,7 @@ public class RentalsController {
 
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
                 row.vehicle + "\n" + timing + "\n\n"
-                        + "The rental will be marked as Returned and the vehicle will be available again. "
+                        + "The rental will move to History and the vehicle will be available again. "
                         + "The amount charged stays \u20b1" + String.format("%,.0f", row.total) + ".",
                 ButtonType.YES, ButtonType.NO);
         confirm.setHeaderText(null);
@@ -259,7 +320,8 @@ public class RentalsController {
                         "FROM rentals r " +
                         "JOIN customers c ON r.customer_id = c.customer_id " +
                         "JOIN vehicles v ON r.vehicle_id = v.vehicle_id " +
-                        "WHERE (c.full_name LIKE ? OR v.model LIKE ? OR v.plate_no LIKE ?) " +
+                        "WHERE (r.status IS NULL OR r.status <> 'Returned') " +
+                        "AND (c.full_name LIKE ? OR v.model LIKE ? OR v.plate_no LIKE ?) " +
                         "ORDER BY r.rent_date DESC, r.rental_id DESC";
 
         List<RentalRow> all = new ArrayList<>();
@@ -305,15 +367,14 @@ public class RentalsController {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            countLabel.setText("Could not load rentals: " + e.getMessage());
+            countLabel.setText("Could not load rentals. Check the database connection.");
             return;
         }
 
-        int active = 0, due = 0, returned = 0;
+        int active = 0, due = 0;
         ObservableList<RentalRow> visible = FXCollections.observableArrayList();
         for (RentalRow row : all) {
             switch (row.status) {
-                case "Returned" -> returned++;
                 case "Overdue", "Due today" -> due++;
                 default -> active++;
             }
@@ -326,7 +387,6 @@ public class RentalsController {
         filterAllBtn.setText("All (" + all.size() + ")");
         filterActiveBtn.setText("Active (" + active + ")");
         filterDueBtn.setText("Due or overdue (" + due + ")");
-        filterReturnedBtn.setText("Returned (" + returned + ")");
         countLabel.setText((active + due) + " cars currently out");
     }
 
@@ -334,7 +394,6 @@ public class RentalsController {
         return switch (currentFilter) {
             case "Active" -> row.status.equals("Active");
             case "Due" -> row.status.equals("Overdue") || row.status.equals("Due today");
-            case "Returned" -> row.status.equals("Returned");
             default -> true;
         };
     }
@@ -344,14 +403,12 @@ public class RentalsController {
     @FXML private void onFilterAll() { setFilter("All", filterAllBtn); }
     @FXML private void onFilterActive() { setFilter("Active", filterActiveBtn); }
     @FXML private void onFilterDue() { setFilter("Due", filterDueBtn); }
-    @FXML private void onFilterReturned() { setFilter("Returned", filterReturnedBtn); }
 
     private void setFilter(String filter, Button activeBtn) {
         currentFilter = filter;
         filterAllBtn.getStyleClass().setAll("pill");
         filterActiveBtn.getStyleClass().setAll("pill");
         filterDueBtn.getStyleClass().setAll("pill");
-        filterReturnedBtn.getStyleClass().setAll("pill");
         activeBtn.getStyleClass().setAll("pill-active");
         loadBoard(searchField.getText());
     }
@@ -380,10 +437,12 @@ public class RentalsController {
         customerNameField.clear();
         contactField.clear();
         licenseField.clear();
+        addressField.clear();
+        idTypeCombo.getSelectionModel().clearSelection();
+        idNumberField.clear();
         rentDatePicker.setValue(LocalDate.now());
         returnDatePicker.setValue(LocalDate.now().plusDays(1));
-        paymentCombo.getSelectionModel().selectFirst();
-        formMessageLabel.setText("");
+        clearErrors();
         loadAvailableVehicles();   // after clearing the message, so "no vehicles" can show
         newRentalOverlay.setVisible(true);
         newRentalOverlay.setManaged(true);
@@ -414,7 +473,7 @@ public class RentalsController {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            formMessageLabel.setText("Could not load vehicles: " + e.getMessage());
+            formMessageLabel.setText("Could not load the vehicles. Check the database connection.");
         }
         vehicleCombo.setItems(options);
         vehicleCombo.getSelectionModel().clearSelection();
@@ -428,19 +487,42 @@ public class RentalsController {
     private void onConfirmRentalClick() {
         String name = customerNameField.getText().trim();
         String contact = contactField.getText().trim();
-        String license = licenseField.getText().trim();
+        String address = addressField.getText().trim();
+        String license = licenseField.getText().trim().toUpperCase();
+        String idType = idTypeCombo.getValue();
+        String idNumber = idNumberField.getText().trim().toUpperCase();
         VehicleOption vehicle = vehicleCombo.getValue();
         LocalDate rent = rentDatePicker.getValue();
         LocalDate ret = returnDatePicker.getValue();
-        String payment = paymentCombo.getValue();
+        String payment = PAYMENT_METHOD;
 
-        if (name.isEmpty() || vehicle == null || rent == null || ret == null || !ret.isAfter(rent)) {
-            formMessageLabel.setText("Fill in the customer name, vehicle, and valid dates.");
+        // Check every field so all the problems show at once, each under its own field.
+        boolean customerOk = FormValidation.show(customerNameField, nameErrorLabel, FormValidation.personName(name, true));
+        customerOk &= FormValidation.show(contactField, contactErrorLabel, FormValidation.phone(contact, true));
+        customerOk &= FormValidation.show(addressField, addressErrorLabel, FormValidation.address(address, true));
+        customerOk &= FormValidation.show(licenseField, licenseErrorLabel, FormValidation.license(license, true));
+        customerOk &= FormValidation.show(idTypeCombo, idTypeErrorLabel,
+                idType == null ? "Select the type of valid ID." : null);
+        customerOk &= FormValidation.show(idNumberField, idNumberErrorLabel, FormValidation.validIdNumber(idNumber, true));
+        boolean rentalOk = FormValidation.show(vehicleCombo, vehicleErrorLabel,
+                vehicle == null ? "Select an available vehicle." : null);
+        rentalOk &= validateDates();
+
+        if (!customerOk || !rentalOk) {
+            formMessageLabel.setText("Please fix the fields marked in red.");
+            formScroll.setVvalue(customerOk ? 1.0 : 0.0);
             return;
         }
+        formMessageLabel.setText("");
 
         long days = ChronoUnit.DAYS.between(rent, ret);
         double total = days * vehicle.rate;
+
+        // "Are you sure?" step: nothing is saved until the details are confirmed.
+        if (!confirmRental(name, contact, address, license, idType, idNumber, vehicle, rent, ret, days, total)) {
+            return;
+        }
+
         int rentalId;
 
         try (Connection conn = DatabaseConnection.getConnection()) {
@@ -460,11 +542,14 @@ public class RentalsController {
 
                 // 2. Customer
                 int customerId;
-                String customerSql = "INSERT INTO customers (full_name, contact_no, license_no) VALUES (?, ?, ?)";
+                String customerSql = "INSERT INTO customers (full_name, contact_no, license_no, address, id_type, id_number) VALUES (?, ?, ?, ?, ?, ?)";
                 try (PreparedStatement stmt = conn.prepareStatement(customerSql, Statement.RETURN_GENERATED_KEYS)) {
                     stmt.setString(1, name);
                     stmt.setString(2, contact);
                     stmt.setString(3, license);
+                    stmt.setString(4, address);
+                    stmt.setString(5, idType);
+                    stmt.setString(6, idNumber);
                     stmt.executeUpdate();
                     try (ResultSet keys = stmt.getGeneratedKeys()) {
                         keys.next();
@@ -498,13 +583,132 @@ public class RentalsController {
 
         } catch (SQLException e) {
             e.printStackTrace();
-            // Show the real reason so a schema problem is obvious instead of a generic message.
-            formMessageLabel.setText("Could not save this rental: " + e.getMessage());
+            formMessageLabel.setText("Could not save this rental. Please try again.");
             return;
         }
 
         onCancelNewRental();
         openReceipt(rentalId);
+    }
+
+    /** Summary shown before saving. Returns true only when the person confirms and pays. */
+    private boolean confirmRental(String name, String contact, String address, String license,
+                                  String idType, String idNumber, VehicleOption vehicle,
+                                  LocalDate rent, LocalDate ret, long days, double total) {
+        GridPane grid = new GridPane();
+        grid.setHgap(20);
+        grid.setVgap(7);
+        grid.setPadding(new Insets(6, 4, 4, 4));
+
+        int row = 0;
+        row = addSummaryRow(grid, row, "Customer", name);
+        row = addSummaryRow(grid, row, "Contact", contact);
+        row = addSummaryRow(grid, row, "Address", address);
+        row = addSummaryRow(grid, row, "Driver's license", license);
+        row = addSummaryRow(grid, row, "Valid ID", idType + " \u00b7 " + idNumber);
+        row = addSummaryRow(grid, row, "Vehicle", vehicle.model + " \u00b7 " + vehicle.plate);
+        row = addSummaryRow(grid, row, "Rental period", rent.format(TABLE_DATE) + "  to  " + ret.format(TABLE_DATE));
+        row = addSummaryRow(grid, row, "Duration", days + (days == 1 ? " day" : " days")
+                + " \u00d7 \u20b1" + String.format("%,.0f", vehicle.rate));
+        row = addSummaryRow(grid, row, "Payment method", PAYMENT_METHOD);
+
+        Separator line = new Separator();
+        grid.add(line, 0, row++, 2, 1);
+
+        Label totalKey = new Label("Total amount due");
+        totalKey.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        Label totalValue = new Label("\u20b1" + String.format("%,.2f", total));
+        totalValue.setStyle("-fx-font-weight: bold; -fx-font-size: 18px;");
+        grid.add(totalKey, 0, row);
+        grid.add(totalValue, 1, row++);
+
+        Label note = new Label("By confirming, you acknowledge that the cash payment shown above has been received "
+                + "and that the vehicle is released to the customer. This will be recorded and the receipt will open.");
+        note.setWrapText(true);
+        note.setMaxWidth(430);
+        note.setStyle("-fx-text-fill: #6B6E78; -fx-font-size: 11.5px;");
+        grid.add(note, 0, row, 2, 1);
+
+        Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
+        dialog.initOwner(customerNameField.getScene().getWindow());
+        dialog.setTitle("Confirm rental");
+        dialog.setHeaderText("Please review the rental details before confirming");
+        dialog.getDialogPane().setContent(grid);
+
+        ButtonType confirmBtn = new ButtonType("Confirm and pay", ButtonBar.ButtonData.OK_DONE);
+        ButtonType backBtn = new ButtonType("Go back", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getButtonTypes().setAll(confirmBtn, backBtn);
+
+        Optional<ButtonType> result = dialog.showAndWait();
+        return result.isPresent() && result.get() == confirmBtn;
+    }
+
+    private int addSummaryRow(GridPane grid, int row, String key, String value) {
+        Label keyLabel = new Label(key);
+        keyLabel.setStyle("-fx-text-fill: #6B6E78;");
+        Label valueLabel = new Label(value);
+        valueLabel.setWrapText(true);
+        valueLabel.setMaxWidth(320);
+        valueLabel.setStyle("-fx-font-weight: bold;");
+        grid.add(keyLabel, 0, row);
+        grid.add(valueLabel, 1, row);
+        return row + 1;
+    }
+
+    /**
+     * Past days are greyed out and can't be picked, so the rent date can't go back to a past
+     * month or year. The return date must be after the rent date. Dates are chosen from the
+     * calendar (clicking the field opens it), not typed.
+     */
+    private void setUpDatePickers() {
+        rentDatePicker.setDayCellFactory(picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate day, boolean empty) {
+                super.updateItem(day, empty);
+                boolean blocked = !empty && day != null && day.isBefore(LocalDate.now());
+                setDisable(blocked);
+                setStyle(blocked ? "-fx-opacity: 0.35;" : "");
+            }
+        });
+
+        returnDatePicker.setDayCellFactory(picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate day, boolean empty) {
+                super.updateItem(day, empty);
+                LocalDate rent = rentDatePicker.getValue();
+                LocalDate earliest = (rent == null || rent.isBefore(LocalDate.now()) ? LocalDate.now() : rent).plusDays(1);
+                boolean blocked = !empty && day != null && day.isBefore(earliest);
+                setDisable(blocked);
+                setStyle(blocked ? "-fx-opacity: 0.35;" : "");
+            }
+        });
+
+        for (DatePicker picker : new DatePicker[] { rentDatePicker, returnDatePicker }) {
+            picker.setEditable(false);
+            picker.getEditor().setOnMouseClicked(e -> picker.show());
+        }
+    }
+
+    /** Checks both dates and shows their messages under the date fields. */
+    private boolean validateDates() {
+        LocalDate rent = rentDatePicker.getValue();
+        LocalDate ret = returnDatePicker.getValue();
+        boolean rentOk = FormValidation.show(rentDatePicker, rentDateErrorLabel, FormValidation.rentDate(rent));
+        boolean retOk = FormValidation.show(returnDatePicker, returnDateErrorLabel, FormValidation.returnDate(rent, ret));
+        return rentOk && retOk;
+    }
+
+    private void clearErrors() {
+        FormValidation.clear(customerNameField, nameErrorLabel);
+        FormValidation.clear(contactField, contactErrorLabel);
+        FormValidation.clear(addressField, addressErrorLabel);
+        FormValidation.clear(licenseField, licenseErrorLabel);
+        FormValidation.clear(idTypeCombo, idTypeErrorLabel);
+        FormValidation.clear(idNumberField, idNumberErrorLabel);
+        FormValidation.clear(vehicleCombo, vehicleErrorLabel);
+        FormValidation.clear(rentDatePicker, rentDateErrorLabel);
+        FormValidation.clear(returnDatePicker, returnDateErrorLabel);
+        formMessageLabel.setText("");
     }
 
     private void openReceipt(int rentalId) {
@@ -516,7 +720,7 @@ public class RentalsController {
         } catch (IOException e) {
             e.printStackTrace();
             Alert error = new Alert(Alert.AlertType.ERROR,
-                    "The rental was saved, but the receipt screen could not be opened:\n" + e.getMessage());
+                    "The rental was saved, but the receipt screen could not be opened.");
             error.setHeaderText(null);
             error.setTitle("Receipt");
             error.showAndWait();
@@ -538,6 +742,11 @@ public class RentalsController {
     @FXML
     private void onRentalsClick() {
         // Already here
+    }
+
+    @FXML
+    private void onHistoryClick() {
+        switchScene("history-view.fxml", "Car Rental System - History");
     }
 
     @FXML

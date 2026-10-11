@@ -25,6 +25,7 @@
                 <Button text="Dashboard" styleClass="rail-btn" maxWidth="Infinity" onAction="#onDashboardClick"/>
                 <Button text="Vehicles" styleClass="rail-btn" maxWidth="Infinity" onAction="#onVehiclesClick"/>
                 <Button text="Rentals" styleClass="rail-btn" maxWidth="Infinity" onAction="#onRentalsClick"/>
+                <Button text="History" styleClass="rail-btn" maxWidth="Infinity" onAction="#onHistoryClick"/>
                 <Button text="Accounts" styleClass="rail-btn-active" maxWidth="Infinity" onAction="#onAccountsClick"/>
                 <VBox VBox.vgrow="ALWAYS"/>
                 <Button text="Log out" styleClass="rail-btn" maxWidth="Infinity" onAction="#onLogoutClick"/>
@@ -51,7 +52,7 @@
 
     <!-- Add staff overlay -->
     <StackPane fx:id="addStaffOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="10.0" maxWidth="360.0" maxHeight="520.0">
+        <VBox styleClass="modal-card" spacing="10.0" maxWidth="380.0" maxHeight="640.0">
             <padding><Insets top="20.0" bottom="20.0" left="24.0" right="24.0"/></padding>
 
             <HBox alignment="CENTER_LEFT">
@@ -61,12 +62,15 @@
 
             <Label text="Username" styleClass="field-label"/>
             <TextField fx:id="newUsernameField" promptText="e.g. jcruz" styleClass="field-input"/>
+            <Label fx:id="newUsernameErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
 
             <Label text="Password" styleClass="field-label"/>
             <PasswordField fx:id="newPasswordField" promptText="Temporary password" styleClass="field-input"/>
+            <Label fx:id="newPasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
 
             <Label text="Confirm password" styleClass="field-label"/>
             <PasswordField fx:id="confirmPasswordField" promptText="Re-enter password" styleClass="field-input"/>
+            <Label fx:id="confirmPasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
 
             <Label fx:id="addStaffMessageLabel" styleClass="error-label" wrapText="true"/>
 
@@ -79,7 +83,7 @@
 
     <!-- Change password overlay -->
     <StackPane fx:id="changePasswordOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="10.0" maxWidth="340.0" maxHeight="480.0">
+        <VBox styleClass="modal-card" spacing="10.0" maxWidth="380.0" maxHeight="560.0">
             <padding><Insets top="20.0" bottom="20.0" left="24.0" right="24.0"/></padding>
 
             <HBox alignment="CENTER_LEFT">
@@ -89,9 +93,11 @@
 
             <Label text="New password" styleClass="field-label"/>
             <PasswordField fx:id="changePasswordField" promptText="New password" styleClass="field-input"/>
+            <Label fx:id="changePasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
 
             <Label text="Confirm password" styleClass="field-label"/>
             <PasswordField fx:id="confirmChangePasswordField" promptText="Re-enter new password" styleClass="field-input"/>
+            <Label fx:id="confirmChangePasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
 
             <Label fx:id="changePasswordMessageLabel" styleClass="error-label" wrapText="true"/>
 
