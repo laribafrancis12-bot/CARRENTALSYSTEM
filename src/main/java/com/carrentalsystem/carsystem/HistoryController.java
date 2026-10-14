@@ -4,6 +4,10 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import java.io.File;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -76,13 +80,13 @@ public class HistoryController {
         sizeColumn(idCol, 0.06, 72);
         sizeColumn(customerCol, 0.12, 110);
         sizeColumn(contactCol, 0.10, 100);
-        sizeColumn(addressCol, 0.15, 130);
-        sizeColumn(vehicleCol, 0.14, 130);
+        sizeColumn(addressCol, 0.12, 130);
+        sizeColumn(vehicleCol, 0.12, 130);
         sizeColumn(rentDateCol, 0.09, 95);
         sizeColumn(returnedOnCol, 0.09, 95);
         sizeColumn(timingCol, 0.10, 100);
         sizeColumn(totalCol, 0.07, 80);
-        sizeColumn(actionsCol, 0.08, 95);
+        sizeColumn(actionsCol, 0.13, 175);
 
         idCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().id));
         idCol.setCellFactory(col -> new TableCell<>() {
@@ -138,21 +142,40 @@ public class HistoryController {
         actionsCol.setSortable(false);
         actionsCol.setCellFactory(col -> new TableCell<>() {
             private final Button receiptBtn = new Button("Receipt");
+            private final Button viewIdBtn = new Button("View ID");
+            private final HBox box = new HBox(6, receiptBtn, viewIdBtn);
 
             {
                 receiptBtn.getStyleClass().addAll("ghost-button", "table-btn");
+                viewIdBtn.getStyleClass().addAll("ghost-button", "table-btn");
                 receiptBtn.setOnAction(e -> {
-                    int i = getIndex();
-                    if (i >= 0 && i < getTableView().getItems().size()) {
-                        openReceipt(getTableView().getItems().get(i).id);
-                    }
+                    HistoryRow row = rowAtIndex();
+                    if (row != null) openReceipt(row.id);
                 });
+                viewIdBtn.setOnAction(e -> {
+                    HistoryRow row = rowAtIndex();
+                    if (row != null) showIdPhoto(row);
+                });
+            }
+
+            private HistoryRow rowAtIndex() {
+                int i = getIndex();
+                return (i >= 0 && i < getTableView().getItems().size()) ? getTableView().getItems().get(i) : null;
             }
 
             @Override
             protected void updateItem(Void value, boolean empty) {
                 super.updateItem(value, empty);
-                setGraphic(empty ? null : receiptBtn);
+                HistoryRow row = empty ? null : rowAtIndex();
+                if (row == null) {
+                    setGraphic(null);
+                    return;
+                }
+                // Older rentals were made before ID photos were uploaded, so they have nothing to view.
+                boolean hasPhoto = row.idPhoto != null && !row.idPhoto.isBlank();
+                viewIdBtn.setVisible(hasPhoto);
+                viewIdBtn.setManaged(hasPhoto);
+                setGraphic(box);
             }
         });
     }
@@ -170,7 +193,7 @@ public class HistoryController {
 
     private void loadHistory(String search) {
         String sql =
-                "SELECT r.rental_id, c.full_name, c.contact_no, c.address, v.model, v.plate_no, " +
+                "SELECT r.rental_id, c.full_name, c.contact_no, c.address, c.id_type, c.id_photo, v.model, v.plate_no, " +
                         "r.rent_date, r.return_date, r.returned_on, r.total_amount " +
                         "FROM rentals r " +
                         "JOIN customers c ON r.customer_id = c.customer_id " +
@@ -218,7 +241,9 @@ public class HistoryController {
                             rs.getDate("rent_date").toLocalDate(),
                             returnedOn,
                             timing,
-                            rs.getDouble("total_amount")
+                            rs.getDouble("total_amount"),
+                            rs.getString("id_type"),
+                            rs.getString("id_photo")
                     ));
                 }
             }
@@ -230,6 +255,23 @@ public class HistoryController {
 
         historyTable.setItems(rows);
         countLabel.setText(rows.size() + " completed rental" + (rows.size() == 1 ? "" : "s"));
+    }
+
+    /** Shows the photo of the customer's valid ID. */
+    private void showIdPhoto(HistoryRow row) {
+        File file = IdPhotoStorage.file(row.idPhoto);
+        Alert dialog;
+        if (file == null || !file.exists()) {
+            dialog = new Alert(Alert.AlertType.WARNING,
+                    "The ID photo could not be found in the valid_ids folder.", ButtonType.OK);
+        } else {
+            dialog = new Alert(Alert.AlertType.INFORMATION, "", ButtonType.CLOSE);
+            dialog.getDialogPane().setContent(new ImageView(new Image(file.toURI().toString(), 640, 440, true, true, false)));
+        }
+        dialog.initOwner(countLabel.getScene().getWindow());
+        dialog.setTitle("Valid ID photo");
+        dialog.setHeaderText(row.customer + " \u00b7 " + (row.idType == null ? "Valid ID" : row.idType));
+        dialog.showAndWait();
     }
 
     private void openReceipt(int rentalId) {
@@ -313,9 +355,12 @@ public class HistoryController {
         final LocalDate returnedOn;   // null for records returned before this date was saved
         final String timing;          // Early, On time, Late (n days) or empty
         final double total;
+        final String idType;
+        final String idPhoto;     // file name in the valid_ids folder, or null
 
         HistoryRow(int id, String customer, String contact, String address, String vehicle,
-                   LocalDate rentDate, LocalDate returnedOn, String timing, double total) {
+                   LocalDate rentDate, LocalDate returnedOn, String timing, double total,
+                   String idType, String idPhoto) {
             this.id = id;
             this.customer = customer;
             this.contact = contact;
@@ -325,6 +370,8 @@ public class HistoryController {
             this.returnedOn = returnedOn;
             this.timing = timing;
             this.total = total;
+            this.idType = idType;
+            this.idPhoto = idPhoto;
         }
     }
 }

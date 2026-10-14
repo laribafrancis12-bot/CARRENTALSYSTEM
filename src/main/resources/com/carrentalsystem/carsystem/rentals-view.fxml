@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
@@ -107,18 +108,20 @@
                         <TextField fx:id="licenseField" promptText="N01-23-456789" prefHeight="38.0" styleClass="field-input"/>
                         <Label fx:id="licenseErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                     </VBox>
-                    <HBox spacing="14.0">
-                        <VBox HBox.hgrow="ALWAYS" minWidth="160.0" prefWidth="0.0" spacing="4.0">
-                            <Label text="Valid ID type" styleClass="field-label"/>
-                            <ComboBox fx:id="idTypeCombo" promptText="Select ID type" maxWidth="Infinity" prefHeight="38.0" styleClass="field-input"/>
-                            <Label fx:id="idTypeErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
-                        </VBox>
-                        <VBox HBox.hgrow="ALWAYS" minWidth="160.0" prefWidth="0.0" spacing="4.0">
-                            <Label text="Valid ID number" styleClass="field-label"/>
-                            <TextField fx:id="idNumberField" promptText="e.g. 0123-4567890-1" prefHeight="38.0" styleClass="field-input"/>
-                            <Label fx:id="idNumberErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
-                        </VBox>
-                    </HBox>
+                    <VBox spacing="4.0">
+                        <Label text="Valid ID type" styleClass="field-label"/>
+                        <ComboBox fx:id="idTypeCombo" promptText="Select ID type" maxWidth="Infinity" prefHeight="38.0" styleClass="field-input"/>
+                        <Label fx:id="idTypeErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
+                    </VBox>
+                    <VBox spacing="6.0">
+                        <Label text="Valid ID photo" styleClass="field-label"/>
+                        <HBox alignment="CENTER_LEFT" spacing="12.0">
+                            <Button fx:id="idPhotoBtn" text="Upload photo" styleClass="ghost-button" onAction="#onChooseIdPhotoClick"/>
+                            <Label fx:id="idPhotoNameLabel" text="No photo chosen" styleClass="page-subtitle" wrapText="true" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                        </HBox>
+                        <ImageView fx:id="idPhotoPreview" fitWidth="260.0" fitHeight="160.0" preserveRatio="true" visible="false" managed="false"/>
+                        <Label fx:id="idPhotoErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
+                    </VBox>
 
                     <Label text="Vehicle and dates" styleClass="section-label">
                         <VBox.margin><Insets top="10.0"/></VBox.margin>

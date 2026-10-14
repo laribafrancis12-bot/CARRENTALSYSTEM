@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.ScrollPane?>
@@ -67,6 +68,7 @@
             <Label text="Password" styleClass="field-label"/>
             <PasswordField fx:id="newPasswordField" promptText="Temporary password" styleClass="field-input"/>
             <Label fx:id="newPasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
+            <Label text="Use at least 8 characters with an uppercase letter and a special character (! @ # $ %)." styleClass="page-subtitle" wrapText="true" minHeight="-Infinity"/>
 
             <Label text="Confirm password" styleClass="field-label"/>
             <PasswordField fx:id="confirmPasswordField" promptText="Re-enter password" styleClass="field-input"/>
@@ -83,7 +85,7 @@
 
     <!-- Change password overlay -->
     <StackPane fx:id="changePasswordOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="10.0" maxWidth="380.0" maxHeight="560.0">
+        <VBox styleClass="modal-card" spacing="10.0" maxWidth="380.0" maxHeight="640.0">
             <padding><Insets top="20.0" bottom="20.0" left="24.0" right="24.0"/></padding>
 
             <HBox alignment="CENTER_LEFT">
@@ -92,12 +94,22 @@
             </HBox>
 
             <Label text="New password" styleClass="field-label"/>
-            <PasswordField fx:id="changePasswordField" promptText="New password" styleClass="field-input"/>
+            <StackPane>
+                <PasswordField fx:id="changePasswordField" promptText="New password" styleClass="field-input"/>
+                <TextField fx:id="changePasswordVisibleField" promptText="New password" styleClass="field-input" visible="false" managed="false"/>
+            </StackPane>
             <Label fx:id="changePasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
+            <Label text="Use at least 8 characters with an uppercase letter and a special character (! @ # $ %)." styleClass="page-subtitle" wrapText="true" minHeight="-Infinity"/>
 
             <Label text="Confirm password" styleClass="field-label"/>
-            <PasswordField fx:id="confirmChangePasswordField" promptText="Re-enter new password" styleClass="field-input"/>
+            <StackPane>
+                <PasswordField fx:id="confirmChangePasswordField" promptText="Re-enter new password" styleClass="field-input"/>
+                <TextField fx:id="confirmChangePasswordVisibleField" promptText="Re-enter new password" styleClass="field-input" visible="false" managed="false"/>
+            </StackPane>
             <Label fx:id="confirmChangePasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
+
+            <CheckBox fx:id="showChangePasswordCheck" text="Show password" styleClass="field-checkbox"
+                      onAction="#onToggleChangePasswordVisibility"/>
 
             <Label fx:id="changePasswordMessageLabel" styleClass="error-label" wrapText="true"/>
 

@@ -5,7 +5,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.control.TextInputControl;
 
+import java.io.File;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -23,7 +26,6 @@ public final class FormValidation {
 
     private static final Pattern NAME_CHARS = Pattern.compile("[\\p{L} ]*");
     private static final Pattern ADDRESS_CHARS = Pattern.compile("[\\p{L}0-9 ,.#-]*");
-    private static final Pattern ID_NUMBER_CHARS = Pattern.compile("[A-Za-z0-9-]*");
     private static final Pattern DIGITS = Pattern.compile("\\d*");
     private static final Pattern LICENSE_CHARS = Pattern.compile("[A-Za-z0-9-]*");
     private static final Pattern LICENSE = Pattern.compile("[A-Za-z]\\d{2}-\\d{2}-\\d{6}");
@@ -63,6 +65,20 @@ public final class FormValidation {
     /** Live feedback: obvious mistakes while typing, the full check when the person leaves the field. */
     public static void live(TextInputControl field, Label errorLabel, Function<Boolean, String> check) {
         field.textProperty().addListener((o, a, b) -> show(field, errorLabel, check.apply(false)));
+        field.focusedProperty().addListener((o, was, now) -> {
+            if (!now) {
+                show(field, errorLabel, check.apply(true));
+            }
+        });
+    }
+
+    /**
+     * Like live(), but once a message is showing it keeps being fully checked while typing, so the
+     * message updates until the problem is fixed (used for passwords).
+     */
+    public static void liveStrict(TextInputControl field, Label errorLabel, Function<Boolean, String> check) {
+        field.textProperty().addListener((o, a, b) ->
+                show(field, errorLabel, check.apply(field.getStyleClass().contains("field-invalid"))));
         field.focusedProperty().addListener((o, was, now) -> {
             if (!now) {
                 show(field, errorLabel, check.apply(true));
@@ -190,21 +206,15 @@ public final class FormValidation {
         return null;
     }
 
-    public static String validIdNumber(String value, boolean complete) {
-        String v = trim(value);
-        if (v.isEmpty()) return complete ? "Enter the valid ID number." : null;
-        if (!ID_NUMBER_CHARS.matcher(v).matches()) {
-            return "ID number can only contain letters, numbers and hyphens.";
+    /** Valid ID photo: required, a JPG or PNG image of 5 MB at most. */
+    public static String idPhoto(File file) {
+        if (file == null) return "Please upload a photo of the valid ID.";
+        String name = file.getName().toLowerCase();
+        if (!(name.endsWith(".jpg") || name.endsWith(".jpeg") || name.endsWith(".png"))) {
+            return "The photo must be a JPG or PNG image.";
         }
-        if (v.length() > 25) return "ID number is too long (25 characters at most).";
-        if (complete && v.length() < 5) return "ID number is too short (at least 5 characters).";
+        if (file.length() > 5L * 1024 * 1024) return "The photo is too large (5 MB at most).";
         return null;
-    }
-
-    /** Valid ID number: letters, numbers and hyphens only, 25 characters at most. */
-    public static void restrictIdNumber(TextInputControl field, Label errorLabel) {
-        restrict(field, errorLabel, Pattern.compile("[A-Za-z0-9-]{0,25}"),
-                "ID number can only contain letters, numbers and hyphens (25 characters at most).");
     }
 
     // ------------------------------------------------------------ vehicle
@@ -260,12 +270,26 @@ public final class FormValidation {
         return null;
     }
 
+    /** Password rule: at least 8 characters, with an uppercase letter and a special character. */
     public static String password(String value, boolean complete) {
         String v = value == null ? "" : value;
         if (v.isEmpty()) return complete ? "Enter a password." : null;
         if (v.length() > 50) return "Password is too long (50 characters at most).";
-        if (complete && v.length() < 6) return "Password must be at least 6 characters.";
-        return null;
+        if (v.chars().anyMatch(Character::isWhitespace)) return "Password can't contain spaces.";
+        if (!complete) return null;
+
+        List<String> missing = new ArrayList<>();
+        if (v.length() < 8) missing.add("at least 8 characters");
+        if (v.chars().noneMatch(Character::isUpperCase)) missing.add("an uppercase letter");
+        if (v.chars().noneMatch(ch -> !Character.isLetterOrDigit(ch))) {
+            missing.add("a special character (such as ! @ # $ %)");
+        }
+        if (missing.isEmpty()) return null;
+
+        String list = missing.size() == 1
+                ? missing.get(0)
+                : String.join(", ", missing.subList(0, missing.size() - 1)) + " and " + missing.get(missing.size() - 1);
+        return "Password needs " + list + ".";
     }
 
     public static String confirmPassword(String password, String confirm, boolean complete) {

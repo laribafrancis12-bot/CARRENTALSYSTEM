@@ -1,11 +1,13 @@
 package com.carrentalsystem.carsystem;
 
 import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -36,6 +38,9 @@ public class AccountsController {
 
     @FXML private Label changePasswordTitleLabel;
     @FXML private PasswordField changePasswordField;
+    @FXML private TextField changePasswordVisibleField;
+    @FXML private TextField confirmChangePasswordVisibleField;
+    @FXML private CheckBox showChangePasswordCheck;
     @FXML private PasswordField confirmChangePasswordField;
     @FXML private Label changePasswordErrorLabel;
     @FXML private Label confirmChangePasswordErrorLabel;
@@ -55,9 +60,9 @@ public class AccountsController {
         // Warnings are written in code and appear right under the field that has the problem.
         FormValidation.live(newUsernameField, newUsernameErrorLabel,
                 c -> FormValidation.username(newUsernameField.getText(), c));
-        FormValidation.live(newPasswordField, newPasswordErrorLabel,
+        FormValidation.liveStrict(newPasswordField, newPasswordErrorLabel,
                 c -> FormValidation.password(newPasswordField.getText(), c));
-        FormValidation.live(confirmPasswordField, confirmPasswordErrorLabel,
+        FormValidation.liveStrict(confirmPasswordField, confirmPasswordErrorLabel,
                 c -> FormValidation.confirmPassword(newPasswordField.getText(), confirmPasswordField.getText(), c));
         newPasswordField.textProperty().addListener((o, a, b) -> {
             if (!confirmPasswordField.getText().isEmpty()) {
@@ -66,9 +71,9 @@ public class AccountsController {
             }
         });
 
-        FormValidation.live(changePasswordField, changePasswordErrorLabel,
+        FormValidation.liveStrict(changePasswordField, changePasswordErrorLabel,
                 c -> FormValidation.password(changePasswordField.getText(), c));
-        FormValidation.live(confirmChangePasswordField, confirmChangePasswordErrorLabel,
+        FormValidation.liveStrict(confirmChangePasswordField, confirmChangePasswordErrorLabel,
                 c -> FormValidation.confirmPassword(changePasswordField.getText(), confirmChangePasswordField.getText(), c));
         changePasswordField.textProperty().addListener((o, a, b) -> {
             if (!confirmChangePasswordField.getText().isEmpty()) {
@@ -77,7 +82,37 @@ public class AccountsController {
             }
         });
 
+        // "Show password": the readable text boxes always hold the same text as the password boxes.
+        changePasswordVisibleField.textProperty().bindBidirectional(changePasswordField.textProperty());
+        confirmChangePasswordVisibleField.textProperty().bindBidirectional(confirmChangePasswordField.textProperty());
+        mirrorInvalid(changePasswordField, changePasswordVisibleField);
+        mirrorInvalid(confirmChangePasswordField, confirmChangePasswordVisibleField);
+        // Leaving a readable box checks the password too, like leaving the hidden one does.
+        changePasswordVisibleField.focusedProperty().addListener((o, was, now) -> {
+            if (!now) {
+                FormValidation.show(changePasswordField, changePasswordErrorLabel,
+                        FormValidation.password(changePasswordField.getText(), true));
+            }
+        });
+        confirmChangePasswordVisibleField.focusedProperty().addListener((o, was, now) -> {
+            if (!now) {
+                FormValidation.show(confirmChangePasswordField, confirmChangePasswordErrorLabel,
+                        FormValidation.confirmPassword(changePasswordField.getText(),
+                                confirmChangePasswordField.getText(), true));
+            }
+        });
+
         loadAccounts();
+    }
+
+    /** Copies the red "invalid" border of a password box onto its readable twin. */
+    private void mirrorInvalid(TextField source, TextField mirror) {
+        source.getStyleClass().addListener((ListChangeListener<String>) change -> {
+            mirror.getStyleClass().remove("field-invalid");
+            if (source.getStyleClass().contains("field-invalid")) {
+                mirror.getStyleClass().add("field-invalid");
+            }
+        });
     }
 
     private void loadAccounts() {
@@ -254,6 +289,8 @@ public class AccountsController {
         FormValidation.clear(changePasswordField, changePasswordErrorLabel);
         FormValidation.clear(confirmChangePasswordField, confirmChangePasswordErrorLabel);
         changePasswordMessageLabel.setText("");
+        showChangePasswordCheck.setSelected(false);
+        setChangePasswordVisible(false);
         changePasswordOverlay.setVisible(true);
         changePasswordOverlay.setManaged(true);
     }
@@ -304,6 +341,22 @@ public class AccountsController {
             e.printStackTrace();
             changePasswordMessageLabel.setText("Could not update the password. Please try again.");
         }
+    }
+
+    @FXML
+    private void onToggleChangePasswordVisibility() {
+        setChangePasswordVisible(showChangePasswordCheck.isSelected());
+    }
+
+    private void setChangePasswordVisible(boolean show) {
+        changePasswordField.setVisible(!show);
+        changePasswordField.setManaged(!show);
+        changePasswordVisibleField.setVisible(show);
+        changePasswordVisibleField.setManaged(show);
+        confirmChangePasswordField.setVisible(!show);
+        confirmChangePasswordField.setManaged(!show);
+        confirmChangePasswordVisibleField.setVisible(show);
+        confirmChangePasswordVisibleField.setManaged(show);
     }
 
     // ---- Deactivate / activate (soft delete) ----
