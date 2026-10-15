@@ -972,3 +972,52 @@
     -fx-border-color: #F27A6F;
     -fx-border-width: 1.5;
 }
+
+
+/* =========================================================
+   Drop-down lists (every ComboBox): white text, dark list
+   ========================================================= */
+
+/* the selected value shown in the box */
+.combo-box .list-cell {
+    -fx-text-fill: white;
+    -fx-background-color: transparent;
+}
+
+/* the grey hint such as "Select ID type" while nothing is chosen */
+.combo-box .list-cell:empty {
+    -fx-text-fill: #6B6E78;
+}
+
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.combo-box .arrow-button .arrow {
+    -fx-background-color: #8A8D96;
+}
+
+/* the list that opens under the box */
+.combo-box-popup .list-view {
+    -fx-background-color: #1C1D23;
+    -fx-border-color: #2E2F37;
+    -fx-background-insets: 0;
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-background-color: #1C1D23;
+    -fx-text-fill: white;
+    -fx-padding: 8 12;
+}
+
+.combo-box-popup .list-view .list-cell:filled:hover,
+.combo-box-popup .list-view .list-cell:filled:selected {
+    -fx-background-color: #D4302B;
+    -fx-text-fill: white;
+}
+
+/* date boxes show their text in white too */
+.date-picker .text-field {
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #6B6E78;
+}
