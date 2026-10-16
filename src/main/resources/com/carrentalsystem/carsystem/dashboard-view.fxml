@@ -35,7 +35,7 @@
     <center>
         <!-- Scrolls when the charts don't fit the window -->
         <ScrollPane fitToWidth="true" styleClass="plain-scroll">
-            <VBox spacing="14.0" styleClass="page-content" maxWidth="1500.0">
+            <VBox spacing="14.0" styleClass="page-content">
 
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                     <VBox HBox.hgrow="ALWAYS">
@@ -121,6 +121,16 @@
                     <Label fx:id="yearChartTitleLabel" text="Revenue by month" styleClass="section-label"/>
                     <BarChart fx:id="yearRevenueChart" animated="false" legendVisible="false"
                               minHeight="260.0" prefHeight="260.0">
+                        <xAxis><CategoryAxis/></xAxis>
+                        <yAxis><NumberAxis/></yAxis>
+                    </BarChart>
+                </VBox>
+
+                <!-- Every car ranked by how many times it was rented -->
+                <VBox styleClass="stat-card" spacing="6.0">
+                    <Label fx:id="carRankTitleLabel" text="Most rented cars" styleClass="section-label"/>
+                    <BarChart fx:id="carRankChart" animated="false" legendVisible="false"
+                              minHeight="300.0" prefHeight="300.0">
                         <xAxis><CategoryAxis/></xAxis>
                         <yAxis><NumberAxis/></yAxis>
                     </BarChart>

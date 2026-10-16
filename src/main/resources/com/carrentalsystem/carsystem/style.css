@@ -4,7 +4,6 @@
    so no FXML changes are needed — just this file.
    ========================================================= */
 
-/* ---- Login screen (kept smaller/standalone, same dark look) ---- */
 
 .login-root {
     -fx-background-color: #0D0E12;

@@ -87,7 +87,7 @@ public class ReceiptController {
 
     private void loadReceipt(int rentalId) {
         String sql =
-                "SELECT r.rental_id, c.full_name, c.contact_no, c.license_no, c.address, c.id_type, c.id_number, " +
+                "SELECT r.rental_id, c.full_name, c.contact_no, c.license_no, c.address, c.id_type, c.id_photo, " +
                         "v.model, v.plate_no, v.type, v.rate_per_day, " +
                         "r.rent_date, r.return_date, r.total_amount, r.payment_method " +
                         "FROM rentals r " +
@@ -128,8 +128,10 @@ public class ReceiptController {
                 contactLabel.setText(orDash(rs.getString("contact_no")));
                 addressLabel.setText(orDash(rs.getString("address")));
                 String idType = rs.getString("id_type");
+                String idPhoto = rs.getString("id_photo");
                 validIdLabel.setText(idType == null || idType.isBlank()
-                        ? "\u2014" : idType + " \u00b7 " + orDash(rs.getString("id_number")));
+                        ? "\u2014"
+                        : idType + (idPhoto == null || idPhoto.isBlank() ? "" : " \u00b7 photo on file"));
 
                 vehicleLabel.setText(orDash(rs.getString("model")));
                 plateLabel.setText(orDash(rs.getString("plate_no")));
@@ -139,7 +141,10 @@ public class ReceiptController {
                 returnByLabel.setText(returnDate.format(SHORT_DATE));
                 durationLabel.setText(days + (days == 1 ? " day" : " days"));
                 durationHoursLabel.setText((days * 24) + " hours");
-                rateLabel.setText(peso(rs.getDouble("rate_per_day"), 0));
+                // The rate the customer actually paid (total / days), so changing a car's rate later
+                // does not change old receipts.
+                double paidRate = days > 0 ? total / days : rs.getDouble("rate_per_day");
+                rateLabel.setText(peso(paidRate, paidRate % 1 == 0 ? 0 : 2));
 
                 paymentLabel.setText(orDash(rs.getString("payment_method")));
                 paymentNoteLabel.setText("Payment received in full on " + rentDate.format(SHORT_DATE)

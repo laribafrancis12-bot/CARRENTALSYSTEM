@@ -65,7 +65,7 @@
                         <TableColumn fx:id="typeCol" text="Type" prefWidth="110.0"/>
                         <TableColumn fx:id="rateCol" text="Rate/day" prefWidth="110.0"/>
                         <TableColumn fx:id="statusCol" text="Status" prefWidth="130.0"/>
-                        <TableColumn fx:id="actionsCol" text="Actions" prefWidth="220.0"/>
+                        <TableColumn fx:id="actionsCol" text="Actions" prefWidth="340.0"/>
                     </columns>
                 </TableView>
             </VBox>
@@ -128,6 +128,38 @@
             <HBox alignment="CENTER_RIGHT" spacing="10.0">
                 <Button text="Cancel" styleClass="ghost-button" onAction="#onCancelAddVehicle"/>
                 <Button text="Save vehicle" styleClass="cta-button" onAction="#onSaveVehicleClick"/>
+            </HBox>
+        </VBox>
+    </StackPane>
+
+
+    <!-- Change rate overlay -->
+    <StackPane fx:id="editRateOverlay" styleClass="modal-overlay" visible="false" managed="false">
+        <VBox styleClass="modal-card" spacing="14.0" maxWidth="440.0">
+            <padding><Insets top="26.0" bottom="26.0" left="30.0" right="30.0"/></padding>
+
+            <HBox alignment="CENTER_LEFT" spacing="12.0">
+                <VBox HBox.hgrow="ALWAYS">
+                    <Label text="Change rate" styleClass="modal-title"/>
+                    <Label fx:id="editRateVehicleLabel" text="-" styleClass="page-subtitle" wrapText="true"/>
+                </VBox>
+                <Button text="X" styleClass="modal-close" onAction="#onCancelEditRate"/>
+            </HBox>
+
+            <VBox spacing="4.0">
+                <Label text="New rate per day (&#8369;)" styleClass="field-label"/>
+                <TextField fx:id="newRateField" promptText="1500" prefHeight="38.0" styleClass="field-input" onAction="#onSaveRateClick"/>
+                <Label fx:id="newRateErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
+            </VBox>
+
+            <Label text="The new rate applies to new rentals only. Rentals already made keep the price they were booked at."
+                   styleClass="page-subtitle" wrapText="true" minHeight="-Infinity"/>
+
+            <Label fx:id="editRateMessageLabel" styleClass="error-label" wrapText="true"/>
+
+            <HBox alignment="CENTER_RIGHT" spacing="10.0">
+                <Button text="Cancel" styleClass="ghost-button" onAction="#onCancelEditRate"/>
+                <Button text="Save rate" styleClass="cta-button" onAction="#onSaveRateClick"/>
             </HBox>
         </VBox>
     </StackPane>

@@ -50,6 +50,13 @@ public class VehiclesController {
     @FXML private ComboBox<String> typeCombo;
     @FXML private ComboBox<Integer> seatsCombo;
     @FXML private TextField rateField;
+
+    // Change rate popup
+    @FXML private StackPane editRateOverlay;
+    @FXML private Label editRateVehicleLabel;
+    @FXML private TextField newRateField;
+    @FXML private Label newRateErrorLabel;
+    @FXML private Label editRateMessageLabel;
     @FXML private Label plateErrorLabel;
     @FXML private Label modelErrorLabel;
     @FXML private Label typeErrorLabel;
@@ -58,6 +65,9 @@ public class VehiclesController {
     @FXML private ComboBox<String> statusCombo;
 
     private String currentFilter = "All";
+
+    /** The vehicle whose rate is being changed in the popup. */
+    private VehicleRow rateTarget;
 
     @FXML
     public void initialize() {
@@ -80,6 +90,7 @@ public class VehiclesController {
         FormValidation.live(plateField, plateErrorLabel, c -> FormValidation.plate(plateField.getText(), c));
         FormValidation.live(modelField, modelErrorLabel, c -> FormValidation.vehicleModel(modelField.getText(), c));
         FormValidation.live(rateField, rateErrorLabel, c -> FormValidation.rate(rateField.getText(), c));
+        FormValidation.live(newRateField, newRateErrorLabel, c -> FormValidation.rate(newRateField.getText(), c));
         typeCombo.valueProperty().addListener((o, a, b) -> {
             if (b != null) FormValidation.clear(typeCombo, typeErrorLabel);
         });
@@ -136,13 +147,15 @@ public class VehiclesController {
         actionsCol.setCellFactory(col -> new TableCell<>() {
             // The choices depend on the car's current status (see statusChoices).
             private final ComboBox<String> statusChanger = new ComboBox<>();
+            private final Button editRateBtn = new Button("Edit rate");
             private final Button deleteBtn = new Button("Delete");
-            private final HBox box = new HBox(8, statusChanger, deleteBtn);
+            private final HBox box = new HBox(8, statusChanger, editRateBtn, deleteBtn);
             private boolean resetting = false;
 
             {
                 statusChanger.setPromptText("Change status");
                 deleteBtn.getStyleClass().add("ghost-button");
+                editRateBtn.getStyleClass().add("ghost-button");
                 statusChanger.setOnAction(e -> {
                     VehicleRow row = rowAtIndex();
                     String newStatus = statusChanger.getValue();
@@ -154,6 +167,10 @@ public class VehiclesController {
                 deleteBtn.setOnAction(e -> {
                     VehicleRow row = rowAtIndex();
                     if (row != null) confirmAndDelete(row);
+                });
+                editRateBtn.setOnAction(e -> {
+                    VehicleRow row = rowAtIndex();
+                    if (row != null) openEditRate(row);
                 });
                 // Table cells are reused for other rows, so the choices are rebuilt when the row changes.
                 indexProperty().addListener((o, a, b) -> refreshChoices());
@@ -410,6 +427,72 @@ public class VehiclesController {
         } catch (SQLException e) {
             e.printStackTrace();
             formMessageLabel.setText("Could not save the vehicle. Please try again.");
+        }
+    }
+
+    // ---- Change rate popup ----
+
+    private void openEditRate(VehicleRow row) {
+        rateTarget = row;
+        editRateVehicleLabel.setText(row.model.get() + " (" + row.plate.get() + ") \u00b7 current rate \u20b1"
+                + String.format("%,.0f", row.rate.get()) + " / day");
+        newRateField.clear();
+        FormValidation.clear(newRateField, newRateErrorLabel);
+        editRateMessageLabel.setText("");
+        editRateOverlay.setVisible(true);
+        editRateOverlay.setManaged(true);
+        newRateField.requestFocus();
+    }
+
+    @FXML
+    private void onCancelEditRate() {
+        newRateField.clear();
+        FormValidation.clear(newRateField, newRateErrorLabel);
+        editRateMessageLabel.setText("");
+        editRateOverlay.setVisible(false);
+        editRateOverlay.setManaged(false);
+        rateTarget = null;
+    }
+
+    @FXML
+    private void onSaveRateClick() {
+        if (rateTarget == null) {
+            return;
+        }
+        String text = newRateField.getText().trim();
+        String problem = FormValidation.rate(text, true);
+        if (problem == null && Math.abs(Double.parseDouble(text) - rateTarget.rate.get()) < 0.005) {
+            problem = "The new rate is the same as the current rate.";
+        }
+        if (!FormValidation.show(newRateField, newRateErrorLabel, problem)) {
+            return;
+        }
+        double newRate = Double.parseDouble(text);
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                "Change the rate of " + rateTarget.model.get() + " (" + rateTarget.plate.get() + ")\n"
+                        + "from \u20b1" + String.format("%,.2f", rateTarget.rate.get())
+                        + " to \u20b1" + String.format("%,.2f", newRate) + " per day?\n\n"
+                        + "The new rate applies to new rentals only. Rentals already made keep their price.",
+                ButtonType.YES, ButtonType.NO);
+        confirm.setHeaderText(null);
+        confirm.setTitle("Change rate");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.YES) {
+            return;
+        }
+
+        String sql = "UPDATE vehicles SET rate_per_day = ? WHERE vehicle_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDouble(1, newRate);
+            stmt.setInt(2, rateTarget.id);
+            stmt.executeUpdate();
+            onCancelEditRate();
+            loadVehicles();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            editRateMessageLabel.setText("Could not change the rate. Please try again.");
         }
     }
 

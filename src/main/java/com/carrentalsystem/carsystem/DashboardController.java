@@ -3,6 +3,8 @@ package com.carrentalsystem.carsystem;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.util.StringConverter;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.PieChart;
@@ -59,6 +61,8 @@ public class DashboardController {
     @FXML private LineChart<String, Number> monthlyChart;
     @FXML private BarChart<String, Number> yearRevenueChart;
     @FXML private Label yearChartTitleLabel;
+    @FXML private BarChart<String, Number> carRankChart;
+    @FXML private Label carRankTitleLabel;
     @FXML private Label revenueChartTitleLabel;
     @FXML private Label monthlyChartTitleLabel;
 
@@ -226,6 +230,7 @@ public class DashboardController {
         loadRevenueChart(admin);
         loadMonthlyChart(admin);
         loadYearRevenueChart(admin);
+        loadCarRankChart(admin);
     }
 
     /** Pie: how many vehicles are in each status. */
@@ -286,6 +291,56 @@ public class DashboardController {
             series.getData().add(new XYChart.Data<>(day.format(label), byDay.getOrDefault(day, 0.0)));
         }
         revenueChart.getData().setAll(series);
+    }
+
+    /**
+     * Bars: every car ranked by how many times it was rented, the most rented on the left
+     * and the cars that were never rented at the end (up to 20 cars).
+     */
+    private void loadCarRankChart(boolean admin) {
+        carRankTitleLabel.setText(admin ? "Most rented cars" : "Cars you rented out most");
+
+        String sql = "SELECT v.model, v.plate_no, COUNT(r.rental_id) AS n FROM vehicles v " +
+                "LEFT JOIN rentals r ON r.vehicle_id = v.vehicle_id " + (admin ? "" : "AND r.created_by = ? ") +
+                "GROUP BY v.vehicle_id, v.model, v.plate_no " +
+                "ORDER BY n DESC, v.model ASC LIMIT 20";
+
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (!admin) {
+                stmt.setString(1, Session.username);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    String model = rs.getString("model");
+                    String plate = rs.getString("plate_no");
+                    String shortModel = model.length() > 16 ? model.substring(0, 15) + "\u2026" : model;
+                    // the plate number keeps every label different, even for two cars of the same model
+                    series.getData().add(new XYChart.Data<>(shortModel + "\n" + (plate == null ? "" : plate),
+                            rs.getInt("n")));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+        carRankChart.getData().setAll(series);
+
+        // whole numbers only on the side axis (a car can't be rented half a time)
+        NumberAxis axis = (NumberAxis) carRankChart.getYAxis();
+        axis.setMinorTickCount(0);
+        axis.setTickLabelFormatter(new StringConverter<Number>() {
+            @Override
+            public String toString(Number value) {
+                return value.doubleValue() % 1 == 0 ? String.valueOf(value.intValue()) : "";
+            }
+
+            @Override
+            public Number fromString(String text) {
+                return 0;
+            }
+        });
     }
 
     /** Bars: money earned in each month of the current year (January to December). */
