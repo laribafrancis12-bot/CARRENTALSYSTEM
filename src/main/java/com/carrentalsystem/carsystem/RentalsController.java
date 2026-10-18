@@ -87,11 +87,9 @@ public class RentalsController {
     @FXML private Label formMessageLabel;
     @FXML private ScrollPane formScroll;
     @FXML private TextField addressField;
-    @FXML private ComboBox<String> idTypeCombo;
     @FXML private Button idPhotoBtn;
     @FXML private Label idPhotoNameLabel;
     @FXML private ImageView idPhotoPreview;
-    @FXML private Label idTypeErrorLabel;
     @FXML private Label idPhotoErrorLabel;
 
     /** The valid-ID photo picked on the form. It is copied into the valid_ids folder when the rental is saved. */
@@ -151,11 +149,6 @@ public class RentalsController {
         FormValidation.restrictLicense(licenseField, licenseErrorLabel);
         FormValidation.restrictPhone(contactField, contactErrorLabel);   // 11 digits, starting with 09
 
-        idTypeCombo.setItems(FXCollections.observableArrayList(
-                "Passport", "UMID", "PhilSys National ID", "SSS ID", "PRC ID", "Postal ID", "Voter's ID", "PhilHealth ID"));
-        idTypeCombo.valueProperty().addListener((o, a, b) -> {
-            if (b != null) FormValidation.clear(idTypeCombo, idTypeErrorLabel);
-        });
 
         paymentField.setText(PAYMENT_METHOD);
         paymentField.setEditable(false);
@@ -452,7 +445,6 @@ public class RentalsController {
         contactField.clear();
         licenseField.clear();
         addressField.clear();
-        idTypeCombo.getSelectionModel().clearSelection();
         clearIdPhoto();
         rentDatePicker.setValue(LocalDate.now());
         returnDatePicker.setValue(LocalDate.now().plusDays(1));
@@ -503,7 +495,6 @@ public class RentalsController {
         String contact = contactField.getText().trim();
         String address = addressField.getText().trim();
         String license = licenseField.getText().trim().toUpperCase();
-        String idType = idTypeCombo.getValue();
         VehicleOption vehicle = vehicleCombo.getValue();
         LocalDate rent = rentDatePicker.getValue();
         LocalDate ret = returnDatePicker.getValue();
@@ -514,8 +505,6 @@ public class RentalsController {
         customerOk &= FormValidation.show(contactField, contactErrorLabel, FormValidation.phone(contact, true));
         customerOk &= FormValidation.show(addressField, addressErrorLabel, FormValidation.address(address, true));
         customerOk &= FormValidation.show(licenseField, licenseErrorLabel, FormValidation.license(license, true));
-        customerOk &= FormValidation.show(idTypeCombo, idTypeErrorLabel,
-                idType == null ? "Select the type of valid ID." : null);
         customerOk &= FormValidation.show(idPhotoBtn, idPhotoErrorLabel, FormValidation.idPhoto(idPhotoFile));
         boolean rentalOk = FormValidation.show(vehicleCombo, vehicleErrorLabel,
                 vehicle == null ? "Select an available vehicle." : null);
@@ -532,7 +521,7 @@ public class RentalsController {
         double total = days * vehicle.rate;
 
         // "Are you sure?" step: nothing is saved until the details are confirmed.
-        if (!confirmRental(name, contact, address, license, idType, idPhotoFile, vehicle, rent, ret, days, total)) {
+        if (!confirmRental(name, contact, address, license, idPhotoFile, vehicle, rent, ret, days, total)) {
             return;
         }
 
@@ -566,14 +555,13 @@ public class RentalsController {
 
                 // 2. Customer
                 int customerId;
-                String customerSql = "INSERT INTO customers (full_name, contact_no, license_no, address, id_type, id_photo) VALUES (?, ?, ?, ?, ?, ?)";
+                String customerSql = "INSERT INTO customers (full_name, contact_no, license_no, address, id_photo) VALUES (?, ?, ?, ?, ?)";
                 try (PreparedStatement stmt = conn.prepareStatement(customerSql, Statement.RETURN_GENERATED_KEYS)) {
                     stmt.setString(1, name);
                     stmt.setString(2, contact);
                     stmt.setString(3, license);
                     stmt.setString(4, address);
-                    stmt.setString(5, idType);
-                    stmt.setString(6, idPhotoName);
+                    stmt.setString(5, idPhotoName);
                     stmt.executeUpdate();
                     try (ResultSet keys = stmt.getGeneratedKeys()) {
                         keys.next();
@@ -660,7 +648,7 @@ public class RentalsController {
 
     /** Summary shown before saving. Returns true only when the person confirms and pays. */
     private boolean confirmRental(String name, String contact, String address, String license,
-                                  String idType, File idPhoto, VehicleOption vehicle,
+                                  File idPhoto, VehicleOption vehicle,
                                   LocalDate rent, LocalDate ret, long days, double total) {
         GridPane grid = new GridPane();
         grid.setHgap(20);
@@ -672,7 +660,7 @@ public class RentalsController {
         row = addSummaryRow(grid, row, "Contact", contact);
         row = addSummaryRow(grid, row, "Address", address);
         row = addSummaryRow(grid, row, "Driver's license", license);
-        row = addSummaryRow(grid, row, "Valid ID", idType + " \u00b7 photo attached");
+        row = addSummaryRow(grid, row, "Valid ID", "Photo attached");
         Label photoKey = new Label("ID photo");
         photoKey.setStyle("-fx-text-fill: #8A8D96;");
         ImageView thumbnail = new ImageView(new Image(idPhoto.toURI().toString(), 220, 130, true, true, false));
@@ -857,7 +845,6 @@ public class RentalsController {
         FormValidation.clear(contactField, contactErrorLabel);
         FormValidation.clear(addressField, addressErrorLabel);
         FormValidation.clear(licenseField, licenseErrorLabel);
-        FormValidation.clear(idTypeCombo, idTypeErrorLabel);
         FormValidation.clear(idPhotoBtn, idPhotoErrorLabel);
         FormValidation.clear(vehicleCombo, vehicleErrorLabel);
         FormValidation.clear(rentDatePicker, rentDateErrorLabel);

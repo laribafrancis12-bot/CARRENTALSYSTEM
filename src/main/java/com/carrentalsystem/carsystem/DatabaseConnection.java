@@ -25,7 +25,6 @@ public class DatabaseConnection {
             addColumnIfMissing(conn, meta, "rentals", "created_by", "VARCHAR(50) NULL");
             addColumnIfMissing(conn, meta, "rentals", "returned_on", "DATE NULL");          // when the car actually came back
             addColumnIfMissing(conn, meta, "customers", "address", "VARCHAR(150) NULL");   // customer address
-            addColumnIfMissing(conn, meta, "customers", "id_type", "VARCHAR(30) NULL");    // valid ID shown by the customer
             addColumnIfMissing(conn, meta, "customers", "id_photo", "VARCHAR(100) NULL");   // file name of the uploaded ID photo
             addColumnIfMissing(conn, meta, "users", "active", "TINYINT(1) NOT NULL DEFAULT 1"); // 0 = deactivated
 

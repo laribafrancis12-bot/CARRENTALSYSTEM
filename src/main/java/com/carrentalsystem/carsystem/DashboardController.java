@@ -311,44 +311,10 @@ public class DashboardController {
         staffChart.getData().setAll(series);
     }
 
-    /** Bars: money earned on each day of the current month. */
+    /** Bars: revenue of each month of the current year (January to December). */
     private void loadMonthRevenueChart(boolean admin) {
-        LocalDate today = LocalDate.now();
-        monthChartTitleLabel.setText((admin ? "Revenue - " : "Your sales - ")
-                + today.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + " " + today.getYear());
-
-        String sql = "SELECT DAY(rent_date) AS d, IFNULL(SUM(total_amount),0) AS amt FROM rentals " +
-                "WHERE MONTH(rent_date) = MONTH(CURDATE()) AND YEAR(rent_date) = YEAR(CURDATE()) " +
-                (admin ? "" : "AND created_by = ? ") +
-                "GROUP BY DAY(rent_date)";
-
-        Map<Integer, Double> byDay = new HashMap<>();
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            if (!admin) {
-                stmt.setString(1, Session.username);
-            }
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    byDay.put(rs.getInt("d"), rs.getDouble("amt"));
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        for (int day = 1; day <= today.lengthOfMonth(); day++) {
-            series.getData().add(new XYChart.Data<>(String.valueOf(day), byDay.getOrDefault(day, 0.0)));
-        }
-        monthRevenueChart.getData().setAll(series);
-    }
-
-    /** Bars: money earned in each month of the current year (January to December). */
-    private void loadYearRevenueChart(boolean admin) {
         int year = LocalDate.now().getYear();
-        yearChartTitleLabel.setText((admin ? "Revenue by month - " : "Your sales by month - ") + year);
+        monthChartTitleLabel.setText((admin ? "Revenue by month - " : "Your sales by month - ") + year);
 
         String sql = "SELECT MONTH(rent_date) AS m, IFNULL(SUM(total_amount),0) AS amt FROM rentals " +
                 "WHERE YEAR(rent_date) = YEAR(CURDATE()) " + (admin ? "" : "AND created_by = ? ") +
@@ -374,6 +340,44 @@ public class DashboardController {
         for (int m = 1; m <= 12; m++) {
             series.getData().add(new XYChart.Data<>(
                     Month.of(m).getDisplayName(TextStyle.SHORT, Locale.ENGLISH), byMonth.getOrDefault(m, 0.0)));
+        }
+        monthRevenueChart.getData().setAll(series);
+    }
+
+    /**
+     * Bars: revenue of each year. It starts at the first year that has rentals (but always
+     * shows at least the last 5 years, and at most the last 10), so years can be compared.
+     */
+    private void loadYearRevenueChart(boolean admin) {
+        yearChartTitleLabel.setText(admin ? "Revenue by year" : "Your sales by year");
+
+        String sql = "SELECT YEAR(rent_date) AS y, IFNULL(SUM(total_amount),0) AS amt FROM rentals " +
+                (admin ? "" : "WHERE created_by = ? ") +
+                "GROUP BY YEAR(rent_date)";
+
+        Map<Integer, Double> byYear = new HashMap<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (!admin) {
+                stmt.setString(1, Session.username);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    byYear.put(rs.getInt("y"), rs.getDouble("amt"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        int thisYear = LocalDate.now().getYear();
+        int firstYear = byYear.keySet().stream().min(Integer::compare).orElse(thisYear);
+        int from = Math.max(Math.min(firstYear, thisYear - 4), thisYear - 9);
+
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        for (int y = from; y <= thisYear; y++) {
+            series.getData().add(new XYChart.Data<>(String.valueOf(y), byYear.getOrDefault(y, 0.0)));
         }
         yearRevenueChart.getData().setAll(series);
     }

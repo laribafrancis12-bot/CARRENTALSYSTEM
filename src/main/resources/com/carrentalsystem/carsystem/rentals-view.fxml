@@ -108,11 +108,6 @@
                         <TextField fx:id="licenseField" promptText="N01-23-456789" prefHeight="38.0" styleClass="field-input"/>
                         <Label fx:id="licenseErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                     </VBox>
-                    <VBox spacing="4.0">
-                        <Label text="Valid ID type" styleClass="field-label"/>
-                        <ComboBox fx:id="idTypeCombo" promptText="Select ID type" maxWidth="Infinity" prefHeight="38.0" styleClass="field-input"/>
-                        <Label fx:id="idTypeErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
-                    </VBox>
                     <VBox spacing="6.0">
                         <Label text="Valid ID photo" styleClass="field-label"/>
                         <HBox alignment="CENTER_LEFT" spacing="12.0">

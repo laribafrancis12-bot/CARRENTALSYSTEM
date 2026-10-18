@@ -193,7 +193,7 @@ public class HistoryController {
 
     private void loadHistory(String search) {
         String sql =
-                "SELECT r.rental_id, c.full_name, c.contact_no, c.address, c.id_type, c.id_photo, v.model, v.plate_no, " +
+                "SELECT r.rental_id, c.full_name, c.contact_no, c.address, c.id_photo, v.model, v.plate_no, " +
                         "r.rent_date, r.return_date, r.returned_on, r.total_amount " +
                         "FROM rentals r " +
                         "JOIN customers c ON r.customer_id = c.customer_id " +
@@ -242,7 +242,6 @@ public class HistoryController {
                             returnedOn,
                             timing,
                             rs.getDouble("total_amount"),
-                            rs.getString("id_type"),
                             rs.getString("id_photo")
                     ));
                 }
@@ -269,7 +268,7 @@ public class HistoryController {
             dialog.getDialogPane().setContent(new ImageView(new Image(file.toURI().toString(), 640, 440, true, true, false)));
         }
         dialog.setTitle("Valid ID photo");
-        dialog.setHeaderText(row.customer + " \u00b7 " + (row.idType == null ? "Valid ID" : row.idType));
+        dialog.setHeaderText(row.customer + " \u00b7 Valid ID");
         dialog.showAndWait();
     }
 
@@ -354,12 +353,11 @@ public class HistoryController {
         final LocalDate returnedOn;   // null for records returned before this date was saved
         final String timing;          // Early, On time, Late (n days) or empty
         final double total;
-        final String idType;
         final String idPhoto;     // file name in the valid_ids folder, or null
 
         HistoryRow(int id, String customer, String contact, String address, String vehicle,
                    LocalDate rentDate, LocalDate returnedOn, String timing, double total,
-                   String idType, String idPhoto) {
+                   String idPhoto) {
             this.id = id;
             this.customer = customer;
             this.contact = contact;
@@ -369,7 +367,6 @@ public class HistoryController {
             this.returnedOn = returnedOn;
             this.timing = timing;
             this.total = total;
-            this.idType = idType;
             this.idPhoto = idPhoto;
         }
     }
