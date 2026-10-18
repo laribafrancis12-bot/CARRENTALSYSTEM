@@ -27,6 +27,7 @@ public class DatabaseConnection {
             addColumnIfMissing(conn, meta, "customers", "address", "VARCHAR(150) NULL");   // customer address
             addColumnIfMissing(conn, meta, "customers", "id_photo", "VARCHAR(100) NULL");   // file name of the uploaded ID photo
             addColumnIfMissing(conn, meta, "users", "active", "TINYINT(1) NOT NULL DEFAULT 1"); // 0 = deactivated
+            addColumnIfMissing(conn, meta, "vehicles", "seats", "INT NULL");                  // passenger seats (older cars have none saved)
 
 
             // If these columns were created as ENUM, values like "Overdue" or "SUV" would be rejected.

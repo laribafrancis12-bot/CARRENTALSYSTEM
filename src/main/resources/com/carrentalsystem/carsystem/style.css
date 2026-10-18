@@ -131,9 +131,9 @@
 
 .rail-logo {
     -fx-text-fill: white;
-    -fx-font-size: 26px;
+    -fx-font-size: 44px;
     -fx-alignment: center;
-    -fx-padding: 0 0 16 0;
+    -fx-padding: 0 0 18 0;
 }
 
 .rail-btn {
@@ -579,7 +579,7 @@
     -fx-max-width: 108;
 }
 
-.compact .rail-logo { -fx-font-size: 20px; }
+.compact .rail-logo { -fx-font-size: 34px; }
 
 .compact .rail-btn,
 .compact .rail-btn-active {

@@ -63,6 +63,7 @@
                         <TableColumn fx:id="plateCol" text="Plate no." prefWidth="110.0"/>
                         <TableColumn fx:id="modelCol" text="Model" prefWidth="200.0"/>
                         <TableColumn fx:id="typeCol" text="Type" prefWidth="110.0"/>
+                        <TableColumn fx:id="seatsCol" text="Seats" prefWidth="70.0"/>
                         <TableColumn fx:id="rateCol" text="Rate/day" prefWidth="110.0"/>
                         <TableColumn fx:id="statusCol" text="Status" prefWidth="130.0"/>
                         <TableColumn fx:id="actionsCol" text="Actions" prefWidth="340.0"/>

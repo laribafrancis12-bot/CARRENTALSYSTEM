@@ -1,6 +1,7 @@
 package com.carrentalsystem.carsystem;
 
 import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -41,6 +42,7 @@ public class VehiclesController {
     @FXML private TableColumn<VehicleRow, String> plateCol;
     @FXML private TableColumn<VehicleRow, String> modelCol;
     @FXML private TableColumn<VehicleRow, String> typeCol;
+    @FXML private TableColumn<VehicleRow, Integer> seatsCol;
     @FXML private TableColumn<VehicleRow, Double> rateCol;
     @FXML private TableColumn<VehicleRow, String> statusCol;
     @FXML private TableColumn<VehicleRow, Void> actionsCol;
@@ -117,6 +119,15 @@ public class VehiclesController {
         });
         modelCol.setCellValueFactory(d -> d.getValue().model);
         typeCol.setCellValueFactory(d -> d.getValue().type);
+        seatsCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().seats));
+        seatsCol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(Integer value, boolean empty) {
+                super.updateItem(value, empty);
+                // Cars added before seats were saved show a dash.
+                setText(empty ? null : (value == null ? "\u2014" : String.valueOf(value)));
+            }
+        });
         rateCol.setCellValueFactory(d -> d.getValue().rate.asObject());
         rateCol.setCellFactory(col -> new TableCell<>() {
             @Override
@@ -230,7 +241,7 @@ public class VehiclesController {
         ObservableList<VehicleRow> rows = FXCollections.observableArrayList();
 
         StringBuilder sql = new StringBuilder(
-                "SELECT vehicle_id, plate_no, model, type, rate_per_day, status FROM vehicles " +
+                "SELECT vehicle_id, plate_no, model, type, seats, rate_per_day, status FROM vehicles " +
                         "WHERE (plate_no LIKE ? OR model LIKE ?) ");
         if (!"All".equals(currentFilter)) {
             sql.append("AND status = ? ");
@@ -254,6 +265,7 @@ public class VehiclesController {
                             rs.getString("plate_no"),
                             rs.getString("model"),
                             rs.getString("type"),
+                            (Integer) rs.getObject("seats"),
                             rs.getDouble("rate_per_day"),
                             rs.getString("status")
                     ));
@@ -413,13 +425,14 @@ public class VehiclesController {
                 }
             }
 
-            String sql = "INSERT INTO vehicles (plate_no, model, type, rate_per_day, status) VALUES (?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO vehicles (plate_no, model, type, seats, rate_per_day, status) VALUES (?, ?, ?, ?, ?, ?)";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, plate);
                 stmt.setString(2, model);
                 stmt.setString(3, type);
-                stmt.setDouble(4, rate);
-                stmt.setString(5, status);
+                stmt.setInt(4, seats);
+                stmt.setDouble(5, rate);
+                stmt.setString(6, status);
                 stmt.executeUpdate();
             }
 
@@ -561,14 +574,16 @@ public class VehiclesController {
         final SimpleStringProperty plate;
         final SimpleStringProperty model;
         final SimpleStringProperty type;
+        final Integer seats;          // null for cars added before seats were saved
         final SimpleDoubleProperty rate;
         final SimpleStringProperty status;
 
-        VehicleRow(int id, String plate, String model, String type, double rate, String status) {
+        VehicleRow(int id, String plate, String model, String type, Integer seats, double rate, String status) {
             this.id = id;
             this.plate = new SimpleStringProperty(plate);
             this.model = new SimpleStringProperty(model);
             this.type = new SimpleStringProperty(type);
+            this.seats = seats;
             this.rate = new SimpleDoubleProperty(rate);
             this.status = new SimpleStringProperty(status);
         }
