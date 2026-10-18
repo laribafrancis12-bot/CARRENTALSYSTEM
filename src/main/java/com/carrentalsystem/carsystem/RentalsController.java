@@ -462,7 +462,7 @@ public class RentalsController {
 
     private void loadAvailableVehicles() {
         ObservableList<VehicleOption> options = FXCollections.observableArrayList();
-        String sql = "SELECT vehicle_id, model, plate_no, rate_per_day FROM vehicles " +
+        String sql = "SELECT vehicle_id, model, plate_no, rate_per_day, seats FROM vehicles " +
                 "WHERE status='Available' ORDER BY model ASC";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -474,7 +474,8 @@ public class RentalsController {
                         rs.getInt("vehicle_id"),
                         rs.getString("model"),
                         rs.getString("plate_no"),
-                        rs.getDouble("rate_per_day")
+                        rs.getDouble("rate_per_day"),
+                        (Integer) rs.getObject("seats")
                 ));
             }
         } catch (SQLException e) {
@@ -528,7 +529,7 @@ public class RentalsController {
         // The ID photo is copied into the valid_ids folder only after the rental was confirmed.
         String idPhotoName;
         try {
-            idPhotoName = IdPhotoStorage.save(idPhotoFile);
+            idPhotoName = IdPhotoStorage.save(idPhotoFile, name);
         } catch (IOException e) {
             e.printStackTrace();
             formMessageLabel.setText("Could not save the ID photo. Please try again.");
@@ -951,17 +952,20 @@ public class RentalsController {
         final String model;
         final String plate;
         final double rate;
+        final Integer seats;   // null for cars added before seats were saved
 
-        VehicleOption(int id, String model, String plate, double rate) {
+        VehicleOption(int id, String model, String plate, double rate, Integer seats) {
             this.id = id;
             this.model = model;
             this.plate = plate;
             this.rate = rate;
+            this.seats = seats;
         }
 
         @Override
         public String toString() {
-            return model + " \u00b7 " + plate + " \u00b7 \u20b1" + String.format("%,.0f", rate) + "/day";
+            return model + " \u00b7 " + plate + (seats == null ? "" : " \u00b7 " + seats + " seats")
+                    + " \u00b7 \u20b1" + String.format("%,.0f", rate) + "/day";
         }
     }
 }
