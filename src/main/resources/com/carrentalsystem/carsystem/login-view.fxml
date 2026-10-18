@@ -24,7 +24,7 @@
 
         <!-- Badge overlapping the header/card boundary -->
         <StackPane styleClass="login-badge" translateY="-30.0">
-            <Label styleClass="login-badge-icon" text=""/>
+            <Label styleClass="login-badge-icon" text="&#128663;"/>
         </StackPane>
 
         <!-- White form card -->

@@ -4,6 +4,7 @@
    so no FXML changes are needed — just this file.
    ========================================================= */
 
+/* ---- Login screen (kept smaller/standalone, same dark look) ---- */
 
 .login-root {
     -fx-background-color: #0D0E12;
@@ -43,7 +44,7 @@
 
 .login-badge-icon {
     -fx-text-fill: white;
-    -fx-font-size: 22px;
+    -fx-font-size: 26px;
 }
 
 .login-card {
@@ -125,10 +126,11 @@
     -fx-pref-width: 150;
     -fx-min-width: 150;
     -fx-max-width: 150;
+    -fx-alignment: top-center;   /* puts the car logo in the middle; the buttons still fill the width */
 }
 
 .rail-logo {
-    -fx-text-fill: #D4302B;
+    -fx-text-fill: white;
     -fx-font-size: 26px;
     -fx-alignment: center;
     -fx-padding: 0 0 16 0;
@@ -1016,7 +1018,96 @@
 }
 
 /* date boxes show their text in white too */
+/* the date box is light, so its text is black (white text could not be read) */
 .date-picker .text-field {
-    -fx-text-fill: white;
+    -fx-text-fill: black;
     -fx-prompt-text-fill: #6B6E78;
 }
+
+/* the "Change status" box in the Vehicles table is light, so its text is black */
+.table-combo .list-cell,
+.table-combo .list-cell:empty {
+    -fx-text-fill: black;
+}
+
+
+/* =========================================================
+   Pop-up messages (confirmations, errors, info) in the system theme
+   ========================================================= */
+
+.themed-dialog {
+    -fx-background-color: #15161B;
+    -fx-border-color: #2E2F37;
+    -fx-border-width: 1;
+    -fx-font-size: 13px;
+}
+
+.themed-dialog .header-panel {
+    -fx-background-color: #1C1D23;
+    -fx-padding: 16 22 16 22;
+}
+
+.themed-dialog .header-panel .label {
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.themed-dialog .content.label {
+    -fx-text-fill: #C9CBD3;
+    -fx-padding: 6 22 10 6;
+}
+
+.themed-dialog .graphic-container {
+    -fx-padding: 14 0 0 22;
+}
+
+.themed-dialog .button-bar .container {
+    -fx-background-color: transparent;
+    -fx-padding: 8 18 18 18;
+}
+
+.themed-dialog .button {
+    -fx-background-color: #1C1D23;
+    -fx-background-radius: 8;
+    -fx-border-color: #2E2F37;
+    -fx-border-radius: 8;
+    -fx-text-fill: white;
+    -fx-padding: 9 24;
+    -fx-cursor: hand;
+}
+
+.themed-dialog .button:hover {
+    -fx-background-color: #23242B;
+}
+
+/* the main button (Yes, OK, Confirm and pay) is red like the other main buttons */
+.themed-dialog .button:default {
+    -fx-background-color: #D4302B;
+    -fx-border-color: #D4302B;
+    -fx-font-weight: bold;
+}
+
+.themed-dialog .button:default:hover {
+    -fx-background-color: #E8463F;
+}
+
+.themed-dialog .separator .line {
+    -fx-border-color: #2E2F37;
+}
+
+.dialog-icon {
+    -fx-min-width: 38;
+    -fx-min-height: 38;
+    -fx-max-width: 38;
+    -fx-max-height: 38;
+    -fx-background-radius: 19;
+    -fx-alignment: center;
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+}
+
+.dialog-icon-main    { -fx-background-color: #D4302B; }
+.dialog-icon-info    { -fx-background-color: #5B8DEF; }
+.dialog-icon-warning { -fx-background-color: #E2A93B; }

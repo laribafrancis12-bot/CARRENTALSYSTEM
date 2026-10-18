@@ -88,6 +88,7 @@ public class VehiclesController {
 
         // Warnings are written in code and appear right under the field that has the problem.
         FormValidation.live(plateField, plateErrorLabel, c -> FormValidation.plate(plateField.getText(), c));
+        FormValidation.restrictPlate(plateField, plateErrorLabel);   // only 3 letters + 4 numbers can be typed
         FormValidation.live(modelField, modelErrorLabel, c -> FormValidation.vehicleModel(modelField.getText(), c));
         FormValidation.live(rateField, rateErrorLabel, c -> FormValidation.rate(rateField.getText(), c));
         FormValidation.live(newRateField, newRateErrorLabel, c -> FormValidation.rate(newRateField.getText(), c));
@@ -154,6 +155,7 @@ public class VehiclesController {
 
             {
                 statusChanger.setPromptText("Change status");
+                statusChanger.getStyleClass().add("table-combo");
                 deleteBtn.getStyleClass().add("ghost-button");
                 editRateBtn.getStyleClass().add("ghost-button");
                 statusChanger.setOnAction(e -> {
@@ -273,7 +275,7 @@ public class VehiclesController {
     private void changeStatus(VehicleRow row, String newStatus) {
         boolean wasOut = "Rented".equals(row.status.get()) || "Overdue".equals(row.status.get());
         if ("Available".equals(newStatus) && wasOut) {
-            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+            Alert confirm = Dialogs.create(Alert.AlertType.CONFIRMATION,
                     row.model.get() + " (" + row.plate.get() + ") is currently "
                             + row.status.get().toLowerCase() + ".\n\n"
                             + "Make it available again? Its open rental will be marked as Returned.",
@@ -290,7 +292,7 @@ public class VehiclesController {
             DatabaseConnection.setVehicleStatus(row.id, newStatus);
         } catch (SQLException e) {
             e.printStackTrace();
-            Alert error = new Alert(Alert.AlertType.ERROR, "Could not change the status. Try again.");
+            Alert error = Dialogs.create(Alert.AlertType.ERROR, "Could not change the status. Try again.");
             error.setHeaderText(null);
             error.showAndWait();
         }
@@ -298,7 +300,7 @@ public class VehiclesController {
     }
 
     private void confirmAndDelete(VehicleRow row) {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+        Alert confirm = Dialogs.create(Alert.AlertType.CONFIRMATION,
                 "Are you sure you want to delete " + row.model.get() + " (" + row.plate.get() + ")?",
                 ButtonType.YES, ButtonType.NO);
         confirm.setHeaderText(null);
@@ -313,7 +315,7 @@ public class VehiclesController {
                 loadVehicles();
             } catch (SQLException e) {
                 e.printStackTrace();
-                Alert error = new Alert(Alert.AlertType.ERROR,
+                Alert error = Dialogs.create(Alert.AlertType.ERROR,
                         "This vehicle may have rental history and can't be deleted.");
                 error.setHeaderText(null);
                 error.showAndWait();
@@ -469,7 +471,7 @@ public class VehiclesController {
         }
         double newRate = Double.parseDouble(text);
 
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+        Alert confirm = Dialogs.create(Alert.AlertType.CONFIRMATION,
                 "Change the rate of " + rateTarget.model.get() + " (" + rateTarget.plate.get() + ")\n"
                         + "from \u20b1" + String.format("%,.2f", rateTarget.rate.get())
                         + " to \u20b1" + String.format("%,.2f", newRate) + " per day?\n\n"
@@ -526,7 +528,7 @@ public class VehiclesController {
 
     @FXML
     private void onLogoutClick() {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+        Alert confirm = Dialogs.create(Alert.AlertType.CONFIRMATION,
                 "Are you sure you want to log out?", ButtonType.YES, ButtonType.NO);
         confirm.setHeaderText(null);
         confirm.setTitle("Log out");

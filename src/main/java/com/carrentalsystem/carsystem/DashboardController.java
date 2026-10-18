@@ -6,7 +6,6 @@ import javafx.fxml.FXML;
 import javafx.util.StringConverter;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.BarChart;
-import javafx.scene.chart.LineChart;
 import javafx.scene.chart.PieChart;
 import javafx.scene.chart.XYChart;
 import javafx.fxml.FXMLLoader;
@@ -28,7 +27,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -57,14 +55,15 @@ public class DashboardController {
     @FXML private VBox dueListContainer;
 
     @FXML private PieChart fleetChart;
-    @FXML private BarChart<String, Number> revenueChart;
-    @FXML private LineChart<String, Number> monthlyChart;
+    @FXML private VBox staffChartCard;
+    @FXML private BarChart<String, Number> staffChart;
+    @FXML private Label staffChartTitleLabel;
+    @FXML private BarChart<String, Number> monthRevenueChart;
+    @FXML private Label monthChartTitleLabel;
     @FXML private BarChart<String, Number> yearRevenueChart;
     @FXML private Label yearChartTitleLabel;
     @FXML private BarChart<String, Number> carRankChart;
     @FXML private Label carRankTitleLabel;
-    @FXML private Label revenueChartTitleLabel;
-    @FXML private Label monthlyChartTitleLabel;
 
     @FXML
     public void initialize() {
@@ -221,14 +220,21 @@ public class DashboardController {
 
     // ---- Charts ----
 
-    /** Admins see the whole company; staff see only the rentals they made themselves. */
+    /**
+     * Admins see the whole company; staff see only the rentals they made themselves.
+     * The staff performance chart is for the admin only (it compares the staff members).
+     */
     private void loadCharts() {
         boolean admin = Session.isAdmin();
-        revenueChartTitleLabel.setText(admin ? "Revenue - last 7 days" : "Your sales - last 7 days");
-        monthlyChartTitleLabel.setText(admin ? "Rentals per month" : "Your rentals per month");
         loadFleetChart();
-        loadRevenueChart(admin);
-        loadMonthlyChart(admin);
+
+        staffChartCard.setVisible(admin);
+        staffChartCard.setManaged(admin);
+        if (admin) {
+            loadStaffPerformanceChart();
+        }
+
+        loadMonthRevenueChart(admin);
         loadYearRevenueChart(admin);
         loadCarRankChart(admin);
     }
@@ -261,13 +267,62 @@ public class DashboardController {
         fleetChart.setData(data);
     }
 
-    /** Bars: money earned on each of the last 7 days. */
-    private void loadRevenueChart(boolean admin) {
-        String sql = "SELECT rent_date AS d, IFNULL(SUM(total_amount),0) AS amt FROM rentals " +
-                "WHERE rent_date >= CURDATE() - INTERVAL 6 DAY " + (admin ? "" : "AND created_by = ? ") +
-                "GROUP BY rent_date";
+    /**
+     * Admin-only: one bar per STAFF member (the admin's own rentals are not counted),
+     * showing how much revenue they brought in this month. Each bar's label also shows
+     * how many cars they rented. Active staff with no rentals yet get a bar of zero,
+     * so the whole team can be compared.
+     */
+    private void loadStaffPerformanceChart() {
+        staffChartTitleLabel.setText("Staff performance - this month");
 
-        Map<LocalDate, Double> byDay = new HashMap<>();
+        String sql = "SELECT u.username, COUNT(r.rental_id) AS n, IFNULL(SUM(r.total_amount),0) AS amt " +
+                "FROM users u " +
+                "LEFT JOIN rentals r ON r.created_by = u.username " +
+                "AND MONTH(r.rent_date) = MONTH(CURDATE()) AND YEAR(r.rent_date) = YEAR(CURDATE()) " +
+                "WHERE u.role = 'staff' " +
+                "GROUP BY u.username " +
+                "HAVING MAX(u.active) = 1 OR COUNT(r.rental_id) > 0 " +
+                "ORDER BY amt DESC, u.username ASC";
+
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            boolean any = false;
+            while (rs.next()) {
+                any = true;
+                String staff = rs.getString("username");
+                int count = rs.getInt("n");
+                double amount = rs.getDouble("amt");
+                String label = staff + "\n(" + count + (count == 1 ? " rental" : " rentals") + ")";
+                series.getData().add(new XYChart.Data<>(label, amount));
+            }
+            if (!any) {
+                // There are no staff accounts yet; show an empty, honest chart.
+                series.getData().add(new XYChart.Data<>("No staff yet", 0));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        staffChart.getData().setAll(series);
+    }
+
+    /** Bars: money earned on each day of the current month. */
+    private void loadMonthRevenueChart(boolean admin) {
+        LocalDate today = LocalDate.now();
+        monthChartTitleLabel.setText((admin ? "Revenue - " : "Your sales - ")
+                + today.getMonth().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + " " + today.getYear());
+
+        String sql = "SELECT DAY(rent_date) AS d, IFNULL(SUM(total_amount),0) AS amt FROM rentals " +
+                "WHERE MONTH(rent_date) = MONTH(CURDATE()) AND YEAR(rent_date) = YEAR(CURDATE()) " +
+                (admin ? "" : "AND created_by = ? ") +
+                "GROUP BY DAY(rent_date)";
+
+        Map<Integer, Double> byDay = new HashMap<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             if (!admin) {
@@ -275,7 +330,7 @@ public class DashboardController {
             }
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    byDay.put(rs.getDate("d").toLocalDate(), rs.getDouble("amt"));
+                    byDay.put(rs.getInt("d"), rs.getDouble("amt"));
                 }
             }
         } catch (SQLException e) {
@@ -283,14 +338,44 @@ public class DashboardController {
             return;
         }
 
-        DateTimeFormatter label = DateTimeFormatter.ofPattern("MMM d");
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        LocalDate today = LocalDate.now();
-        for (int i = 6; i >= 0; i--) {
-            LocalDate day = today.minusDays(i);
-            series.getData().add(new XYChart.Data<>(day.format(label), byDay.getOrDefault(day, 0.0)));
+        for (int day = 1; day <= today.lengthOfMonth(); day++) {
+            series.getData().add(new XYChart.Data<>(String.valueOf(day), byDay.getOrDefault(day, 0.0)));
         }
-        revenueChart.getData().setAll(series);
+        monthRevenueChart.getData().setAll(series);
+    }
+
+    /** Bars: money earned in each month of the current year (January to December). */
+    private void loadYearRevenueChart(boolean admin) {
+        int year = LocalDate.now().getYear();
+        yearChartTitleLabel.setText((admin ? "Revenue by month - " : "Your sales by month - ") + year);
+
+        String sql = "SELECT MONTH(rent_date) AS m, IFNULL(SUM(total_amount),0) AS amt FROM rentals " +
+                "WHERE YEAR(rent_date) = YEAR(CURDATE()) " + (admin ? "" : "AND created_by = ? ") +
+                "GROUP BY MONTH(rent_date)";
+
+        Map<Integer, Double> byMonth = new HashMap<>();
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (!admin) {
+                stmt.setString(1, Session.username);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    byMonth.put(rs.getInt("m"), rs.getDouble("amt"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        for (int m = 1; m <= 12; m++) {
+            series.getData().add(new XYChart.Data<>(
+                    Month.of(m).getDisplayName(TextStyle.SHORT, Locale.ENGLISH), byMonth.getOrDefault(m, 0.0)));
+        }
+        yearRevenueChart.getData().setAll(series);
     }
 
     /**
@@ -343,72 +428,6 @@ public class DashboardController {
         });
     }
 
-    /** Bars: money earned in each month of the current year (January to December). */
-    private void loadYearRevenueChart(boolean admin) {
-        int year = LocalDate.now().getYear();
-        yearChartTitleLabel.setText((admin ? "Revenue by month - " : "Your sales by month - ") + year);
-
-        String sql = "SELECT MONTH(rent_date) AS m, IFNULL(SUM(total_amount),0) AS amt FROM rentals " +
-                "WHERE YEAR(rent_date) = YEAR(CURDATE()) " + (admin ? "" : "AND created_by = ? ") +
-                "GROUP BY MONTH(rent_date)";
-
-        Map<Integer, Double> byMonth = new HashMap<>();
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            if (!admin) {
-                stmt.setString(1, Session.username);
-            }
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    byMonth.put(rs.getInt("m"), rs.getDouble("amt"));
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        for (int m = 1; m <= 12; m++) {
-            series.getData().add(new XYChart.Data<>(
-                    Month.of(m).getDisplayName(TextStyle.SHORT, Locale.ENGLISH), byMonth.getOrDefault(m, 0.0)));
-        }
-        yearRevenueChart.getData().setAll(series);
-    }
-
-    /** Line: number of rentals in each of the last 6 months. */
-    private void loadMonthlyChart(boolean admin) {
-        String sql = "SELECT DATE_FORMAT(rent_date, '%Y-%m') AS ym, COUNT(*) AS n FROM rentals " +
-                "WHERE rent_date >= DATE_SUB(DATE_FORMAT(CURDATE(), '%Y-%m-01'), INTERVAL 5 MONTH) " +
-                (admin ? "" : "AND created_by = ? ") +
-                "GROUP BY ym";
-
-        Map<String, Integer> byMonth = new HashMap<>();
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            if (!admin) {
-                stmt.setString(1, Session.username);
-            }
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    byMonth.put(rs.getString("ym"), rs.getInt("n"));
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        DateTimeFormatter label = DateTimeFormatter.ofPattern("MMM yy");
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        YearMonth now = YearMonth.now();
-        for (int i = 5; i >= 0; i--) {
-            YearMonth month = now.minusMonths(i);
-            series.getData().add(new XYChart.Data<>(month.format(label), byMonth.getOrDefault(month.toString(), 0)));
-        }
-        monthlyChart.getData().setAll(series);
-    }
-
     @FXML
     private void onHistoryClick() {
         switchScene("history-view.fxml", "Car Rental System - History");
@@ -443,7 +462,7 @@ public class DashboardController {
 
     @FXML
     private void onLogoutClick() {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+        Alert confirm = Dialogs.create(Alert.AlertType.CONFIRMATION,
                 "Are you sure you want to log out?", ButtonType.YES, ButtonType.NO);
         confirm.setHeaderText(null);
         confirm.setTitle("Log out");

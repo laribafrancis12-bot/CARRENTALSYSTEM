@@ -31,6 +31,9 @@ public class AccountsController {
     @FXML private TextField newUsernameField;
     @FXML private PasswordField newPasswordField;
     @FXML private PasswordField confirmPasswordField;
+    @FXML private TextField newPasswordVisibleField;
+    @FXML private TextField confirmPasswordVisibleField;
+    @FXML private CheckBox showNewPasswordCheck;
     @FXML private Label newUsernameErrorLabel;
     @FXML private Label newPasswordErrorLabel;
     @FXML private Label confirmPasswordErrorLabel;
@@ -79,6 +82,25 @@ public class AccountsController {
             if (!confirmChangePasswordField.getText().isEmpty()) {
                 FormValidation.show(confirmChangePasswordField, confirmChangePasswordErrorLabel,
                         FormValidation.confirmPassword(b, confirmChangePasswordField.getText(), true));
+            }
+        });
+
+        // "Show password" on the Add staff popup (same idea as in Change password below).
+        newPasswordVisibleField.textProperty().bindBidirectional(newPasswordField.textProperty());
+        confirmPasswordVisibleField.textProperty().bindBidirectional(confirmPasswordField.textProperty());
+        mirrorInvalid(newPasswordField, newPasswordVisibleField);
+        mirrorInvalid(confirmPasswordField, confirmPasswordVisibleField);
+        newPasswordVisibleField.focusedProperty().addListener((o, was, now) -> {
+            if (!now) {
+                FormValidation.show(newPasswordField, newPasswordErrorLabel,
+                        FormValidation.password(newPasswordField.getText(), true));
+            }
+        });
+        confirmPasswordVisibleField.focusedProperty().addListener((o, was, now) -> {
+            if (!now) {
+                FormValidation.show(confirmPasswordField, confirmPasswordErrorLabel,
+                        FormValidation.confirmPassword(newPasswordField.getText(),
+                                confirmPasswordField.getText(), true));
             }
         });
 
@@ -202,7 +224,7 @@ public class AccountsController {
 
     /** Simple OK dialog used for success / error messages. */
     private void showInfo(String title, String message) {
-        Alert info = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.OK);
+        Alert info = Dialogs.create(Alert.AlertType.INFORMATION, message, ButtonType.OK);
         info.setHeaderText(null);
         info.setTitle(title);
         info.showAndWait();
@@ -216,6 +238,8 @@ public class AccountsController {
         newPasswordField.clear();
         confirmPasswordField.clear();
         clearAddStaffErrors();
+        showNewPasswordCheck.setSelected(false);
+        setNewPasswordVisible(false);
         addStaffOverlay.setVisible(true);
         addStaffOverlay.setManaged(true);
     }
@@ -315,7 +339,7 @@ public class AccountsController {
         }
         changePasswordMessageLabel.setText("");
 
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+        Alert confirm = Dialogs.create(Alert.AlertType.CONFIRMATION,
                 "Are you sure you want to change the password for \"" + targetUsername + "\"?",
                 ButtonType.YES, ButtonType.NO);
         confirm.setHeaderText(null);
@@ -344,6 +368,22 @@ public class AccountsController {
     }
 
     @FXML
+    private void onToggleNewPasswordVisibility() {
+        setNewPasswordVisible(showNewPasswordCheck.isSelected());
+    }
+
+    private void setNewPasswordVisible(boolean show) {
+        newPasswordField.setVisible(!show);
+        newPasswordField.setManaged(!show);
+        newPasswordVisibleField.setVisible(show);
+        newPasswordVisibleField.setManaged(show);
+        confirmPasswordField.setVisible(!show);
+        confirmPasswordField.setManaged(!show);
+        confirmPasswordVisibleField.setVisible(show);
+        confirmPasswordVisibleField.setManaged(show);
+    }
+
+    @FXML
     private void onToggleChangePasswordVisibility() {
         setChangePasswordVisible(showChangePasswordCheck.isSelected());
     }
@@ -362,7 +402,7 @@ public class AccountsController {
     // ---- Deactivate / activate (soft delete) ----
 
     private void confirmAndDeactivate(String username) {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+        Alert confirm = Dialogs.create(Alert.AlertType.CONFIRMATION,
                 "Deactivate the account \"" + username + "\"?\n\n"
                         + "They will no longer be able to log in. Their rental records are kept, "
                         + "and you can activate the account again at any time.",
@@ -427,7 +467,7 @@ public class AccountsController {
 
     @FXML
     private void onLogoutClick() {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+        Alert confirm = Dialogs.create(Alert.AlertType.CONFIRMATION,
                 "Are you sure you want to log out?", ButtonType.YES, ButtonType.NO);
         confirm.setHeaderText(null);
         confirm.setTitle("Log out");

@@ -262,13 +262,12 @@ public class HistoryController {
         File file = IdPhotoStorage.file(row.idPhoto);
         Alert dialog;
         if (file == null || !file.exists()) {
-            dialog = new Alert(Alert.AlertType.WARNING,
+            dialog = Dialogs.create(Alert.AlertType.WARNING,
                     "The ID photo could not be found in the valid_ids folder.", ButtonType.OK);
         } else {
-            dialog = new Alert(Alert.AlertType.INFORMATION, "", ButtonType.CLOSE);
+            dialog = Dialogs.create(Alert.AlertType.INFORMATION, "", ButtonType.CLOSE);
             dialog.getDialogPane().setContent(new ImageView(new Image(file.toURI().toString(), 640, 440, true, true, false)));
         }
-        dialog.initOwner(countLabel.getScene().getWindow());
         dialog.setTitle("Valid ID photo");
         dialog.setHeaderText(row.customer + " \u00b7 " + (row.idType == null ? "Valid ID" : row.idType));
         dialog.showAndWait();
@@ -283,7 +282,7 @@ public class HistoryController {
             controller.setBackToHistory();
         } catch (IOException e) {
             e.printStackTrace();
-            Alert error = new Alert(Alert.AlertType.ERROR, "The receipt screen could not be opened.");
+            Alert error = Dialogs.create(Alert.AlertType.ERROR, "The receipt screen could not be opened.");
             error.setHeaderText(null);
             error.setTitle("Receipt");
             error.showAndWait();
@@ -321,7 +320,7 @@ public class HistoryController {
 
     @FXML
     private void onLogoutClick() {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+        Alert confirm = Dialogs.create(Alert.AlertType.CONFIRMATION,
                 "Are you sure you want to log out?", ButtonType.YES, ButtonType.NO);
         confirm.setHeaderText(null);
         confirm.setTitle("Log out");

@@ -114,6 +114,34 @@ public final class FormValidation {
                 "Address can only contain letters, numbers, spaces and , . - # (150 characters at most).");
     }
 
+    /** Contact number: digits only, must start with 09, 11 digits at most (the Philippine mobile format). */
+    public static void restrictPhone(TextInputControl field, Label errorLabel) {
+        restrict(field, errorLabel, Pattern.compile("(0(9\\d{0,9})?)?"),
+                "Contact number must be 11 digits and start with 09 (e.g. 09171234567).");
+    }
+
+    /**
+     * Plate number: fixed format ABC 1234 (3 letters, then 4 numbers). Letters are made capital
+     * and the space is added automatically while typing; anything else cannot be typed.
+     */
+    public static void restrictPlate(TextInputControl field, Label errorLabel) {
+        field.setTextFormatter(new TextFormatter<String>(change -> {
+            if (!change.isContentChange()) {
+                return change;
+            }
+            String raw = change.getControlNewText().replace(" ", "").toUpperCase();
+            if (!raw.matches("[A-Z]{0,3}\\d{0,4}")) {
+                show(field, errorLabel, "Plate number must be 3 letters followed by 4 numbers (e.g. ABC 1234).");
+                return null;
+            }
+            String formatted = raw.length() > 3 ? raw.substring(0, 3) + " " + raw.substring(3) : raw;
+            change.setRange(0, change.getControlText().length());
+            change.setText(formatted);
+            change.selectRange(formatted.length(), formatted.length());
+            return change;
+        }));
+    }
+
     /**
      * Driver's license: fixed format N01-23-456789 (1 letter, 2 digits, 2 digits, 6 digits).
      * Letters are made capital and the hyphens are added automatically while typing.

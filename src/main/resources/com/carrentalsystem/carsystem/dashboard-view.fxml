@@ -4,7 +4,6 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.chart.BarChart?>
 <?import javafx.scene.chart.CategoryAxis?>
-<?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.chart.PieChart?>
 <?import javafx.scene.control.Label?>
@@ -89,7 +88,7 @@
 
                 </HBox>
 
-                <!-- Charts -->
+                <!-- Fleet status + staff performance (admin only: it compares the staff members) -->
                 <HBox spacing="12.0">
                     <VBox styleClass="stat-card" spacing="6.0" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
                         <Label text="Fleet status" styleClass="section-label"/>
@@ -97,9 +96,21 @@
                                   minHeight="270.0" prefHeight="270.0"/>
                     </VBox>
 
+                    <VBox fx:id="staffChartCard" styleClass="stat-card" spacing="6.0" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
+                        <Label fx:id="staffChartTitleLabel" text="Staff performance - this month" styleClass="section-label"/>
+                        <BarChart fx:id="staffChart" animated="false" legendVisible="false"
+                                  minHeight="270.0" prefHeight="270.0">
+                            <xAxis><CategoryAxis/></xAxis>
+                            <yAxis><NumberAxis/></yAxis>
+                        </BarChart>
+                    </VBox>
+                </HBox>
+
+                <!-- Revenue: this month day by day, and this year month by month -->
+                <HBox spacing="12.0">
                     <VBox styleClass="stat-card" spacing="6.0" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
-                        <Label fx:id="revenueChartTitleLabel" text="Revenue - last 7 days" styleClass="section-label"/>
-                        <BarChart fx:id="revenueChart" animated="false" legendVisible="false"
+                        <Label fx:id="monthChartTitleLabel" text="Revenue - this month" styleClass="section-label"/>
+                        <BarChart fx:id="monthRevenueChart" animated="false" legendVisible="false"
                                   minHeight="270.0" prefHeight="270.0">
                             <xAxis><CategoryAxis/></xAxis>
                             <yAxis><NumberAxis/></yAxis>
@@ -107,24 +118,14 @@
                     </VBox>
 
                     <VBox styleClass="stat-card" spacing="6.0" HBox.hgrow="ALWAYS" minWidth="0.0" prefWidth="0.0">
-                        <Label fx:id="monthlyChartTitleLabel" text="Rentals per month" styleClass="section-label"/>
-                        <LineChart fx:id="monthlyChart" animated="false" legendVisible="false"
-                                   minHeight="270.0" prefHeight="270.0">
+                        <Label fx:id="yearChartTitleLabel" text="Revenue by month" styleClass="section-label"/>
+                        <BarChart fx:id="yearRevenueChart" animated="false" legendVisible="false"
+                                  minHeight="270.0" prefHeight="270.0">
                             <xAxis><CategoryAxis/></xAxis>
                             <yAxis><NumberAxis/></yAxis>
-                        </LineChart>
+                        </BarChart>
                     </VBox>
                 </HBox>
-
-                <!-- Revenue for the whole year, month by month -->
-                <VBox styleClass="stat-card" spacing="6.0">
-                    <Label fx:id="yearChartTitleLabel" text="Revenue by month" styleClass="section-label"/>
-                    <BarChart fx:id="yearRevenueChart" animated="false" legendVisible="false"
-                              minHeight="260.0" prefHeight="260.0">
-                        <xAxis><CategoryAxis/></xAxis>
-                        <yAxis><NumberAxis/></yAxis>
-                    </BarChart>
-                </VBox>
 
                 <!-- Every car ranked by how many times it was rented -->
                 <VBox styleClass="stat-card" spacing="6.0">

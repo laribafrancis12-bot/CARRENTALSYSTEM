@@ -4,6 +4,13 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.application.Platform;
+import javafx.scene.Node;
+import javafx.scene.control.skin.DatePickerSkin;
+import java.time.Month;
+import java.time.format.TextStyle;
+import java.util.Locale;
+import java.util.function.Supplier;
 import java.io.File;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -142,6 +149,7 @@ public class RentalsController {
         FormValidation.restrictName(customerNameField, nameErrorLabel);
         FormValidation.restrictAddress(addressField, addressErrorLabel);
         FormValidation.restrictLicense(licenseField, licenseErrorLabel);
+        FormValidation.restrictPhone(contactField, contactErrorLabel);   // 11 digits, starting with 09
 
         idTypeCombo.setItems(FXCollections.observableArrayList(
                 "Passport", "UMID", "PhilSys National ID", "SSS ID", "PRC ID", "Postal ID", "Voter's ID", "PhilHealth ID"));
@@ -285,7 +293,7 @@ public class RentalsController {
             timing = "Returned on the agreed date (" + agreed + ").";
         }
 
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+        Alert confirm = Dialogs.create(Alert.AlertType.CONFIRMATION,
                 row.vehicle + "\n" + timing + "\n\n"
                         + "The rental will move to History and the vehicle will be available again. "
                         + "The amount charged stays \u20b1" + String.format("%,.0f", row.total) + ".",
@@ -301,7 +309,7 @@ public class RentalsController {
             DatabaseConnection.markReturned(row.id);
         } catch (SQLException e) {
             e.printStackTrace();
-            Alert error = new Alert(Alert.AlertType.ERROR, "Could not mark this rental as returned. Try again.");
+            Alert error = Dialogs.create(Alert.AlertType.ERROR, "Could not mark this rental as returned. Try again.");
             error.setHeaderText(null);
             error.showAndWait();
         }
@@ -666,7 +674,7 @@ public class RentalsController {
         row = addSummaryRow(grid, row, "Driver's license", license);
         row = addSummaryRow(grid, row, "Valid ID", idType + " \u00b7 photo attached");
         Label photoKey = new Label("ID photo");
-        photoKey.setStyle("-fx-text-fill: #6B6E78;");
+        photoKey.setStyle("-fx-text-fill: #8A8D96;");
         ImageView thumbnail = new ImageView(new Image(idPhoto.toURI().toString(), 220, 130, true, true, false));
         grid.add(photoKey, 0, row);
         grid.add(thumbnail, 1, row++);
@@ -680,9 +688,9 @@ public class RentalsController {
         grid.add(line, 0, row++, 2, 1);
 
         Label totalKey = new Label("Total amount due");
-        totalKey.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+        totalKey.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
         Label totalValue = new Label("\u20b1" + String.format("%,.2f", total));
-        totalValue.setStyle("-fx-font-weight: bold; -fx-font-size: 18px;");
+        totalValue.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18px;");
         grid.add(totalKey, 0, row);
         grid.add(totalValue, 1, row++);
 
@@ -690,11 +698,10 @@ public class RentalsController {
                 + "and that the vehicle is released to the customer. This will be recorded and the receipt will open.");
         note.setWrapText(true);
         note.setMaxWidth(430);
-        note.setStyle("-fx-text-fill: #6B6E78; -fx-font-size: 11.5px;");
+        note.setStyle("-fx-text-fill: #8A8D96; -fx-font-size: 11.5px;");
         grid.add(note, 0, row, 2, 1);
 
-        Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
-        dialog.initOwner(customerNameField.getScene().getWindow());
+        Alert dialog = Dialogs.create(Alert.AlertType.CONFIRMATION);
         dialog.setTitle("Confirm rental");
         dialog.setHeaderText("Please review the rental details before confirming");
         dialog.getDialogPane().setContent(grid);
@@ -709,11 +716,11 @@ public class RentalsController {
 
     private int addSummaryRow(GridPane grid, int row, String key, String value) {
         Label keyLabel = new Label(key);
-        keyLabel.setStyle("-fx-text-fill: #6B6E78;");
+        keyLabel.setStyle("-fx-text-fill: #8A8D96;");
         Label valueLabel = new Label(value);
         valueLabel.setWrapText(true);
         valueLabel.setMaxWidth(320);
-        valueLabel.setStyle("-fx-font-weight: bold;");
+        valueLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
         grid.add(keyLabel, 0, row);
         grid.add(valueLabel, 1, row);
         return row + 1;
@@ -729,7 +736,7 @@ public class RentalsController {
             @Override
             public void updateItem(LocalDate day, boolean empty) {
                 super.updateItem(day, empty);
-                boolean blocked = !empty && day != null && day.isBefore(LocalDate.now());
+                boolean blocked = !empty && day != null && (day.isBefore(LocalDate.now()) || day.getYear() > lastYear());
                 setDisable(blocked);
                 setStyle(blocked ? "-fx-opacity: 0.35;" : "");
             }
@@ -741,16 +748,99 @@ public class RentalsController {
                 super.updateItem(day, empty);
                 LocalDate rent = rentDatePicker.getValue();
                 LocalDate earliest = (rent == null || rent.isBefore(LocalDate.now()) ? LocalDate.now() : rent).plusDays(1);
-                boolean blocked = !empty && day != null && day.isBefore(earliest);
+                boolean blocked = !empty && day != null && (day.isBefore(earliest) || day.getYear() > lastYear());
                 setDisable(blocked);
                 setStyle(blocked ? "-fx-opacity: 0.35;" : "");
             }
+        });
+
+        // The month and year arrows of the calendar can't go back to the past either.
+        limitCalendarNavigation(rentDatePicker, LocalDate::now);
+        limitCalendarNavigation(returnDatePicker, () -> {
+            LocalDate rent = rentDatePicker.getValue();
+            return (rent == null || rent.isBefore(LocalDate.now()) ? LocalDate.now() : rent).plusDays(1);
         });
 
         for (DatePicker picker : new DatePicker[] { rentDatePicker, returnDatePicker }) {
             picker.setEditable(false);
             picker.getEditor().setOnMouseClicked(e -> picker.show());
         }
+    }
+
+    /** The last year that can be picked: next year, so a rental can still run over New Year. */
+    private static int lastYear() {
+        return LocalDate.now().getYear() + 1;
+    }
+
+    /**
+     * Greys out the calendar's month/year arrows that would go before the earliest allowed date
+     * (and past next year). If the calendar's layout is not found, nothing happens: the days that
+     * cannot be picked are still greyed out.
+     */
+    private void limitCalendarNavigation(DatePicker picker, Supplier<LocalDate> earliest) {
+        picker.showingProperty().addListener((o, was, showing) -> {
+            if (!showing) {
+                return;
+            }
+            Platform.runLater(() -> {
+                try {
+                    if (!(picker.getSkin() instanceof DatePickerSkin)) {
+                        return;
+                    }
+                    Node content = ((DatePickerSkin) picker.getSkin()).getPopupContent();
+                    List<Node> spinners = new ArrayList<>(content.lookupAll(".spinner"));   // month, then year
+                    if (spinners.size() < 2) {
+                        return;
+                    }
+                    Node monthSpinner = spinners.get(0);
+                    Node yearSpinner = spinners.get(1);
+                    Node monthLabel = monthSpinner.lookup(".label");
+                    Node yearLabel = yearSpinner.lookup(".label");
+                    Node monthLeft = monthSpinner.lookup(".left-button");
+                    Node monthRight = monthSpinner.lookup(".right-button");
+                    Node yearLeft = yearSpinner.lookup(".left-button");
+                    Node yearRight = yearSpinner.lookup(".right-button");
+                    if (!(monthLabel instanceof Label) || !(yearLabel instanceof Label)) {
+                        return;
+                    }
+                    Label monthText = (Label) monthLabel;
+                    Label yearText = (Label) yearLabel;
+
+                    Runnable update = () -> {
+                        try {
+                            int year = Integer.parseInt(yearText.getText().trim());
+                            int month = monthNumber(monthText.getText());
+                            LocalDate min = earliest.get();
+                            boolean firstYear = year <= min.getYear();
+                            if (yearLeft != null) yearLeft.setDisable(firstYear);
+                            if (yearRight != null) yearRight.setDisable(year >= lastYear());
+                            if (monthLeft != null) monthLeft.setDisable(firstYear && month > 0 && month <= min.getMonthValue());
+                            if (monthRight != null) monthRight.setDisable(year >= lastYear() && month == 12);
+                        } catch (RuntimeException ignored) {
+                            // unreadable label: leave the arrows as they are
+                        }
+                    };
+
+                    if (!Boolean.TRUE.equals(picker.getProperties().get("navLimited"))) {
+                        picker.getProperties().put("navLimited", Boolean.TRUE);
+                        monthText.textProperty().addListener((a, b, c) -> update.run());
+                        yearText.textProperty().addListener((a, b, c) -> update.run());
+                    }
+                    update.run();
+                } catch (RuntimeException ignored) {
+                    // the calendar looks different on this JavaFX version: keep the default arrows
+                }
+            });
+        });
+    }
+
+    private static int monthNumber(String name) {
+        for (Month m : Month.values()) {
+            if (m.getDisplayName(TextStyle.FULL, Locale.getDefault()).equalsIgnoreCase(name.trim())) {
+                return m.getValue();
+            }
+        }
+        return 0;
     }
 
     /** Checks both dates and shows their messages under the date fields. */
@@ -783,7 +873,7 @@ public class RentalsController {
             controller.setRentalId(rentalId);
         } catch (IOException e) {
             e.printStackTrace();
-            Alert error = new Alert(Alert.AlertType.ERROR,
+            Alert error = Dialogs.create(Alert.AlertType.ERROR,
                     "The rental was saved, but the receipt screen could not be opened.");
             error.setHeaderText(null);
             error.setTitle("Receipt");
@@ -821,7 +911,7 @@ public class RentalsController {
 
     @FXML
     private void onLogoutClick() {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+        Alert confirm = Dialogs.create(Alert.AlertType.CONFIRMATION,
                 "Are you sure you want to log out?", ButtonType.YES, ButtonType.NO);
         confirm.setHeaderText(null);
         confirm.setTitle("Log out");

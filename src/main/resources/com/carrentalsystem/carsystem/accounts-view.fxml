@@ -66,13 +66,22 @@
             <Label fx:id="newUsernameErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
 
             <Label text="Password" styleClass="field-label"/>
-            <PasswordField fx:id="newPasswordField" promptText="Temporary password" styleClass="field-input"/>
+            <StackPane>
+                <PasswordField fx:id="newPasswordField" promptText="Temporary password" styleClass="field-input"/>
+                <TextField fx:id="newPasswordVisibleField" promptText="Temporary password" styleClass="field-input" visible="false" managed="false"/>
+            </StackPane>
             <Label fx:id="newPasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
             <Label text="Use at least 8 characters with an uppercase letter and a special character (! @ # $ %)." styleClass="page-subtitle" wrapText="true" minHeight="-Infinity"/>
 
             <Label text="Confirm password" styleClass="field-label"/>
-            <PasswordField fx:id="confirmPasswordField" promptText="Re-enter password" styleClass="field-input"/>
+            <StackPane>
+                <PasswordField fx:id="confirmPasswordField" promptText="Re-enter password" styleClass="field-input"/>
+                <TextField fx:id="confirmPasswordVisibleField" promptText="Re-enter password" styleClass="field-input" visible="false" managed="false"/>
+            </StackPane>
             <Label fx:id="confirmPasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
+
+            <CheckBox fx:id="showNewPasswordCheck" text="Show password" styleClass="field-checkbox"
+                      onAction="#onToggleNewPasswordVisibility"/>
 
             <Label fx:id="addStaffMessageLabel" styleClass="error-label" wrapText="true"/>
 
