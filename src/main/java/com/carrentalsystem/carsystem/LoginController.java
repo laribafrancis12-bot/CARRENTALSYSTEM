@@ -47,7 +47,7 @@ public class LoginController {
             return;
         }
 
-        String sql = "SELECT role, active FROM users WHERE username = ? AND password = ?";
+        String sql = "SELECT username, role, active FROM users WHERE BINARY username = ? AND BINARY password = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -60,7 +60,7 @@ public class LoginController {
                         showMessage("This account has been deactivated. Please contact the admin.", false);
                         return;
                     }
-                    Session.username = username;
+                    Session.username = rs.getString("username");   // exactly as saved (capitals included)
                     Session.role = rs.getString("role");
                     goToDashboard();
                 } else {
