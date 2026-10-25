@@ -71,8 +71,7 @@
             <StackPane>
                 <PasswordField fx:id="newPasswordField" promptText="Temporary password" styleClass="field-input"/>
                 <TextField fx:id="newPasswordVisibleField" promptText="Temporary password" styleClass="field-input" visible="false" managed="false"/>
-                </Group>
-    </StackPane>
+            </StackPane>
             <Label fx:id="newPasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
             <Label text="Use at least 8 characters with an uppercase letter and a special character (! @ # $ %)." styleClass="page-subtitle" wrapText="true" minHeight="-Infinity"/>
 
@@ -91,6 +90,7 @@
                 <Button text="Create account" styleClass="cta-button" onAction="#onCreateStaffClick"/>
             </HBox>
         </VBox>
+        </Group>
     </StackPane>
 
     <!-- Change password overlay -->
@@ -108,8 +108,7 @@
             <StackPane>
                 <PasswordField fx:id="changePasswordField" promptText="New password" styleClass="field-input"/>
                 <TextField fx:id="changePasswordVisibleField" promptText="New password" styleClass="field-input" visible="false" managed="false"/>
-                </Group>
-    </StackPane>
+            </StackPane>
             <Label fx:id="changePasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
             <Label text="Use at least 8 characters with an uppercase letter and a special character (! @ # $ %)." styleClass="page-subtitle" wrapText="true" minHeight="-Infinity"/>
 
@@ -128,6 +127,7 @@
                 <Button text="Save password" styleClass="cta-button" onAction="#onSavePasswordClick"/>
             </HBox>
         </VBox>
+        </Group>
     </StackPane>
 
 </StackPane>
