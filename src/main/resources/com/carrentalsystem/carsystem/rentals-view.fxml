@@ -83,7 +83,7 @@
 
     <!-- New rental overlay -->
     <StackPane fx:id="newRentalOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="10.0" maxWidth="560.0" maxHeight="700.0">
+        <VBox styleClass="modal-card" spacing="10.0" maxWidth="560.0" maxHeight="700.0" prefHeight="-1.0">
             <padding><Insets top="26.0" bottom="26.0" left="30.0" right="30.0"/></padding>
 
             <HBox alignment="CENTER_LEFT">
