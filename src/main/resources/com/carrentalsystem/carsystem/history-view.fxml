@@ -51,11 +51,11 @@
                     <TableColumn fx:id="vehicleCol" text="Vehicle" prefWidth="150.0"/>
                     <TableColumn fx:id="rentDateCol" text="Rent date" prefWidth="100.0"/>
                     <TableColumn fx:id="returnedOnCol" text="Returned on" prefWidth="100.0"/>
-                    <TableColumn fx:id="timingCol" text="Return" prefWidth="105.0"/>
+                    <TableColumn fx:id="timingCol" text="Return" prefWidth="155.0"/>
                     <TableColumn fx:id="totalCol" text="Total" prefWidth="85.0"/>
-                    <TableColumn fx:id="rentedByCol" text="Rented by" prefWidth="95.0"/>
-                    <TableColumn fx:id="returnedByCol" text="Returned by" prefWidth="95.0"/>
-                    <TableColumn fx:id="actionsCol" text="Actions" prefWidth="95.0"/>
+                    <TableColumn fx:id="rentedByCol" text="Rented by" prefWidth="125.0"/>
+                    <TableColumn fx:id="returnedByCol" text="Returned by" prefWidth="125.0"/>
+                    <TableColumn fx:id="actionsCol" text="Actions" prefWidth="190.0"/>
                 </columns>
             </TableView>
 
