@@ -7,37 +7,37 @@
 /* ---- Login screen (kept smaller/standalone, same dark look) ---- */
 
 .login-root {
-    -fx-background-color: #0D0E12;
+    -fx-background-color: #F4F7FB;
     -fx-font-family: "Segoe UI";
 }
 
 .login-hero {
-    -fx-background-color: #15161B;
+    -fx-background-color: #FFFFFF;
     -fx-background-radius: 0 0 60 60;
     -fx-padding: 24 20 10 20;
-    -fx-border-color: transparent transparent #D4302B transparent;
+    -fx-border-color: transparent transparent #2563EB transparent;
     -fx-border-width: 0 0 3 0;
 }
 
 .login-hero-title {
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
     -fx-font-size: 20px;
     -fx-font-weight: bold;
 }
 
 .login-hero-subtitle {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 12px;
 }
 
 .login-badge {
-    -fx-background-color: #D4302B;
+    -fx-background-color: #2563EB;
     -fx-background-radius: 30;
     -fx-min-width: 60;
     -fx-min-height: 60;
     -fx-max-width: 60;
     -fx-max-height: 60;
-    -fx-border-color: #0D0E12;
+    -fx-border-color: #F4F7FB;
     -fx-border-width: 5;
     -fx-border-radius: 30;
 }
@@ -48,9 +48,9 @@
 }
 
 .login-card {
-    -fx-background-color: #15161B;
+    -fx-background-color: #FFFFFF;
     -fx-background-radius: 20;
-    -fx-border-color: #26272E;
+    -fx-border-color: #E2E8F0;
     -fx-border-radius: 20;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.45), 16, 0, 0, 6);
 }
@@ -58,26 +58,26 @@
 .login-title {
     -fx-font-size: 18px;
     -fx-font-weight: bold;
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
 }
 
 .login-subtitle {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 12px;
 }
 
 /* ---- Shared form fields (used on every screen) ---- */
 
 .field-label {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 11px;
 }
 
 .field-input {
-    -fx-background-color: #1C1D23;
-    -fx-text-fill: white;
+    -fx-background-color: #F0F4FA;
+    -fx-text-fill: #0F172A;
     -fx-prompt-text-fill: #6B6E78;
-    -fx-border-color: #2E2F37;
+    -fx-border-color: #CBD5E1;
     -fx-border-radius: 10;
     -fx-background-radius: 10;
     -fx-padding: 10 12;
@@ -85,16 +85,16 @@
 }
 
 .field-input:focused {
-    -fx-border-color: #D4302B;
+    -fx-border-color: #2563EB;
 }
 
 .field-checkbox {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 12px;
 }
 
 .login-button {
-    -fx-background-color: #D4302B;
+    -fx-background-color: #2563EB;
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-background-radius: 10;
@@ -104,7 +104,7 @@
 }
 
 .login-button:hover {
-    -fx-background-color: #A8231E;
+    -fx-background-color: #1D4ED8;
 }
 
 .error-label {
@@ -115,22 +115,22 @@
 /* ---- App shell: sidebar + page ---- */
 
 .app-root {
-    -fx-background-color: #0D0E12;
+    -fx-background-color: #F4F7FB;
     -fx-font-family: "Segoe UI";
 }
 
 .rail {
-    -fx-background-color: #15161B;
-    -fx-border-color: transparent #D4302B transparent transparent;
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: transparent #2563EB transparent transparent;
     -fx-border-width: 0 3 0 0;
-    -fx-pref-width: 150;
-    -fx-min-width: 150;
-    -fx-max-width: 150;
+    -fx-pref-width: 210;
+    -fx-min-width: 210;
+    -fx-max-width: 210;
     -fx-alignment: top-center;   /* puts the car logo in the middle; the buttons still fill the width */
 }
 
 .rail-logo {
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
     -fx-font-size: 44px;
     -fx-alignment: center;
     -fx-padding: 0 0 18 0;
@@ -138,7 +138,7 @@
 
 .rail-btn {
     -fx-background-color: transparent;
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 13px;
     -fx-padding: 12 10;
     -fx-background-radius: 8;
@@ -147,11 +147,11 @@
 }
 
 .rail-btn:hover {
-    -fx-background-color: #1F2026;
+    -fx-background-color: #EAF1FF;
 }
 
 .rail-btn-active {
-    -fx-background-color: #D4302B;
+    -fx-background-color: #2563EB;
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-font-size: 13px;
@@ -163,16 +163,16 @@
 .page-title {
     -fx-font-size: 22px;
     -fx-font-weight: bold;
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
 }
 
 .page-subtitle {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 13px;
 }
 
 .cta-button {
-    -fx-background-color: #D4302B;
+    -fx-background-color: #2563EB;
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-background-radius: 8;
@@ -182,13 +182,13 @@
 }
 
 .cta-button:hover {
-    -fx-background-color: #A8231E;
+    -fx-background-color: #1D4ED8;
 }
 
 .ghost-button {
-    -fx-background-color: #1C1D23;
-    -fx-text-fill: white;
-    -fx-border-color: #2E2F37;
+    -fx-background-color: #F0F4FA;
+    -fx-text-fill: #0F172A;
+    -fx-border-color: #CBD5E1;
     -fx-border-radius: 8;
     -fx-background-radius: 8;
     -fx-padding: 10 16;
@@ -199,7 +199,7 @@
 .section-label {
     -fx-font-size: 14px;
     -fx-font-weight: bold;
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
 }
 
 .plain-scroll {
@@ -213,8 +213,8 @@
 /* ---- Filter pills (Vehicles screen) ---- */
 
 .pill {
-    -fx-background-color: #1C1D23;
-    -fx-text-fill: #C9CBD3;
+    -fx-background-color: #F0F4FA;
+    -fx-text-fill: #475569;
     -fx-background-radius: 16;
     -fx-padding: 6 14;
     -fx-font-size: 12px;
@@ -222,11 +222,11 @@
 }
 
 .pill:hover {
-    -fx-background-color: #26272E;
+    -fx-background-color: #E2E8F0;
 }
 
 .pill-active {
-    -fx-background-color: #D4302B;
+    -fx-background-color: #2563EB;
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-background-radius: 16;
@@ -238,22 +238,22 @@
 /* ---- Dashboard stat cards ---- */
 
 .stat-card {
-    -fx-background-color: #15161B;
-    -fx-border-color: #26272E;
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E2E8F0;
     -fx-border-radius: 12;
     -fx-background-radius: 12;
     -fx-padding: 16;
 }
 
 .stat-label {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 11px;
 }
 
 .stat-value {
     -fx-font-size: 22px;
     -fx-font-weight: bold;
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
 }
 
 .stat-value-green {
@@ -271,18 +271,18 @@
 .stat-value-red {
     -fx-font-size: 22px;
     -fx-font-weight: bold;
-    -fx-text-fill: #E8463F;
+    -fx-text-fill: #2563EB;
 }
 
 .revenue-total {
     -fx-font-size: 30px;
     -fx-font-weight: bold;
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
 }
 
 .revenue-chip {
-    -fx-background-color: #1C1D23;
-    -fx-text-fill: #C9CBD3;
+    -fx-background-color: #F0F4FA;
+    -fx-text-fill: #475569;
     -fx-background-radius: 8;
     -fx-padding: 5 12;
     -fx-font-size: 12px;
@@ -291,26 +291,26 @@
 /* ---- Row cards used on Dashboard due-list, Rentals board, Accounts list ---- */
 
 .due-card {
-    -fx-background-color: #1C1D23;
+    -fx-background-color: #F0F4FA;
     -fx-background-radius: 10;
     -fx-padding: 10;
-    -fx-border-color: transparent transparent transparent #D4302B;
+    -fx-border-color: transparent transparent transparent #2563EB;
     -fx-border-width: 0 0 0 3;
 }
 
 .due-name {
     -fx-font-size: 13px;
     -fx-font-weight: bold;
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
 }
 
 .due-detail {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 12px;
 }
 
 .due-badge-today {
-    -fx-background-color: #3A2E12;
+    -fx-background-color: #FEF3C7;
     -fx-text-fill: #E2A93B;
     -fx-background-radius: 8;
     -fx-padding: 4 10;
@@ -318,8 +318,8 @@
 }
 
 .due-badge-overdue {
-    -fx-background-color: #3A1512;
-    -fx-text-fill: #E8463F;
+    -fx-background-color: #FEE2E2;
+    -fx-text-fill: #2563EB;
     -fx-background-radius: 8;
     -fx-padding: 4 10;
     -fx-font-size: 12px;
@@ -342,23 +342,23 @@
 }
 
 .badge-gray {
-    -fx-background-color: #1C1D23;
-    -fx-text-fill: #C9CBD3;
+    -fx-background-color: #F0F4FA;
+    -fx-text-fill: #475569;
     -fx-background-radius: 8;
     -fx-padding: 4 10;
     -fx-font-size: 12px;
 }
 
 .badge-red {
-    -fx-background-color: #3A1512;
-    -fx-text-fill: #E8463F;
+    -fx-background-color: #FEE2E2;
+    -fx-text-fill: #2563EB;
     -fx-background-radius: 8;
     -fx-padding: 4 10;
     -fx-font-size: 12px;
 }
 
 .badge-amber {
-    -fx-background-color: #3A2E12;
+    -fx-background-color: #FEF3C7;
     -fx-text-fill: #E2A93B;
     -fx-background-radius: 8;
     -fx-padding: 4 10;
@@ -368,24 +368,24 @@
 /* ---- Rentals board columns ---- */
 
 .board-col {
-    -fx-background-color: #15161B;
+    -fx-background-color: #FFFFFF;
     -fx-background-radius: 12;
     -fx-padding: 12;
-    -fx-border-color: #26272E;
+    -fx-border-color: #E2E8F0;
 }
 
 /* ---- Vehicles table ---- */
 
 .data-table {
-    -fx-background-color: #15161B;
-    -fx-border-color: #26272E;
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E2E8F0;
     -fx-border-radius: 10;
     -fx-background-radius: 10;
     -fx-table-cell-border-color: transparent;
 }
 
 .data-table .column-header-background {
-    -fx-background-color: #1C1D23;
+    -fx-background-color: #F0F4FA;
     -fx-background-radius: 10 10 0 0;
 }
 
@@ -394,38 +394,38 @@
 }
 
 .data-table .column-header .label {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
 }
 
 .data-table .table-row-cell {
-    -fx-background-color: #15161B;
-    -fx-border-color: transparent transparent #212229 transparent;
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: transparent transparent #E2E8F0 transparent;
 }
 
 .data-table .table-row-cell:odd {
-    -fx-background-color: #18191F;
+    -fx-background-color: #F8FAFC;
 }
 
 .data-table .table-row-cell:selected {
-    -fx-background-color: #2A1715;
+    -fx-background-color: #DBEAFE;
 }
 
 .data-table .table-cell {
-    -fx-text-fill: #E7E8EC;
+    -fx-text-fill: #334155;
     -fx-font-size: 12px;
     -fx-alignment: center-left;
     -fx-padding: 10;
 }
 
 .data-table .placeholder .label {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
 }
 
 /* Plate number text, used via a style class on that one column's cells */
 .plate-text {
-    -fx-text-fill: #E8463F;
+    -fx-text-fill: #2563EB;
     -fx-font-weight: bold;
 }
 
@@ -436,14 +436,14 @@
 }
 
 .modal-card {
-    -fx-background-color: #15161B;
+    -fx-background-color: #FFFFFF;
     -fx-background-radius: 16;
-    -fx-border-color: #26272E;
+    -fx-border-color: #E2E8F0;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 20, 0, 0, 6);
 }
 
 .modal-icon {
-    -fx-background-color: #D4302B;
+    -fx-background-color: #2563EB;
     -fx-background-radius: 10;
 }
 
@@ -455,28 +455,28 @@
 .modal-title {
     -fx-font-size: 17px;
     -fx-font-weight: bold;
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
 }
 
 .modal-close {
     -fx-background-color: transparent;
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-cursor: hand;
     -fx-font-size: 13px;
 }
 
 .total-box {
-    -fx-background-color: #1C1D23;
+    -fx-background-color: #F0F4FA;
     -fx-background-radius: 10;
 }
 
 .total-breakdown {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 12px;
 }
 
 .total-amount {
-    -fx-text-fill: #E8463F;
+    -fx-text-fill: #2563EB;
     -fx-font-size: 19px;
     -fx-font-weight: bold;
 }
@@ -484,81 +484,81 @@
 /* ---- Receipt ---- */
 
 .ticket-card {
-    -fx-background-color: #15161B;
-    -fx-border-color: #26272E;
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #E2E8F0;
     -fx-border-radius: 14;
     -fx-background-radius: 14;
 }
 
 .ticket-head {
-    -fx-background-color: #1C1D23;
+    -fx-background-color: #F0F4FA;
     -fx-background-radius: 14 14 0 0;
-    -fx-border-color: transparent transparent #D4302B transparent;
+    -fx-border-color: transparent transparent #2563EB transparent;
     -fx-border-width: 0 0 3 0;
 }
 
 .ticket-brand {
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
     -fx-font-size: 18px;
     -fx-font-weight: bold;
 }
 
 .ticket-brand-sub {
-    -fx-text-fill: #D4302B;
+    -fx-text-fill: #2563EB;
     -fx-font-size: 12px;
     -fx-font-weight: bold;
 }
 
 .ticket-section-box {
-    -fx-background-color: #1C1D23;
+    -fx-background-color: #F0F4FA;
     -fx-background-radius: 10;
 }
 
 .ticket-key {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 10px;
 }
 
 .ticket-val {
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
     -fx-font-size: 13px;
     -fx-font-weight: bold;
 }
 
 .ticket-row {
-    -fx-text-fill: #E7E8EC;
+    -fx-text-fill: #334155;
     -fx-font-size: 12px;
 }
 
 .ticket-row-muted {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 12px;
 }
 
 .ticket-total {
-    -fx-background-color: #2A1715;
+    -fx-background-color: #DBEAFE;
     -fx-background-radius: 10;
 }
 
 .ticket-total-label {
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
     -fx-font-size: 13px;
     -fx-font-weight: bold;
 }
 
 .ticket-total-amount {
-    -fx-text-fill: #E8463F;
+    -fx-text-fill: #2563EB;
     -fx-font-size: 24px;
     -fx-font-weight: bold;
 }
 
 .ticket-payment-box {
-    -fx-background-color: #1C1D23;
+    -fx-background-color: #F0F4FA;
     -fx-background-radius: 10;
 }
 
 .receipt-icon {
-    -fx-text-fill: #D4302B;
+    -fx-text-fill: #2563EB;
     -fx-font-size: 18px;
     -fx-cursor: hand;
 }
@@ -603,14 +603,14 @@
 
 /* header band */
 .rc-head {
-    -fx-background-color: #15161B;
+    -fx-background-color: #FFFFFF;
     -fx-padding: 26 32 26 32;
-    -fx-border-color: #D4302B transparent transparent transparent;
+    -fx-border-color: #2563EB transparent transparent transparent;
     -fx-border-width: 5 0 0 0;
 }
 
 .rc-logo-box {
-    -fx-background-color: #D4302B;
+    -fx-background-color: #2563EB;
     -fx-background-radius: 10;
 }
 
@@ -620,27 +620,27 @@
 }
 
 .rc-brand {
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
     -fx-font-size: 26px;
     -fx-font-weight: bold;
     -fx-font-style: italic;
 }
 
 .rc-brand-sub {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 10px;
     -fx-font-weight: bold;
 }
 
 .rc-title {
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
     -fx-font-size: 28px;
     -fx-font-weight: bold;
     -fx-font-style: italic;
 }
 
 .rc-title-sub {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 11px;
 }
 
@@ -658,20 +658,20 @@
 }
 
 .rc-val {
-    -fx-text-fill: #15161B;
+    -fx-text-fill: #FFFFFF;
     -fx-font-size: 15px;
     -fx-font-weight: bold;
 }
 
 .rc-val-mono {
-    -fx-text-fill: #15161B;
+    -fx-text-fill: #FFFFFF;
     -fx-font-family: "Consolas";
     -fx-font-size: 14px;
     -fx-font-weight: bold;
 }
 
 .rc-sub {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 10px;
 }
 
@@ -706,46 +706,46 @@
 }
 
 .rc-card-title {
-    -fx-text-fill: #15161B;
+    -fx-text-fill: #FFFFFF;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
 }
 
 /* dark payment box */
 .rc-pay-box {
-    -fx-background-color: #15161B;
+    -fx-background-color: #FFFFFF;
     -fx-background-radius: 12;
     -fx-padding: 20;
 }
 
 .rc-pay-title {
-    -fx-text-fill: #E8463F;
+    -fx-text-fill: #2563EB;
     -fx-font-size: 11px;
     -fx-font-weight: bold;
 }
 
 .rc-pay-icon {
-    -fx-background-color: #D4302B;
+    -fx-background-color: #2563EB;
     -fx-background-radius: 10;
 }
 
 .rc-pay-key {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 10px;
 }
 
 .rc-pay-val {
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
     -fx-font-size: 17px;
     -fx-font-weight: bold;
 }
 
 .rc-pay-line {
-    -fx-background-color: #2E2F37;
+    -fx-background-color: #CBD5E1;
 }
 
 .rc-pay-note {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 11px;
 }
 
@@ -762,23 +762,23 @@
 }
 
 .rc-row-val {
-    -fx-text-fill: #15161B;
+    -fx-text-fill: #FFFFFF;
     -fx-font-size: 13px;
     -fx-font-weight: bold;
 }
 
 .rc-line {
-    -fx-background-color: #15161B;
+    -fx-background-color: #FFFFFF;
 }
 
 .rc-total-label {
-    -fx-text-fill: #15161B;
+    -fx-text-fill: #FFFFFF;
     -fx-font-size: 15px;
     -fx-font-weight: bold;
 }
 
 .rc-total-amount {
-    -fx-text-fill: #D4302B;
+    -fx-text-fill: #2563EB;
     -fx-font-size: 28px;
     -fx-font-weight: bold;
 }
@@ -791,19 +791,19 @@
 }
 
 .rc-thanks {
-    -fx-text-fill: #15161B;
+    -fx-text-fill: #FFFFFF;
     -fx-font-size: 18px;
     -fx-font-weight: bold;
     -fx-font-style: italic;
 }
 
 .rc-fine {
-    -fx-text-fill: #8A8D96;
+    -fx-text-fill: #64748B;
     -fx-font-size: 10px;
 }
 
 .rc-sign-name {
-    -fx-text-fill: #15161B;
+    -fx-text-fill: #FFFFFF;
     -fx-font-size: 16px;
     -fx-font-style: italic;
     -fx-font-weight: bold;
@@ -814,7 +814,7 @@
     -fx-text-fill: #6B6E78;
     -fx-font-size: 9px;
     -fx-font-weight: bold;
-    -fx-border-color: #15161B transparent transparent transparent;
+    -fx-border-color: #FFFFFF transparent transparent transparent;
     -fx-border-width: 1 0 0 0;
     -fx-padding: 5 0 0 0;
 }
@@ -842,7 +842,7 @@
 }
 
 .data-table .corner {
-    -fx-background-color: #1C1D23;
+    -fx-background-color: #F0F4FA;
 }
 
 /* dark scrollbars inside tables */
@@ -851,13 +851,13 @@
 }
 
 .data-table .scroll-bar .track {
-    -fx-background-color: #15161B;
+    -fx-background-color: #FFFFFF;
     -fx-border-color: transparent;
     -fx-background-radius: 6;
 }
 
 .data-table .scroll-bar .thumb {
-    -fx-background-color: #2E2F37;
+    -fx-background-color: #CBD5E1;
     -fx-background-radius: 6;
 }
 
@@ -908,26 +908,26 @@
 }
 
 .chart-horizontal-grid-lines {
-    -fx-stroke: #26272E;
+    -fx-stroke: #E2E8F0;
 }
 
 .chart-vertical-zero-line,
 .chart-horizontal-zero-line {
-    -fx-stroke: #2E2F37;
+    -fx-stroke: #CBD5E1;
 }
 
 .chart .axis {
-    -fx-tick-label-fill: #8A8D96;
+    -fx-tick-label-fill: #64748B;
     -fx-font-size: 11px;
 }
 
 .chart .axis-tick-mark,
 .chart .axis-minor-tick-mark {
-    -fx-stroke: #2E2F37;
+    -fx-stroke: #CBD5E1;
 }
 
 .chart .axis:top, .chart .axis:bottom, .chart .axis:left, .chart .axis:right {
-    -fx-border-color: #2E2F37;
+    -fx-border-color: #CBD5E1;
 }
 
 .chart-legend {
@@ -935,7 +935,7 @@
 }
 
 .chart-legend-item {
-    -fx-text-fill: #C9CBD3;
+    -fx-text-fill: #475569;
     -fx-font-size: 11px;
 }
 
@@ -944,28 +944,28 @@
 }
 
 .chart-pie {
-    -fx-border-color: #15161B;
+    -fx-border-color: #FFFFFF;
 }
 
 /* Pie: Available, Rented, Overdue, Maintenance, then anything else */
 .default-color0.chart-pie { -fx-pie-color: #4CAF66; }
 .default-color1.chart-pie { -fx-pie-color: #5B8DEF; }
-.default-color2.chart-pie { -fx-pie-color: #E8463F; }
+.default-color2.chart-pie { -fx-pie-color: #2563EB; }
 .default-color3.chart-pie { -fx-pie-color: #E2A93B; }
 .default-color4.chart-pie { -fx-pie-color: #9B7BE8; }
 
 /* Bars and line */
 .default-color0.chart-bar {
-    -fx-bar-fill: #D4302B;
+    -fx-bar-fill: #2563EB;
 }
 
 .default-color0.chart-series-line {
-    -fx-stroke: #D4302B;
+    -fx-stroke: #2563EB;
     -fx-stroke-width: 2.5px;
 }
 
 .default-color0.chart-line-symbol {
-    -fx-background-color: #D4302B, #0D0E12;
+    -fx-background-color: #2563EB, #F4F7FB;
 }
 
 /* Upload button that failed validation */
@@ -981,7 +981,7 @@
 
 /* the selected value shown in the box */
 .combo-box .list-cell {
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
     -fx-background-color: transparent;
 }
 
@@ -995,26 +995,26 @@
 }
 
 .combo-box .arrow-button .arrow {
-    -fx-background-color: #8A8D96;
+    -fx-background-color: #64748B;
 }
 
 /* the list that opens under the box */
 .combo-box-popup .list-view {
-    -fx-background-color: #1C1D23;
-    -fx-border-color: #2E2F37;
+    -fx-background-color: #F0F4FA;
+    -fx-border-color: #CBD5E1;
     -fx-background-insets: 0;
 }
 
 .combo-box-popup .list-view .list-cell {
-    -fx-background-color: #1C1D23;
-    -fx-text-fill: white;
+    -fx-background-color: #F0F4FA;
+    -fx-text-fill: #0F172A;
     -fx-padding: 8 12;
 }
 
 .combo-box-popup .list-view .list-cell:filled:hover,
 .combo-box-popup .list-view .list-cell:filled:selected {
-    -fx-background-color: #D4302B;
-    -fx-text-fill: white;
+    -fx-background-color: #2563EB;
+    -fx-text-fill: #0F172A;
 }
 
 /* date boxes show their text in white too */
@@ -1036,25 +1036,25 @@
    ========================================================= */
 
 .themed-dialog {
-    -fx-background-color: #15161B;
-    -fx-border-color: #2E2F37;
+    -fx-background-color: #FFFFFF;
+    -fx-border-color: #CBD5E1;
     -fx-border-width: 1;
     -fx-font-size: 13px;
 }
 
 .themed-dialog .header-panel {
-    -fx-background-color: #1C1D23;
+    -fx-background-color: #F0F4FA;
     -fx-padding: 16 22 16 22;
 }
 
 .themed-dialog .header-panel .label {
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
     -fx-font-size: 15px;
     -fx-font-weight: bold;
 }
 
 .themed-dialog .content.label {
-    -fx-text-fill: #C9CBD3;
+    -fx-text-fill: #475569;
     -fx-padding: 6 22 10 6;
 }
 
@@ -1068,11 +1068,11 @@
 }
 
 .themed-dialog .button {
-    -fx-background-color: #1C1D23;
+    -fx-background-color: #F0F4FA;
     -fx-background-radius: 8;
-    -fx-border-color: #2E2F37;
+    -fx-border-color: #CBD5E1;
     -fx-border-radius: 8;
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
     -fx-padding: 9 24;
     -fx-cursor: hand;
 }
@@ -1083,17 +1083,17 @@
 
 /* the main button (Yes, OK, Confirm and pay) is red like the other main buttons */
 .themed-dialog .button:default {
-    -fx-background-color: #D4302B;
-    -fx-border-color: #D4302B;
+    -fx-background-color: #2563EB;
+    -fx-border-color: #2563EB;
     -fx-font-weight: bold;
 }
 
 .themed-dialog .button:default:hover {
-    -fx-background-color: #E8463F;
+    -fx-background-color: #2563EB;
 }
 
 .themed-dialog .separator .line {
-    -fx-border-color: #2E2F37;
+    -fx-border-color: #CBD5E1;
 }
 
 .dialog-icon {
@@ -1103,11 +1103,18 @@
     -fx-max-height: 38;
     -fx-background-radius: 19;
     -fx-alignment: center;
-    -fx-text-fill: white;
+    -fx-text-fill: #0F172A;
     -fx-font-size: 20px;
     -fx-font-weight: bold;
 }
 
-.dialog-icon-main    { -fx-background-color: #D4302B; }
+.dialog-icon-main    { -fx-background-color: #2563EB; }
 .dialog-icon-info    { -fx-background-color: #5B8DEF; }
 .dialog-icon-warning { -fx-background-color: #E2A93B; }
+/* Modern interaction polish */
+.button:focused, .text-field:focused, .password-field:focused { -fx-focus-color: transparent; -fx-faint-focus-color: transparent; }
+.ghost-button:hover { -fx-background-color: #DBEAFE; -fx-border-color: #93C5FD; }
+.stat-card:hover { -fx-border-color: #93C5FD; -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.09), 16, 0, 0, 4); }
+.data-table .table-row-cell:hover { -fx-background-color: #EFF6FF; }
+.rail-btn-active { -fx-text-fill: white; }
+.login-button, .cta-button, .pill-active { -fx-text-fill: white; }
