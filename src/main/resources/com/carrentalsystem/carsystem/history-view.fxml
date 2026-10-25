@@ -18,14 +18,16 @@
     <left>
         <VBox spacing="6.0" styleClass="rail">
             <padding><Insets top="20.0" bottom="20.0" left="10.0" right="10.0"/></padding>
-            <Label text="&#128663;" styleClass="rail-logo"/>
-            <Button text="Dashboard" styleClass="rail-btn" maxWidth="Infinity" onAction="#onDashboardClick"/>
+            <VBox spacing="2.0" styleClass="nav-brand"><Label text="RENTASTIC" styleClass="nav-brand-title"/><Label text="WORKSPACE / ADMIN" styleClass="nav-brand-subtitle"/></VBox>
+            <Label text="WORKSPACE" styleClass="nav-section-label"/>
+                <Button text="Dashboard" styleClass="rail-btn" maxWidth="Infinity" onAction="#onDashboardClick"/>
             <Button fx:id="vehiclesBtn" text="Vehicles" styleClass="rail-btn" maxWidth="Infinity" onAction="#onVehiclesClick"/>
             <Button text="Rentals" styleClass="rail-btn" maxWidth="Infinity" onAction="#onRentalsClick"/>
             <Button text="History" styleClass="rail-btn-active" maxWidth="Infinity" onAction="#onHistoryClick"/>
             <Button fx:id="accountsBtn" text="Accounts" styleClass="rail-btn" maxWidth="Infinity" onAction="#onAccountsClick"/>
             <VBox VBox.vgrow="ALWAYS"/>
-            <Button text="Log out" styleClass="rail-btn" maxWidth="Infinity" onAction="#onLogoutClick"/>
+            <Label text="ACCOUNT" styleClass="nav-section-label"/>
+                <Button text="Log out" styleClass="rail-btn" maxWidth="Infinity" onAction="#onLogoutClick"/>
         </VBox>
     </left>
 
