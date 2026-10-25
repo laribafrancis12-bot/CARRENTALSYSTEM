@@ -1145,3 +1145,29 @@
     -fx-background-color: rgba(31, 111, 209, 0.14);
     -fx-background-radius: 6;
 }
+/* ===== 2026 dashboard refinement: shared, non-destructive overrides ===== */
+.app-root, .login-root { -fx-background-color: #F3F6FB; }
+.page-content { -fx-padding: 28 32 28 32; }
+.page-title { -fx-font-size: 28px; -fx-text-fill: #10233F; }
+.page-subtitle { -fx-text-fill: #61748F; }
+.rail { -fx-background-color: #142D50; -fx-border-width: 0; }
+.rail-btn { -fx-background-radius: 10; -fx-padding: 13 14; }
+.rail-btn:hover { -fx-background-color: #284568; }
+.rail-btn-active { -fx-background-color: #E8F1FF; -fx-text-fill: #174A91; -fx-background-radius: 10; }
+.stat-card, .board-col { -fx-background-color: white; -fx-background-radius: 16; -fx-border-radius: 16; -fx-border-color: #E4EAF3; -fx-effect: dropshadow(gaussian, rgba(25,55,95,0.07), 16, 0, 0, 4); }
+.stat-card:hover { -fx-border-color: #A9C8F4; }
+.login-card, .modal-card { -fx-background-color: white; -fx-background-radius: 18; -fx-border-radius: 18; -fx-border-color: #E0E8F2; }
+.field-input { -fx-background-color: #F9FBFE; -fx-border-color: #D6E1EF; -fx-background-radius: 9; -fx-border-radius: 9; }
+.field-input:focused { -fx-background-color: white; -fx-border-color: #2563EB; -fx-border-width: 1.5; }
+.cta-button, .login-button { -fx-background-color: #2563EB; -fx-background-radius: 10; }
+.cta-button:hover, .login-button:hover { -fx-background-color: #1D4ED8; }
+.ghost-button { -fx-background-radius: 10; -fx-border-radius: 10; -fx-border-color: #DCE5F0; }
+.ghost-button:hover { -fx-background-color: #EFF6FF; -fx-border-color: #A9C8F4; }
+.data-table { -fx-background-color: white; -fx-border-color: #E2E8F0; -fx-border-radius: 12; -fx-background-radius: 12; }
+.data-table .column-header-background { -fx-background-color: #EFF4FB; }
+.data-table .table-row-cell { -fx-background-color: white; -fx-border-color: transparent transparent #EDF1F7 transparent; }
+.data-table .table-row-cell:odd { -fx-background-color: #F9FBFF; }
+.data-table .table-row-cell:hover { -fx-background-color: #EFF6FF; }
+.data-table .table-row-cell:selected { -fx-background-color: #DBEAFE; }
+.data-table .table-cell { -fx-text-fill: #172B49; }
+.compact .page-content { -fx-padding: 16 18 16 18; }
