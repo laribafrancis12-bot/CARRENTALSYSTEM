@@ -1253,3 +1253,27 @@
 .compact .nav-brand-title { -fx-font-size: 16px; }
 .compact .nav-brand-subtitle { -fx-font-size: 8px; }
 /* Receipt-specific .rc-* print styles are not modified. */
+
+/* FINAL POLISH — spacious web-app surfaces and fully legible status chips */
+.badge-red, .badge-blue, .badge-green, .badge-amber {
+    -fx-min-width: 98px;
+    -fx-pref-width: -1;
+    -fx-max-width: Infinity;
+    -fx-alignment: CENTER;
+    -fx-padding: 7 12;
+    -fx-background-radius: 9;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+.badge-red { -fx-background-color: #FCE5E7; -fx-text-fill: #B92E47; }
+.badge-blue { -fx-background-color: #E9E4FF; -fx-text-fill: #6742B1; }
+.badge-green { -fx-background-color: #DDF6EB; -fx-text-fill: #177953; }
+.badge-amber { -fx-background-color: #FFF0D9; -fx-text-fill: #A66316; }
+.data-table .table-row-cell { -fx-cell-size: 60px; }
+.data-table .table-cell { -fx-padding: 10 12; }
+.data-table .table-cell .label { -fx-text-overrun: CLIP; }
+.page-content { -fx-spacing: 18; }
+.nav-brand { -fx-padding: 15 9 26 9; }
+.nav-brand-title { -fx-font-size: 23px; }
+.stat-card { -fx-border-width: 1; -fx-padding: 24; }
+.ghost-button, .cta-button, .pill, .pill-active { -fx-cursor: hand; }
