@@ -83,26 +83,28 @@ public class HistoryController {
     // ---- Table ----
 
     private void sizeColumn(TableColumn<HistoryRow, ?> col, double share, double minWidth) {
+        // Keep a real content-sized minimum. The table scrolls horizontally on
+        // narrow screens instead of squeezing badges, names and action buttons.
         col.setMinWidth(minWidth);
-        // minus 24px so the vertical scrollbar never forces a horizontal one
-        col.prefWidthProperty().bind(historyTable.widthProperty().subtract(24).multiply(share));
+        col.setPrefWidth(minWidth);
     }
 
     private void setUpTable() {
         historyTable.setPlaceholder(new Label("No completed rentals yet"));
 
-        sizeColumn(idCol, 0.05, 65);
-        sizeColumn(customerCol, 0.10, 100);
-        sizeColumn(contactCol, 0.08, 95);
-        sizeColumn(addressCol, 0.11, 120);
-        sizeColumn(vehicleCol, 0.11, 120);
-        sizeColumn(rentDateCol, 0.07, 90);
-        sizeColumn(returnedOnCol, 0.07, 90);
-        sizeColumn(timingCol, 0.07, 90);
-        sizeColumn(totalCol, 0.06, 75);
-        sizeColumn(rentedByCol, 0.07, 85);
-        sizeColumn(returnedByCol, 0.07, 85);
-        sizeColumn(actionsCol, 0.14, 175);
+        // Fixed readable widths: FXML prefWidth alone was previously overridden.
+        sizeColumn(idCol, 0, 85);
+        sizeColumn(customerCol, 0, 165);
+        sizeColumn(contactCol, 0, 140);
+        sizeColumn(addressCol, 0, 210);
+        sizeColumn(vehicleCol, 0, 185);
+        sizeColumn(rentDateCol, 0, 135);
+        sizeColumn(returnedOnCol, 0, 140);
+        sizeColumn(timingCol, 0, 160);
+        sizeColumn(totalCol, 0, 115);
+        sizeColumn(rentedByCol, 0, 150);
+        sizeColumn(returnedByCol, 0, 150);
+        sizeColumn(actionsCol, 0, 210);
 
         idCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().id));
         idCol.setCellFactory(col -> new TableCell<>() {
@@ -136,6 +138,8 @@ public class HistoryController {
                     return;
                 }
                 Label badge = new Label(value);
+                badge.setMinWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
+                badge.setMaxWidth(javafx.scene.layout.Region.USE_PREF_SIZE);
                 if (value.startsWith("Late")) {
                     badge.getStyleClass().add("badge-red");
                 } else if (value.equals("Early")) {
