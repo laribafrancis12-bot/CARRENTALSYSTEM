@@ -23,6 +23,8 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.util.StringConverter;
+import javafx.scene.input.KeyCode;
 import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -93,6 +95,7 @@ public class RentalsController {
 
     /** Every car that can be rented right now; the car-type box decides which of them are offered. */
     private List<VehicleOption> availableVehicles = new ArrayList<>();
+    private List<VehicleOption> vehiclesForSelectedType = new ArrayList<>();
     @FXML private DatePicker rentDatePicker;
     @FXML private DatePicker returnDatePicker;
     @FXML private TextField paymentField;   // always "Cash"
@@ -146,9 +149,46 @@ public class RentalsController {
         FormValidation.live(licenseField, licenseErrorLabel,
                 c -> FormValidation.license(licenseField.getText(), c));
 
-        // Each car in the list shows a swatch of its real color next to its name.
+        // Editable searchable dropdown: typing filters available cars, while the
+        // arrow still opens the list. The value always remains a real VehicleOption.
+        vehicleCombo.setEditable(true);
+        vehicleCombo.setConverter(new StringConverter<>() {
+            @Override public String toString(VehicleOption car) {
+                return car == null ? "" : car.toString();
+            }
+            @Override public VehicleOption fromString(String text) {
+                if (text == null) return null;
+                for (VehicleOption car : vehiclesForSelectedType) {
+                    if (car.toString().equalsIgnoreCase(text.trim())) return car;
+                }
+                return null;
+            }
+        });
         vehicleCombo.setCellFactory(list -> new VehicleCell(null));
-        vehicleCombo.setButtonCell(new VehicleCell(vehicleCombo));
+        // A custom button cell would cover the editor of an editable ComboBox.
+        vehicleCombo.getEditor().setPromptText("Type model or plate, or open the list");
+        vehicleCombo.getEditor().setOnKeyReleased(event -> {
+            if (event.getCode() == KeyCode.UP || event.getCode() == KeyCode.DOWN
+                    || event.getCode() == KeyCode.ENTER || event.getCode() == KeyCode.ESCAPE
+                    || event.getCode() == KeyCode.TAB) return;
+            String typed = vehicleCombo.getEditor().getText();
+            String query = typed == null ? "" : typed.trim().toLowerCase(Locale.ROOT);
+            List<VehicleOption> matches = new ArrayList<>();
+            for (VehicleOption car : vehiclesForSelectedType) {
+                if (car.model.toLowerCase(Locale.ROOT).contains(query)
+                        || car.plate.toLowerCase(Locale.ROOT).contains(query)
+                        || car.toString().toLowerCase(Locale.ROOT).contains(query)) {
+                    matches.add(car);
+                }
+            }
+            vehicleCombo.getSelectionModel().clearSelection();
+            vehicleCombo.setItems(FXCollections.observableArrayList(matches));
+            vehicleCombo.getEditor().setText(typed);
+            vehicleCombo.getEditor().positionCaret(typed.length());
+            updateTotal();
+            if (!matches.isEmpty() && !vehicleCombo.isShowing()) vehicleCombo.show();
+            if (matches.isEmpty() && vehicleCombo.isShowing()) vehicleCombo.hide();
+        });
 
         // First the type of car, then only the cars of that type are offered.
         vehicleCombo.setDisable(true);
@@ -160,7 +200,9 @@ public class RentalsController {
                     if (type.equals(v.type)) ofType.add(v);
                 }
             }
+            vehiclesForSelectedType = ofType;
             vehicleCombo.setItems(FXCollections.observableArrayList(ofType));
+            vehicleCombo.getEditor().clear();
             vehicleCombo.setDisable(type == null);
             vehicleCombo.setPromptText(type == null ? "Choose the car type first" : "Select a car");
             if (type != null) FormValidation.clear(carTypeCombo, carTypeErrorLabel);
@@ -548,8 +590,10 @@ public class RentalsController {
 
         carTypeCombo.setItems(FXCollections.observableArrayList(types));
         carTypeCombo.getSelectionModel().clearSelection();
+        vehiclesForSelectedType = new ArrayList<>();
         vehicleCombo.setItems(FXCollections.observableArrayList());
         vehicleCombo.getSelectionModel().clearSelection();
+        vehicleCombo.getEditor().clear();
         vehicleCombo.setDisable(true);
         vehicleCombo.setPromptText("Choose the car type first");
 
@@ -566,6 +610,8 @@ public class RentalsController {
         String address = addressField.getText().trim();
         String license = licenseField.getText().trim().toUpperCase();
         VehicleOption vehicle = vehicleCombo.getValue();
+        // Do not accept free text that was never selected from the available cars.
+        if (vehicle != null && !vehiclesForSelectedType.contains(vehicle)) vehicle = null;
         LocalDate rent = rentDatePicker.getValue();
         LocalDate ret = returnDatePicker.getValue();
         String payment = PAYMENT_METHOD;
