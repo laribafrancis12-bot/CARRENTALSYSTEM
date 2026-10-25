@@ -42,6 +42,7 @@ public class DashboardController {
     @FXML private Button vehiclesBtn;
     @FXML private Button accountsBtn;
     @FXML private Label dateLabel;
+    @FXML private Label chartRefreshLabel;
     @FXML private Label totalVehiclesLabel;
     @FXML private Label availableLabel;
     @FXML private Label rentedLabel;
@@ -82,6 +83,30 @@ public class DashboardController {
         loadRevenueOrSales();
         loadDueList();
         loadCharts();
+        chartRefreshLabel.setText("Loaded from MySQL");
+    }
+
+    /** Reloads every dashboard metric and chart from MySQL without restarting the application. */
+    @FXML
+    private void onRefreshDashboardClick() {
+        DatabaseConnection.refreshOverdue();
+        loadStats();
+        loadRevenueOrSales();
+        loadDueList();
+        boolean admin = Session.isAdmin();
+        loadFleetChart();
+        if (admin) loadStaffPerformanceChart();
+        // Preserve the selected reporting year while refreshing available years.
+        Integer selected = yearCombo.getValue();
+        setUpYearCombo(admin);
+        if (selected != null && yearCombo.getItems().contains(selected)) {
+            yearCombo.setValue(selected);
+        }
+        loadMonthRevenueChart(admin);
+        loadYearRevenueChart(admin);
+        loadCarRankChart(admin);
+        chartRefreshLabel.setText("Updated " + java.time.LocalTime.now().format(
+                DateTimeFormatter.ofPattern("hh:mm:ss a")));
     }
 
     private void applyRoleRestrictions() {
