@@ -85,7 +85,7 @@
 
     <!-- Add vehicle overlay -->
     <StackPane fx:id="addVehicleOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="14.0" maxWidth="540.0">
+        <VBox styleClass="modal-card" spacing="14.0" maxWidth="540.0" maxHeight="-Infinity">
             <padding><Insets top="26.0" bottom="26.0" left="30.0" right="30.0"/></padding>
 
             <HBox alignment="CENTER_LEFT" spacing="12.0">
@@ -153,7 +153,7 @@
 
     <!-- Edit vehicle overlay (rate and color) -->
     <StackPane fx:id="editRateOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="14.0" maxWidth="460.0">
+        <VBox styleClass="modal-card" spacing="14.0" maxWidth="460.0" maxHeight="-Infinity">
             <padding><Insets top="26.0" bottom="26.0" left="30.0" right="30.0"/></padding>
 
             <HBox alignment="CENTER_LEFT" spacing="12.0">
