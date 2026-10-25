@@ -1174,174 +1174,82 @@
 
 
 
-/* =========================================================
-   RENtastic / Atelier: warm ivory + emerald + coral
-   Distinctly LIGHT navigation, tactile surfaces, richer depth.
-   ========================================================= */
-.app-root, .login-root {
-    -fx-background-color: #F8F7F2;
-    -fx-font-family: "Segoe UI";
-    -fx-font-size: 14px;
-}
-.rail {
-    -fx-background-color: #FFFFFF;
-    -fx-border-color: transparent #E9E8DF transparent transparent;
-    -fx-border-width: 0 1 0 0;
-    -fx-pref-width: 198;
-    -fx-min-width: 198;
-    -fx-max-width: 198;
-    -fx-effect: dropshadow(gaussian, rgba(35,56,47,0.045), 14, 0, 3, 0);
-}
-.rail-logo {
-    -fx-text-fill: #177C64;
-    -fx-font-size: 34px;
-    -fx-padding: 12 0 28 0;
-}
-.rail-btn, .rail-btn-active {
-    -fx-font-size: 14px;
-    -fx-padding: 13 15;
-    -fx-background-radius: 11;
-    -fx-cursor: hand;
-    -fx-alignment: center-left;
-}
-.rail-btn { -fx-text-fill: #617269; -fx-background-color: transparent; }
-.rail-btn:hover { -fx-text-fill: #177C64; -fx-background-color: #F1F7F1; }
-.rail-btn-active {
-    -fx-background-color: #DFF2E9;
-    -fx-text-fill: #126F56;
-    -fx-font-weight: bold;
-    -fx-border-color: transparent transparent transparent #20A37A;
-    -fx-border-width: 0 0 0 4;
-    -fx-border-radius: 3 11 11 3;
-}
-.rail-btn-active:hover { -fx-background-color: #D3EDE0; }
+
+/* RenTastic Studio — modern SaaS-style LIGHT interface, plum + tangerine.
+   Intentional redesign: no dark navigation, no blue/green primary theme. */
+.app-root, .login-root { -fx-background-color: #F7F6FA; -fx-font-family: "Segoe UI"; -fx-font-size: 14px; }
+.rail { -fx-background-color: #FFFFFF; -fx-border-color: transparent #EAE7EF transparent transparent; -fx-border-width: 0 1 0 0; -fx-pref-width: 210; -fx-min-width: 210; -fx-max-width: 210; }
+.nav-brand { -fx-padding: 12 8 22 9; }
+.nav-brand-title { -fx-font-size: 21px; -fx-font-weight: bold; -fx-text-fill: #6541A5; }
+.nav-brand-subtitle { -fx-font-size: 9px; -fx-font-weight: bold; -fx-text-fill: #A5A0B1; }
+.nav-section-label { -fx-text-fill: #A09BA9; -fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 12 10 7 12; -fx-alignment: center-left; -fx-max-width: Infinity; }
+.rail-btn, .rail-btn-active { -fx-background-radius: 12; -fx-font-size: 14px; -fx-padding: 13 15; -fx-alignment: center-left; -fx-cursor: hand; }
+.rail-btn { -fx-background-color: transparent; -fx-text-fill: #706B7F; }
+.rail-btn:hover { -fx-background-color: #F5F0FD; -fx-text-fill: #6744A9; }
+.rail-btn-active { -fx-background-color: #F0E9FC; -fx-text-fill: #6541A5; -fx-font-weight: bold; }
+.rail-btn-active:hover { -fx-background-color: #E8DDFB; }
 .page-content { -fx-padding: 30 34 30 34; }
-.page-title { -fx-text-fill: #253F34; -fx-font-size: 30px; -fx-font-weight: bold; }
-.page-subtitle { -fx-text-fill: #87978D; -fx-font-size: 13px; }
-.section-label { -fx-text-fill: #284C3C; -fx-font-size: 18px; -fx-font-weight: bold; }
-.field-label { -fx-text-fill: #4B6658; -fx-font-size: 12px; -fx-font-weight: bold; }
-.field-input {
-    -fx-background-color: #FFFFFF;
-    -fx-text-fill: #253F34;
-    -fx-prompt-text-fill: #9DAAA0;
-    -fx-border-color: #DFE7DE;
-    -fx-border-radius: 12;
-    -fx-background-radius: 12;
-    -fx-padding: 11 14;
-    -fx-font-size: 14px;
-}
-.field-input:hover { -fx-border-color: #AFCDBB; }
-.field-input:focused { -fx-border-color: #23A67E; -fx-border-width: 1.5; }
-.cta-button, .login-button {
-    -fx-background-color: #17946F;
-    -fx-text-fill: white;
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-background-radius: 12;
-    -fx-padding: 12 21;
-    -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(23,148,111,0.20), 10, 0, 0, 3);
-}
-.cta-button:hover, .login-button:hover { -fx-background-color: #117A5C; }
-.cta-button:pressed, .login-button:pressed { -fx-background-color: #0E624B; }
-.ghost-button {
-    -fx-background-color: white;
-    -fx-text-fill: #416050;
-    -fx-border-color: #DCE5DC;
-    -fx-border-radius: 11;
-    -fx-background-radius: 11;
-    -fx-padding: 10 16;
-    -fx-font-size: 14px;
-    -fx-cursor: hand;
-}
-.ghost-button:hover { -fx-background-color: #F1F8F1; -fx-border-color: #A7D3BB; }
-.pill { -fx-background-color: #F0F0E9; -fx-text-fill: #6C7D70; -fx-background-radius: 24; -fx-padding: 8 17; -fx-cursor: hand; }
-.pill:hover { -fx-background-color: #E4EEE4; }
-.pill-active { -fx-background-color: #DDF3E8; -fx-text-fill: #107958; -fx-background-radius: 24; -fx-padding: 8 17; -fx-font-weight: bold; }
-.stat-card {
-    -fx-background-color: #FFFFFF;
-    -fx-background-radius: 18;
-    -fx-border-radius: 18;
-    -fx-border-color: #E6EBE2;
-    -fx-padding: 22;
-    -fx-effect: dropshadow(gaussian, rgba(55,75,55,0.085), 20, 0, 0, 5);
-}
-.stat-card:hover { -fx-border-color: #B8DCC8; -fx-background-color: #FBFFFC; }
-.stat-label { -fx-text-fill: #819185; -fx-font-size: 12px; }
+.page-title { -fx-text-fill: #28213A; -fx-font-size: 30px; -fx-font-weight: bold; }
+.page-subtitle { -fx-text-fill: #928C9C; -fx-font-size: 13px; }
+.section-label { -fx-text-fill: #332944; -fx-font-size: 18px; -fx-font-weight: bold; }
+.field-label { -fx-text-fill: #5D556C; -fx-font-size: 12px; -fx-font-weight: bold; }
+.field-input { -fx-background-color: white; -fx-text-fill: #332B40; -fx-prompt-text-fill: #AAA3B3; -fx-border-color: #E2DEEA; -fx-border-radius: 12; -fx-background-radius: 12; -fx-padding: 11 14; -fx-font-size: 14px; }
+.field-input:hover { -fx-border-color: #BDA8DE; }
+.field-input:focused { -fx-border-color: #8A61D0; -fx-border-width: 1.5; }
+.cta-button, .login-button { -fx-background-color: #7548B8; -fx-text-fill: white; -fx-background-radius: 12; -fx-padding: 12 20; -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(117,72,184,0.18), 12, 0, 0, 4); }
+.cta-button:hover, .login-button:hover { -fx-background-color: #6139A2; }
+.ghost-button { -fx-background-color: white; -fx-text-fill: #5B4C74; -fx-border-color: #E4DEED; -fx-border-radius: 11; -fx-background-radius: 11; -fx-padding: 10 16; -fx-font-size: 14px; -fx-cursor: hand; }
+.ghost-button:hover { -fx-background-color: #F7F2FF; -fx-border-color: #C9B7E8; }
+.pill { -fx-background-color: #F0EDF4; -fx-text-fill: #766C82; -fx-background-radius: 20; -fx-padding: 8 16; -fx-cursor: hand; }
+.pill:hover { -fx-background-color: #E9E0F5; }
+.pill-active { -fx-background-color: #EFE4FF; -fx-text-fill: #7548B8; -fx-background-radius: 20; -fx-padding: 8 16; -fx-font-weight: bold; }
+.stat-card, .board-col { -fx-background-color: white; -fx-background-radius: 18; -fx-border-radius: 18; -fx-border-color: #EBE7F0; -fx-effect: dropshadow(gaussian, rgba(62,43,88,0.07), 18, 0, 0, 5); }
+.stat-card { -fx-padding: 22; }
+.stat-card:hover { -fx-border-color: #D6C2F0; }
+.stat-label { -fx-text-fill: #92899F; -fx-font-size: 12px; }
 .stat-value, .stat-value-green, .stat-value-amber, .stat-value-red { -fx-font-size: 30px; -fx-font-weight: bold; }
-.stat-value { -fx-text-fill: #254A38; }
-.revenue-total { -fx-text-fill: #1A7E60; -fx-font-size: 36px; -fx-font-weight: bold; }
-.revenue-chip { -fx-background-color: #FDECE3; -fx-text-fill: #BD6544; -fx-background-radius: 18; }
-.board-col {
-    -fx-background-color: #FFFFFF;
-    -fx-background-radius: 18;
-    -fx-border-radius: 18;
-    -fx-border-color: #E6EBE2;
-    -fx-padding: 16;
-    -fx-effect: dropshadow(gaussian, rgba(55,75,55,0.065), 14, 0, 0, 4);
-}
-.due-card { -fx-background-color: #F1F8F3; -fx-border-color: transparent transparent transparent #28A67D; -fx-border-width: 0 0 0 3; -fx-background-radius: 12; }
-.data-table {
-    -fx-background-color: white;
-    -fx-border-color: #E5E9E0;
-    -fx-border-radius: 15;
-    -fx-background-radius: 15;
-    -fx-table-cell-border-color: transparent;
-    -fx-effect: dropshadow(gaussian, rgba(55,75,55,0.04), 12, 0, 0, 3);
-}
-.data-table .column-header-background { -fx-background-color: #F2F5EF; -fx-background-radius: 14 14 0 0; }
+.stat-value { -fx-text-fill: #39294E; }
+.revenue-total { -fx-text-fill: #7548B8; -fx-font-size: 36px; -fx-font-weight: bold; }
+.revenue-chip { -fx-background-color: #FFF1E8; -fx-text-fill: #C16B37; -fx-background-radius: 18; }
+.due-card { -fx-background-color: #F9F5FF; -fx-border-color: transparent transparent transparent #9566D3; -fx-border-width: 0 0 0 3; -fx-background-radius: 12; }
+.data-table { -fx-background-color: white; -fx-border-color: #EBE7F0; -fx-border-radius: 15; -fx-background-radius: 15; -fx-table-cell-border-color: transparent; }
+.data-table .column-header-background { -fx-background-color: #F5F2F9; -fx-background-radius: 14 14 0 0; }
 .data-table .column-header { -fx-background-color: transparent; -fx-size: 44px; }
-.data-table .column-header .label { -fx-text-fill: #55705F; -fx-font-size: 12px; -fx-font-weight: bold; -fx-alignment: center-left; }
-.data-table .table-row-cell { -fx-background-color: white; -fx-border-color: transparent transparent #F0F1EC transparent; }
-.data-table .table-row-cell:odd { -fx-background-color: #FCFCF9; }
-.data-table .table-row-cell:hover { -fx-background-color: #F0F8F2; }
-.data-table .table-row-cell:selected { -fx-background-color: #DFF4E8; }
-.data-table .table-cell { -fx-text-fill: #344B3B; -fx-font-size: 13px; -fx-padding: 11 10; -fx-alignment: center-left; }
-.data-table .corner { -fx-background-color: #F2F5EF; }
-.data-table .scroll-bar .track { -fx-background-color: #F2F4EF; }
-.data-table .scroll-bar .thumb { -fx-background-color: #C2D3C6; -fx-background-radius: 8; }
-.table-btn { -fx-font-size: 12px; -fx-padding: 7 11; }
-.modal-overlay { -fx-background-color: rgba(29,51,39,0.38); }
-.modal-card {
-    -fx-background-color: #FFFFFF;
-    -fx-background-radius: 20;
-    -fx-border-radius: 20;
-    -fx-border-color: #E5E9E1;
-    -fx-effect: dropshadow(gaussian, rgba(34,54,37,0.22), 24, 0, 0, 8);
-}
-.modal-title { -fx-text-fill: #274637; -fx-font-size: 22px; -fx-font-weight: bold; }
-.modal-icon { -fx-background-color: #1B9B75; -fx-background-radius: 12; }
-.modal-close { -fx-text-fill: #718478; -fx-background-color: transparent; -fx-cursor: hand; }
-.modal-close:hover { -fx-background-color: #F2F5EF; -fx-text-fill: #284D3B; -fx-background-radius: 9; }
-.total-box { -fx-background-color: #E9F6EE; -fx-background-radius: 12; }
-.total-amount { -fx-text-fill: #138262; }
-.login-hero {
-    -fx-background-color: #E5F4E8;
-    -fx-background-radius: 24 24 52 52;
-    -fx-border-color: transparent transparent #24A37A transparent;
-    -fx-border-width: 0 0 3 0;
-    -fx-padding: 27 20 14 20;
-}
-.login-hero-title { -fx-text-fill: #1B795A; -fx-font-size: 29px; -fx-font-weight: bold; }
-.login-hero-subtitle { -fx-text-fill: #6B9480; -fx-font-size: 13px; }
-.login-badge { -fx-background-color: #1B9B75; -fx-border-color: #F8F7F2; }
-.login-card {
-    -fx-background-color: #FFFFFF;
-    -fx-background-radius: 20;
-    -fx-border-radius: 20;
-    -fx-border-color: #E6EBE2;
-    -fx-effect: dropshadow(gaussian, rgba(45,76,53,0.11), 18, 0, 0, 6);
-}
-.login-title { -fx-text-fill: #274737; }
-.login-subtitle { -fx-text-fill: #8A9B8D; }
-.pager-btn { -fx-background-color: white; -fx-border-color: #DDE8DD; -fx-background-radius: 10; -fx-border-radius: 10; -fx-text-fill: #42604A; }
-.pager-btn:hover { -fx-background-color: #ECF7ED; }
-.chart-horizontal-grid-lines { -fx-stroke: #E5ECE4; }
-.chart .axis { -fx-tick-label-fill: #708879; }
-.chart-legend-item { -fx-text-fill: #486755; }
+.data-table .column-header .label { -fx-text-fill: #675C76; -fx-font-size: 12px; -fx-font-weight: bold; -fx-alignment: center-left; }
+.data-table .table-row-cell { -fx-background-color: white; -fx-border-color: transparent transparent #F0EDF4 transparent; }
+.data-table .table-row-cell:odd { -fx-background-color: #FDFBFF; }
+.data-table .table-row-cell:hover { -fx-background-color: #F7F0FF; }
+.data-table .table-row-cell:selected { -fx-background-color: #EDE1FF; }
+.data-table .table-cell { -fx-text-fill: #3E344B; -fx-font-size: 13px; -fx-padding: 11 10; -fx-alignment: center-left; }
+.data-table .corner { -fx-background-color: #F5F2F9; }
+.data-table .scroll-bar .track { -fx-background-color: #F4F0F8; }
+.data-table .scroll-bar .thumb { -fx-background-color: #CBBAD9; -fx-background-radius: 7; }
+.table-btn { -fx-font-size: 12px; -fx-padding: 7 10; }
+.modal-overlay { -fx-background-color: rgba(41,31,58,0.37); }
+.modal-card { -fx-background-color: white; -fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #EBE5F0; -fx-effect: dropshadow(gaussian, rgba(43,31,65,0.23), 24, 0, 0, 8); }
+.modal-title { -fx-text-fill: #32263F; -fx-font-size: 22px; -fx-font-weight: bold; }
+.modal-icon { -fx-background-color: #7548B8; -fx-background-radius: 12; }
+.modal-close { -fx-text-fill: #85798F; -fx-background-color: transparent; -fx-cursor: hand; }
+.modal-close:hover { -fx-background-color: #F4EFFA; -fx-background-radius: 9; }
+.total-box { -fx-background-color: #F4EBFF; -fx-background-radius: 12; }
+.total-amount { -fx-text-fill: #7548B8; }
+.login-hero { -fx-background-color: #F0E9FC; -fx-background-radius: 22 22 50 50; -fx-border-color: transparent transparent #9E74D5 transparent; -fx-border-width: 0 0 3 0; -fx-padding: 27 20 14 20; }
+.login-hero-title { -fx-text-fill: #6640A2; -fx-font-size: 29px; -fx-font-weight: bold; }
+.login-hero-subtitle { -fx-text-fill: #8977A1; -fx-font-size: 13px; }
+.login-badge { -fx-background-color: #7548B8; -fx-border-color: #F7F6FA; }
+.login-card { -fx-background-color: white; -fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #EBE7F0; -fx-effect: dropshadow(gaussian, rgba(62,43,88,0.12), 18, 0, 0, 6); }
+.login-title { -fx-text-fill: #3A2A50; }
+.login-subtitle { -fx-text-fill: #92879F; }
+.pager-btn { -fx-background-color: white; -fx-border-color: #E5DEED; -fx-background-radius: 10; -fx-border-radius: 10; -fx-text-fill: #625174; }
+.pager-btn:hover { -fx-background-color: #F4EDFD; }
+.chart-horizontal-grid-lines { -fx-stroke: #ECE7F2; }
+.chart .axis { -fx-tick-label-fill: #80758B; }
+.chart-legend-item { -fx-text-fill: #5C4E6D; }
 .chart-pie { -fx-border-color: white; }
-.compact .rail { -fx-pref-width: 132; -fx-min-width: 132; -fx-max-width: 132; }
+.compact .rail { -fx-pref-width: 140; -fx-min-width: 140; -fx-max-width: 140; }
 .compact .page-content { -fx-padding: 18 20 18 20; }
 .compact .page-title { -fx-font-size: 23px; }
 .compact .rail-btn, .compact .rail-btn-active { -fx-font-size: 12px; -fx-padding: 10 8; }
-/* Receipt styles intentionally left untouched for printing. */
+.compact .nav-brand-title { -fx-font-size: 16px; }
+.compact .nav-brand-subtitle { -fx-font-size: 8px; }
+/* Receipt-specific .rc-* print styles are not modified. */
