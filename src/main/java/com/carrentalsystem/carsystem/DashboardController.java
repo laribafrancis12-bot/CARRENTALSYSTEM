@@ -14,6 +14,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -51,6 +52,7 @@ public class DashboardController {
     @FXML private Label revenueTodayLabel;
     @FXML private Label revenueWeekLabel;
     @FXML private Label revenueYearLabel;
+    @FXML private Label revenueAllTimeLabel;
     @FXML private Label rentalsCountLabel;
     @FXML private VBox dueListContainer;
 
@@ -60,6 +62,9 @@ public class DashboardController {
     @FXML private Label staffChartTitleLabel;
     @FXML private BarChart<String, Number> monthRevenueChart;
     @FXML private Label monthChartTitleLabel;
+    @FXML private ComboBox<Integer> yearCombo;
+    @FXML private Label monthYearTotalLabel;
+    private boolean yearComboReady = false;
     @FXML private BarChart<String, Number> yearRevenueChart;
     @FXML private Label yearChartTitleLabel;
     @FXML private BarChart<String, Number> carRankChart;
@@ -90,9 +95,9 @@ public class DashboardController {
     private void loadStats() {
         String sql =
                 "SELECT " +
-                        "(SELECT COUNT(*) FROM vehicles) AS total, " +
-                        "(SELECT COUNT(*) FROM vehicles WHERE status='Available') AS available, " +
-                        "(SELECT COUNT(*) FROM vehicles WHERE status IN ('Rented','Overdue')) AS rented, " +
+                        "(SELECT COUNT(*) FROM vehicles WHERE archived = 0) AS total, " +
+                        "(SELECT COUNT(*) FROM vehicles WHERE archived = 0 AND status='Available') AS available, " +
+                        "(SELECT COUNT(*) FROM vehicles WHERE archived = 0 AND status IN ('Rented','Overdue')) AS rented, " +
                         "(SELECT COUNT(*) FROM rentals WHERE status='Overdue') AS overdue";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -127,13 +132,14 @@ public class DashboardController {
                         "(SELECT IFNULL(SUM(total_amount),0) FROM rentals WHERE rent_date >= CURDATE() - INTERVAL 6 DAY " + staffFilter + ") AS week, " +
                         "(SELECT IFNULL(SUM(total_amount),0) FROM rentals WHERE MONTH(rent_date)=MONTH(CURDATE()) AND YEAR(rent_date)=YEAR(CURDATE()) " + staffFilter + ") AS month, " +
                         "(SELECT IFNULL(SUM(total_amount),0) FROM rentals WHERE YEAR(rent_date)=YEAR(CURDATE()) " + staffFilter + ") AS yearTotal, " +
+                        "(SELECT IFNULL(SUM(total_amount),0) FROM rentals WHERE 1=1 " + staffFilter + ") AS allTime, " +
                         "(SELECT COUNT(*) FROM rentals WHERE MONTH(rent_date)=MONTH(CURDATE()) AND YEAR(rent_date)=YEAR(CURDATE()) " + staffFilter + ") AS rentalCount";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             if (!admin) {
-                for (int i = 1; i <= 5; i++) {
+                for (int i = 1; i <= 6; i++) {
                     stmt.setString(i, Session.username);
                 }
             }
@@ -143,6 +149,7 @@ public class DashboardController {
                     revenueTodayLabel.setText("Today \u20b1" + String.format("%,.0f", rs.getDouble("today")));
                     revenueWeekLabel.setText("This week \u20b1" + String.format("%,.0f", rs.getDouble("week")));
                     revenueYearLabel.setText("This year \u20b1" + String.format("%,.0f", rs.getDouble("yearTotal")));
+                    revenueAllTimeLabel.setText("All time \u20b1" + String.format("%,.0f", rs.getDouble("allTime")));
                     revenueMonthLabel.setText("\u20b1" + String.format("%,.0f", rs.getDouble("month")));
                     revenuePeriodLabel.setText("this month");
                     int count = rs.getInt("rentalCount");
@@ -158,24 +165,19 @@ public class DashboardController {
     private void loadDueList() {
         dueListContainer.getChildren().clear();
 
-        boolean admin = Session.isAdmin();
-        String staffFilter = admin ? "" : "AND r.created_by = ?";
-
+        // Every staff member sees every car that is due or overdue, whoever made the rental:
+        // anyone on duty may be the one who receives the car back. (Sales figures stay per staff.)
         String sql =
-                "SELECT c.full_name, v.model, r.return_date, r.status " +
+                "SELECT c.full_name, v.model, r.return_date, r.status, r.created_by " +
                         "FROM rentals r " +
                         "JOIN customers c ON r.customer_id = c.customer_id " +
                         "JOIN vehicles v ON r.vehicle_id = v.vehicle_id " +
                         "WHERE r.status IN ('Active','Overdue') " +
-                        "AND (r.status = 'Overdue' OR r.return_date = CURDATE()) " + staffFilter + " " +
+                        "AND (r.status = 'Overdue' OR r.return_date = CURDATE()) " +
                         "ORDER BY r.return_date ASC";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            if (!admin) {
-                stmt.setString(1, Session.username);
-            }
 
             try (ResultSet rs = stmt.executeQuery()) {
                 boolean any = false;
@@ -186,6 +188,7 @@ public class DashboardController {
                             rs.getString("full_name"),
                             rs.getString("model"),
                             rs.getDate("return_date").toString(),
+                            rs.getString("created_by"),
                             overdue));
                 }
                 if (!any) {
@@ -199,11 +202,12 @@ public class DashboardController {
         }
     }
 
-    private HBox buildDueRow(String customerName, String vehicleModel, String returnDate, boolean overdue) {
+    private HBox buildDueRow(String customerName, String vehicleModel, String returnDate, String rentedBy, boolean overdue) {
         Label name = new Label(customerName);
         name.getStyleClass().add("due-name");
 
-        Label detail = new Label(vehicleModel + " \u00b7 " + returnDate);
+        Label detail = new Label(vehicleModel + " \u00b7 due " + returnDate
+                + (rentedBy == null || rentedBy.isBlank() ? "" : " \u00b7 rented by " + rentedBy));
         detail.getStyleClass().add("due-detail");
 
         VBox info = new VBox(name, detail);
@@ -234,6 +238,7 @@ public class DashboardController {
             loadStaffPerformanceChart();
         }
 
+        setUpYearCombo(admin);
         loadMonthRevenueChart(admin);
         loadYearRevenueChart(admin);
         loadCarRankChart(admin);
@@ -250,7 +255,7 @@ public class DashboardController {
 
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT status, COUNT(*) AS n FROM vehicles GROUP BY status")) {
+             ResultSet rs = stmt.executeQuery("SELECT status, COUNT(*) AS n FROM vehicles WHERE archived = 0 GROUP BY status")) {
             while (rs.next()) {
                 String status = rs.getString("status");
                 if (status != null) {
@@ -311,20 +316,70 @@ public class DashboardController {
         staffChart.getData().setAll(series);
     }
 
-    /** Bars: revenue of each month of the current year (January to December). */
+    /** The years the user can pick: from the first year that has rentals up to the current year (newest first). */
+    private void setUpYearCombo(boolean admin) {
+        int thisYear = LocalDate.now().getYear();
+        int first = thisYear;
+        int last = thisYear;
+
+        String sql = "SELECT MIN(YEAR(rent_date)) AS lo, MAX(YEAR(rent_date)) AS hi FROM rentals " +
+                (admin ? "" : "WHERE created_by = ?");
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            if (!admin) {
+                stmt.setString(1, Session.username);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int lo = rs.getInt("lo");
+                    int hi = rs.getInt("hi");
+                    if (lo > 0) first = Math.min(first, lo);
+                    if (hi > 0) last = Math.max(last, hi);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        ObservableList<Integer> years = FXCollections.observableArrayList();
+        for (int y = last; y >= first; y--) {
+            years.add(y);
+        }
+        yearCombo.setItems(years);
+        yearCombo.setValue(thisYear);
+
+        if (!yearComboReady) {
+            yearComboReady = true;
+            // picking another year redraws the chart for that year
+            yearCombo.valueProperty().addListener((o, was, now) -> {
+                if (now != null) {
+                    loadMonthRevenueChart(Session.isAdmin());
+                }
+            });
+        }
+    }
+
+    /** The year picked in the drop-down (the current year until the user picks another). */
+    private int selectedYear() {
+        Integer picked = yearCombo.getValue();
+        return picked == null ? LocalDate.now().getYear() : picked;
+    }
+
+    /** Bars: revenue of each month (January to December) of the year picked in the drop-down. */
     private void loadMonthRevenueChart(boolean admin) {
-        int year = LocalDate.now().getYear();
+        int year = selectedYear();
         monthChartTitleLabel.setText((admin ? "Revenue by month - " : "Your sales by month - ") + year);
 
         String sql = "SELECT MONTH(rent_date) AS m, IFNULL(SUM(total_amount),0) AS amt FROM rentals " +
-                "WHERE YEAR(rent_date) = YEAR(CURDATE()) " + (admin ? "" : "AND created_by = ? ") +
+                "WHERE YEAR(rent_date) = ? " + (admin ? "" : "AND created_by = ? ") +
                 "GROUP BY MONTH(rent_date)";
 
         Map<Integer, Double> byMonth = new HashMap<>();
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, year);
             if (!admin) {
-                stmt.setString(1, Session.username);
+                stmt.setString(2, Session.username);
             }
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -336,12 +391,16 @@ public class DashboardController {
             return;
         }
 
+        double yearTotal = 0;
         XYChart.Series<String, Number> series = new XYChart.Series<>();
         for (int m = 1; m <= 12; m++) {
+            double amount = byMonth.getOrDefault(m, 0.0);
+            yearTotal += amount;
             series.getData().add(new XYChart.Data<>(
-                    Month.of(m).getDisplayName(TextStyle.SHORT, Locale.ENGLISH), byMonth.getOrDefault(m, 0.0)));
+                    Month.of(m).getDisplayName(TextStyle.SHORT, Locale.ENGLISH), amount));
         }
         monthRevenueChart.getData().setAll(series);
+        monthYearTotalLabel.setText("Total revenue for " + year + ": \u20b1" + String.format("%,.0f", yearTotal));
     }
 
     /**
@@ -387,10 +446,11 @@ public class DashboardController {
      * and the cars that were never rented at the end (up to 20 cars).
      */
     private void loadCarRankChart(boolean admin) {
-        carRankTitleLabel.setText(admin ? "Most rented cars" : "Cars you rented out most");
+        carRankTitleLabel.setText(admin ? "Most rented cars (by plate number)" : "Cars you rented out most (by plate number)");
 
         String sql = "SELECT v.model, v.plate_no, COUNT(r.rental_id) AS n FROM vehicles v " +
                 "LEFT JOIN rentals r ON r.vehicle_id = v.vehicle_id " + (admin ? "" : "AND r.created_by = ? ") +
+                "WHERE v.archived = 0 " +
                 "GROUP BY v.vehicle_id, v.model, v.plate_no " +
                 "ORDER BY n DESC, v.model ASC LIMIT 20";
 
@@ -402,12 +462,9 @@ public class DashboardController {
             }
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    String model = rs.getString("model");
+                    // the plate number of the car is the label of its bar
                     String plate = rs.getString("plate_no");
-                    String shortModel = model.length() > 16 ? model.substring(0, 15) + "\u2026" : model;
-                    // the plate number keeps every label different, even for two cars of the same model
-                    series.getData().add(new XYChart.Data<>(shortModel + "\n" + (plate == null ? "" : plate),
-                            rs.getInt("n")));
+                    series.getData().add(new XYChart.Data<>(plate == null ? "\u2014" : plate, rs.getInt("n")));
                 }
             }
         } catch (SQLException e) {
@@ -430,6 +487,19 @@ public class DashboardController {
                 return 0;
             }
         });
+    }
+
+    /** Opens the printable report of the dashboard (analytics), which can be printed or saved as a PDF. */
+    @FXML
+    private void onExportReportClick() {
+        // The report is made for the year picked in the drop-down.
+        try {
+            ReportController report = Navigator.show((Stage) dateLabel.getScene().getWindow(),
+                    "report-view.fxml", "Car Rental System - Report");
+            report.setYear(selectedYear());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -461,7 +531,14 @@ public class DashboardController {
 
     @FXML
     private void onNewRentalClick() {
-        switchScene("rentals-view.fxml", "Car Rental System - Rentals");
+        // Go to the Rentals screen and open the New rental popup there right away.
+        try {
+            RentalsController rentals = Navigator.show((Stage) dateLabel.getScene().getWindow(),
+                    "rentals-view.fxml", "Car Rental System - Rentals");
+            rentals.openNewRentalForm();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML

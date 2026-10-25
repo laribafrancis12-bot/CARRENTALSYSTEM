@@ -30,7 +30,7 @@
     </left>
 
     <center>
-        <VBox spacing="14.0" styleClass="page-content" maxWidth="1500.0" BorderPane.alignment="TOP_CENTER">
+        <VBox spacing="14.0" styleClass="page-content" BorderPane.alignment="TOP_CENTER">
 
             <HBox alignment="CENTER_LEFT" spacing="10.0">
                 <VBox HBox.hgrow="ALWAYS">
@@ -53,9 +53,19 @@
                     <TableColumn fx:id="returnedOnCol" text="Returned on" prefWidth="100.0"/>
                     <TableColumn fx:id="timingCol" text="Return" prefWidth="105.0"/>
                     <TableColumn fx:id="totalCol" text="Total" prefWidth="85.0"/>
+                    <TableColumn fx:id="rentedByCol" text="Rented by" prefWidth="95.0"/>
+                    <TableColumn fx:id="returnedByCol" text="Returned by" prefWidth="95.0"/>
                     <TableColumn fx:id="actionsCol" text="Actions" prefWidth="95.0"/>
                 </columns>
             </TableView>
+
+            <!-- Page arrows: the table shows 10 records at a time -->
+            <HBox alignment="CENTER" spacing="12.0">
+                <Label fx:id="pageInfoLabel" text="" styleClass="page-subtitle" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                <Button fx:id="pagePrevBtn" text="&#8592;" styleClass="pager-btn"/>
+                <Label fx:id="pageLabel" text="Page 1 of 1" styleClass="pager-label"/>
+                <Button fx:id="pageNextBtn" text="&#8594;" styleClass="pager-btn"/>
+            </HBox>
         </VBox>
     </center>
 </BorderPane>

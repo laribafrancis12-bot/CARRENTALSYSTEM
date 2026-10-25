@@ -51,6 +51,7 @@ public final class Dialogs {
         icon.getStyleClass().addAll("dialog-icon", switch (type) {
             case INFORMATION -> "dialog-icon-info";
             case WARNING -> "dialog-icon-warning";
+            case ERROR -> "dialog-icon-error";
             default -> "dialog-icon-main";
         });
         alert.setGraphic(icon);

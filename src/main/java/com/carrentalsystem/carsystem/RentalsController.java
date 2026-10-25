@@ -26,6 +26,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -48,6 +49,9 @@ public class RentalsController {
 
     /** The only payment method: the field on the form is fixed and cannot be changed. */
     private static final String PAYMENT_METHOD = "Cash";
+
+    /** How many rentals the table shows on one page. */
+    private static final int PAGE_SIZE = 10;
 
     private static final DateTimeFormatter TABLE_DATE = DateTimeFormatter.ofPattern("MMM d, yyyy");
 
@@ -78,7 +82,17 @@ public class RentalsController {
     @FXML private TextField customerNameField;
     @FXML private TextField contactField;
     @FXML private TextField licenseField;
+    @FXML private ComboBox<String> carTypeCombo;
     @FXML private ComboBox<VehicleOption> vehicleCombo;
+
+    @FXML private Button pagePrevBtn;
+    @FXML private Button pageNextBtn;
+    @FXML private Label pageLabel;
+    @FXML private Label pageInfoLabel;
+    private Pager<RentalRow> pager;
+
+    /** Every car that can be rented right now; the car-type box decides which of them are offered. */
+    private List<VehicleOption> availableVehicles = new ArrayList<>();
     @FXML private DatePicker rentDatePicker;
     @FXML private DatePicker returnDatePicker;
     @FXML private TextField paymentField;   // always "Cash"
@@ -99,6 +113,7 @@ public class RentalsController {
     @FXML private Label addressErrorLabel;
     @FXML private Label licenseErrorLabel;
     @FXML private Label vehicleErrorLabel;
+    @FXML private Label carTypeErrorLabel;
     @FXML private Label rentDateErrorLabel;
     @FXML private Label returnDateErrorLabel;
 
@@ -130,8 +145,28 @@ public class RentalsController {
                 c -> FormValidation.address(addressField.getText(), c));
         FormValidation.live(licenseField, licenseErrorLabel,
                 c -> FormValidation.license(licenseField.getText(), c));
+
+        // Each car in the list shows a swatch of its real color next to its name.
+        vehicleCombo.setCellFactory(list -> new VehicleCell(null));
+        vehicleCombo.setButtonCell(new VehicleCell(vehicleCombo));
+
+        // First the type of car, then only the cars of that type are offered.
+        vehicleCombo.setDisable(true);
+        carTypeCombo.valueProperty().addListener((o, a, type) -> {
+            vehicleCombo.getSelectionModel().clearSelection();
+            List<VehicleOption> ofType = new ArrayList<>();
+            if (type != null) {
+                for (VehicleOption v : availableVehicles) {
+                    if (type.equals(v.type)) ofType.add(v);
+                }
+            }
+            vehicleCombo.setItems(FXCollections.observableArrayList(ofType));
+            vehicleCombo.setDisable(type == null);
+            vehicleCombo.setPromptText(type == null ? "Choose the car type first" : "Select a car");
+            if (type != null) FormValidation.clear(carTypeCombo, carTypeErrorLabel);
+        });
         vehicleCombo.valueProperty().addListener((o, a, b) -> {
-            if (b != null) FormValidation.clear(vehicleCombo, vehicleErrorLabel);
+            if (b != null) validateCoding();   // clears the message, or warns if the car is on number coding that day
         });
         rentDatePicker.valueProperty().addListener((o, a, b) -> {
             // If the return date is no longer after the new rent date, move it to the next day.
@@ -140,6 +175,7 @@ public class RentalsController {
                 returnDatePicker.setValue(b.plusDays(1));
             }
             validateDates();
+            validateCoding();
         });
         returnDatePicker.valueProperty().addListener((o, a, b) -> validateDates());
 
@@ -156,7 +192,10 @@ public class RentalsController {
 
         setUpDatePickers();
 
+        pager = new Pager<>(rentalTable, pagePrevBtn, pageNextBtn, pageLabel, pageInfoLabel, PAGE_SIZE);
         setUpTable();
+        TableTools.fitHeaders(rentalTable);    // no column title is cut
+        TableTools.lockColumns(rentalTable);   // columns can't be dragged wider
         DatabaseConnection.refreshOverdue();
         loadBoard("");
     }
@@ -299,14 +338,15 @@ public class RentalsController {
         }
 
         try {
-            DatabaseConnection.markReturned(row.id);
+            // The staff member who receives the car is saved too (the sale stays with whoever made the rental).
+            DatabaseConnection.markReturned(row.id, Session.username);
         } catch (SQLException e) {
             e.printStackTrace();
             Alert error = Dialogs.create(Alert.AlertType.ERROR, "Could not mark this rental as returned. Try again.");
             error.setHeaderText(null);
             error.showAndWait();
         }
-        loadBoard(searchField.getText());
+        loadBoard(searchField.getText(), true);
     }
 
     private TableCell<RentalRow, LocalDate> dateCell() {
@@ -321,6 +361,11 @@ public class RentalsController {
 
     /** Reloads the table from the database, applying the search box and the selected filter pill. */
     private void loadBoard(String search) {
+        loadBoard(search, false);
+    }
+
+    /** keepPage = true after an action (like Return) so the table stays on the same page. */
+    private void loadBoard(String search, boolean keepPage) {
         String sql =
                 "SELECT r.rental_id, c.full_name, c.contact_no, v.model, v.plate_no, " +
                         "r.rent_date, r.return_date, r.total_amount, r.status " +
@@ -390,7 +435,11 @@ public class RentalsController {
             }
         }
 
-        rentalTable.setItems(visible);
+        if (keepPage) {
+            pager.refreshItems(visible);
+        } else {
+            pager.setItems(visible);
+        }
         filterAllBtn.setText("All (" + all.size() + ")");
         filterActiveBtn.setText("Active (" + active + ")");
         filterDueBtn.setText("Due or overdue (" + due + ")");
@@ -439,6 +488,11 @@ public class RentalsController {
         totalAmountLabel.setText("\u20b1" + String.format("%,.2f", total));
     }
 
+    /** Opens the New rental popup right away (used by the Dashboard's "+ New rental" button). */
+    public void openNewRentalForm() {
+        onNewRentalClick();
+    }
+
     @FXML
     private void onNewRentalClick() {
         customerNameField.clear();
@@ -461,30 +515,45 @@ public class RentalsController {
     }
 
     private void loadAvailableVehicles() {
-        ObservableList<VehicleOption> options = FXCollections.observableArrayList();
-        String sql = "SELECT vehicle_id, model, plate_no, rate_per_day, seats FROM vehicles " +
-                "WHERE status='Available' ORDER BY model ASC";
+        availableVehicles = new ArrayList<>();
+        // Archived cars can't be rented.
+        String sql = "SELECT vehicle_id, model, plate_no, type, color, rate_per_day FROM vehicles " +
+                "WHERE status='Available' AND archived = 0 ORDER BY model ASC";
 
         try (Connection conn = DatabaseConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                options.add(new VehicleOption(
+                availableVehicles.add(new VehicleOption(
                         rs.getInt("vehicle_id"),
                         rs.getString("model"),
                         rs.getString("plate_no"),
-                        rs.getDouble("rate_per_day"),
-                        (Integer) rs.getObject("seats")
+                        rs.getString("type"),
+                        rs.getString("color"),
+                        rs.getDouble("rate_per_day")
                 ));
             }
         } catch (SQLException e) {
             e.printStackTrace();
             formMessageLabel.setText("Could not load the vehicles. Check the database connection.");
         }
-        vehicleCombo.setItems(options);
+
+        // Only the types that have a car available are offered.
+        List<String> types = new ArrayList<>();
+        for (VehicleOption v : availableVehicles) {
+            if (v.type != null && !types.contains(v.type)) types.add(v.type);
+        }
+        java.util.Collections.sort(types);
+
+        carTypeCombo.setItems(FXCollections.observableArrayList(types));
+        carTypeCombo.getSelectionModel().clearSelection();
+        vehicleCombo.setItems(FXCollections.observableArrayList());
         vehicleCombo.getSelectionModel().clearSelection();
-        if (options.isEmpty() && formMessageLabel.getText().isEmpty()) {
+        vehicleCombo.setDisable(true);
+        vehicleCombo.setPromptText("Choose the car type first");
+
+        if (availableVehicles.isEmpty() && formMessageLabel.getText().isEmpty()) {
             formMessageLabel.setText("No vehicles are available right now.");
         }
         updateTotal();
@@ -507,8 +576,15 @@ public class RentalsController {
         customerOk &= FormValidation.show(addressField, addressErrorLabel, FormValidation.address(address, true));
         customerOk &= FormValidation.show(licenseField, licenseErrorLabel, FormValidation.license(license, true));
         customerOk &= FormValidation.show(idPhotoBtn, idPhotoErrorLabel, FormValidation.idPhoto(idPhotoFile));
-        boolean rentalOk = FormValidation.show(vehicleCombo, vehicleErrorLabel,
-                vehicle == null ? "Select an available vehicle." : null);
+        boolean rentalOk = FormValidation.show(carTypeCombo, carTypeErrorLabel,
+                carTypeCombo.getValue() == null ? "Select the type of car first." : null);
+        String vehicleProblem = null;
+        if (vehicle == null) {
+            if (carTypeCombo.getValue() != null) vehicleProblem = "Select an available car.";
+        } else if (rent != null) {
+            vehicleProblem = NumberCoding.warning(vehicle.plate, rent);   // number coding on the rent date
+        }
+        rentalOk &= FormValidation.show(vehicleCombo, vehicleErrorLabel, vehicleProblem);
         rentalOk &= validateDates();
 
         if (!customerOk || !rentalOk) {
@@ -663,7 +739,7 @@ public class RentalsController {
         row = addSummaryRow(grid, row, "Driver's license", license);
         row = addSummaryRow(grid, row, "Valid ID", "Photo attached");
         Label photoKey = new Label("ID photo");
-        photoKey.setStyle("-fx-text-fill: #8A8D96;");
+        photoKey.setStyle("-fx-text-fill: #4A6080;");
         ImageView thumbnail = new ImageView(new Image(idPhoto.toURI().toString(), 220, 130, true, true, false));
         grid.add(photoKey, 0, row);
         grid.add(thumbnail, 1, row++);
@@ -677,9 +753,9 @@ public class RentalsController {
         grid.add(line, 0, row++, 2, 1);
 
         Label totalKey = new Label("Total amount due");
-        totalKey.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;");
+        totalKey.setStyle("-fx-text-fill: #14263F; -fx-font-weight: bold; -fx-font-size: 14px;");
         Label totalValue = new Label("\u20b1" + String.format("%,.2f", total));
-        totalValue.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18px;");
+        totalValue.setStyle("-fx-text-fill: #14263F; -fx-font-weight: bold; -fx-font-size: 18px;");
         grid.add(totalKey, 0, row);
         grid.add(totalValue, 1, row++);
 
@@ -687,7 +763,7 @@ public class RentalsController {
                 + "and that the vehicle is released to the customer. This will be recorded and the receipt will open.");
         note.setWrapText(true);
         note.setMaxWidth(430);
-        note.setStyle("-fx-text-fill: #8A8D96; -fx-font-size: 11.5px;");
+        note.setStyle("-fx-text-fill: #4A6080; -fx-font-size: 11.5px;");
         grid.add(note, 0, row, 2, 1);
 
         Alert dialog = Dialogs.create(Alert.AlertType.CONFIRMATION);
@@ -705,11 +781,11 @@ public class RentalsController {
 
     private int addSummaryRow(GridPane grid, int row, String key, String value) {
         Label keyLabel = new Label(key);
-        keyLabel.setStyle("-fx-text-fill: #8A8D96;");
+        keyLabel.setStyle("-fx-text-fill: #4A6080;");
         Label valueLabel = new Label(value);
         valueLabel.setWrapText(true);
         valueLabel.setMaxWidth(320);
-        valueLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+        valueLabel.setStyle("-fx-text-fill: #14263F; -fx-font-weight: bold;");
         grid.add(keyLabel, 0, row);
         grid.add(valueLabel, 1, row);
         return row + 1;
@@ -832,6 +908,19 @@ public class RentalsController {
         return 0;
     }
 
+    /**
+     * Number coding: if the chosen car's plate is banned from the road on the rent date
+     * (Metro Manila coding, by the last digit of the plate), the message is shown under the car box.
+     */
+    private void validateCoding() {
+        VehicleOption car = vehicleCombo.getValue();
+        if (car == null) {
+            return;
+        }
+        LocalDate rent = rentDatePicker.getValue();
+        FormValidation.show(vehicleCombo, vehicleErrorLabel, rent == null ? null : NumberCoding.warning(car.plate, rent));
+    }
+
     /** Checks both dates and shows their messages under the date fields. */
     private boolean validateDates() {
         LocalDate rent = rentDatePicker.getValue();
@@ -848,6 +937,7 @@ public class RentalsController {
         FormValidation.clear(licenseField, licenseErrorLabel);
         FormValidation.clear(idPhotoBtn, idPhotoErrorLabel);
         FormValidation.clear(vehicleCombo, vehicleErrorLabel);
+        FormValidation.clear(carTypeCombo, carTypeErrorLabel);
         FormValidation.clear(rentDatePicker, rentDateErrorLabel);
         FormValidation.clear(returnDatePicker, returnDateErrorLabel);
         formMessageLabel.setText("");
@@ -946,26 +1036,49 @@ public class RentalsController {
         }
     }
 
+    /** One row of the car list: a swatch of the car's color, then its name, color, plate and rate. */
+    private static class VehicleCell extends ListCell<VehicleOption> {
+        private final ComboBox<VehicleOption> promptOwner;   // only for the box itself: shows its hint when empty
+
+        VehicleCell(ComboBox<VehicleOption> promptOwner) {
+            this.promptOwner = promptOwner;
+        }
+
+        @Override
+        protected void updateItem(VehicleOption item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty || item == null) {
+                setText(promptOwner == null ? null : promptOwner.getPromptText());
+                setGraphic(null);
+            } else {
+                setText(item.toString());
+                setGraphic(CarColors.swatch(item.color));
+            }
+        }
+    }
+
     /** Wraps a vehicle so the ComboBox can show a friendly label but keep the id and rate. */
     private static class VehicleOption {
         final int id;
         final String model;
         final String plate;
+        final String type;
+        final String color;
         final double rate;
-        final Integer seats;   // null for cars added before seats were saved
 
-        VehicleOption(int id, String model, String plate, double rate, Integer seats) {
+        VehicleOption(int id, String model, String plate, String type, String color, double rate) {
             this.id = id;
             this.model = model;
             this.plate = plate;
+            this.type = type;
+            this.color = color;
             this.rate = rate;
-            this.seats = seats;
         }
 
         @Override
         public String toString() {
-            return model + " \u00b7 " + plate + (seats == null ? "" : " \u00b7 " + seats + " seats")
-                    + " \u00b7 \u20b1" + String.format("%,.0f", rate) + "/day";
+            return model + (color == null || color.isBlank() ? "" : " \u00b7 " + color)
+                    + " \u00b7 " + plate + " \u00b7 \u20b1" + String.format("%,.0f", rate) + "/day";
         }
     }
 }

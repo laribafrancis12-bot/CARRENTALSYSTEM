@@ -80,8 +80,6 @@
             </StackPane>
             <Label fx:id="confirmPasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
 
-            <CheckBox fx:id="showNewPasswordCheck" text="Show password" styleClass="field-checkbox"
-                      onAction="#onToggleNewPasswordVisibility"/>
 
             <Label fx:id="addStaffMessageLabel" styleClass="error-label" wrapText="true"/>
 
@@ -117,8 +115,6 @@
             </StackPane>
             <Label fx:id="confirmChangePasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
 
-            <CheckBox fx:id="showChangePasswordCheck" text="Show password" styleClass="field-checkbox"
-                      onAction="#onToggleChangePasswordVisibility"/>
 
             <Label fx:id="changePasswordMessageLabel" styleClass="error-label" wrapText="true"/>
 

@@ -5,9 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
 
 /**
  * Keeps the photos of customers' valid IDs.
@@ -15,54 +13,41 @@ import java.util.Date;
  * The photos are copied into a "valid_ids" folder next to the app (the folder the app runs from),
  * and only the file name is saved in the database (customers.id_photo).
  *
- **/
-
+ * Each file is named after the renter and the date, for example Maria_Santos_2026-10-18.jpg,
+ * so it is easy to find in the folder.
+ */
 public final class IdPhotoStorage {
 
     public static final Path DIR = Paths.get("valid_ids");
 
-    private static final SimpleDateFormat STAMP = new SimpleDateFormat("yyyyMMdd_HHmmss");
-
     private IdPhotoStorage() {}
 
     /**
-     * Copies the chosen photo into the valid_ids folder, named after the renter, and returns the
-     * file name to save in the database.
+     * Copies the chosen photo into the valid_ids folder, named after the renter and today's date
+     * (Maria_Santos_2026-10-18.jpg; a second photo the same day becomes ..._2.jpg),
+     * and returns the file name to save in the database.
      */
     public static String save(File source, String renterName) throws IOException {
         Files.createDirectories(DIR);
         String ext = source.getName().toLowerCase().endsWith(".png") ? ".png" : ".jpg";
-        String safeName = sanitizeName(renterName);
-        String stamp;
-        synchronized (STAMP) {
-            stamp = STAMP.format(new Date());
+        String base = cleanName(renterName) + "_" + LocalDate.now();
+
+        String stored = base + ext;
+        int copy = 2;
+        while (Files.exists(DIR.resolve(stored))) {
+            stored = base + "_" + copy + ext;
+            copy++;
         }
-
-        String stored = safeName + "_" + stamp + ext;
-        Path target = DIR.resolve(stored);
-
-        // Extremely unlikely, but guard against two rentals for the same name in the same second.
-        int suffix = 2;
-        while (Files.exists(target)) {
-            stored = safeName + "_" + stamp + "_" + suffix + ext;
-            target = DIR.resolve(stored);
-            suffix++;
-        }
-
-        Files.copy(source.toPath(), target, StandardCopyOption.REPLACE_EXISTING);
+        Files.copy(source.toPath(), DIR.resolve(stored));
         return stored;
     }
 
-    /** Keeps only letters, numbers and spaces from the name, then turns spaces into underscores. */
-    private static String sanitizeName(String name) {
-        if (name == null || name.isBlank()) {
-            return "unknown";
-        }
-        String cleaned = name.trim()
-                .replaceAll("[^\\p{L}\\p{N} ]", "")
-                .replaceAll("\\s+", "_");
+    /** Makes the renter's name safe for a file name: letters and numbers, words joined by "_". */
+    private static String cleanName(String name) {
+        String cleaned = name == null ? "" : name.trim().replaceAll("[^\\p{L}\\p{N}]+", "_");
+        cleaned = cleaned.replaceAll("^_+|_+$", "");
         if (cleaned.isEmpty()) {
-            return "unknown";
+            cleaned = "customer";
         }
         return cleaned.length() > 40 ? cleaned.substring(0, 40) : cleaned;
     }

@@ -2,13 +2,9 @@ package com.carrentalsystem.carsystem;
 
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -20,56 +16,70 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
-import java.util.ArrayList;
-import java.util.List;
 
 public class VehiclesController {
 
+    /** How many vehicles the table shows on one page. */
+    private static final int PAGE_SIZE = 10;
+
     @FXML private Button vehiclesBtn;
     @FXML private Button accountsBtn;
-    @FXML private StackPane addVehicleOverlay;
     @FXML private TextField searchField;
     @FXML private Label countLabel;
-    @FXML private Label formMessageLabel;
 
     @FXML private Button filterAllBtn;
     @FXML private Button filterAvailableBtn;
     @FXML private Button filterRentedBtn;
     @FXML private Button filterOverdueBtn;
     @FXML private Button filterMaintenanceBtn;
+    @FXML private Button filterArchivedBtn;
 
     @FXML private TableView<VehicleRow> vehicleTable;
+    @FXML private Button pagePrevBtn;
+    @FXML private Button pageNextBtn;
+    @FXML private Label pageLabel;
+    @FXML private Label pageInfoLabel;
+    private Pager<VehicleRow> pager;
     @FXML private TableColumn<VehicleRow, String> plateCol;
     @FXML private TableColumn<VehicleRow, String> modelCol;
     @FXML private TableColumn<VehicleRow, String> typeCol;
+    @FXML private TableColumn<VehicleRow, String> colorCol;
     @FXML private TableColumn<VehicleRow, Integer> seatsCol;
     @FXML private TableColumn<VehicleRow, Double> rateCol;
     @FXML private TableColumn<VehicleRow, String> statusCol;
     @FXML private TableColumn<VehicleRow, Void> actionsCol;
 
+    // Add vehicle popup
+    @FXML private StackPane addVehicleOverlay;
+    @FXML private Label formMessageLabel;
     @FXML private TextField plateField;
     @FXML private TextField modelField;
     @FXML private ComboBox<String> typeCombo;
     @FXML private ComboBox<Integer> seatsCombo;
+    @FXML private ComboBox<String> colorCombo;
     @FXML private TextField rateField;
-
-    // Change rate popup
-    @FXML private StackPane editRateOverlay;
-    @FXML private Label editRateVehicleLabel;
-    @FXML private TextField newRateField;
-    @FXML private Label newRateErrorLabel;
-    @FXML private Label editRateMessageLabel;
+    @FXML private ComboBox<String> statusCombo;
     @FXML private Label plateErrorLabel;
     @FXML private Label modelErrorLabel;
     @FXML private Label typeErrorLabel;
     @FXML private Label seatsErrorLabel;
+    @FXML private Label colorErrorLabel;
     @FXML private Label rateErrorLabel;
-    @FXML private ComboBox<String> statusCombo;
 
+    // Edit vehicle popup (rate and color)
+    @FXML private StackPane editRateOverlay;
+    @FXML private Label editRateVehicleLabel;
+    @FXML private TextField newRateField;
+    @FXML private ComboBox<String> editColorCombo;
+    @FXML private ComboBox<Integer> editSeatsCombo;
+    @FXML private Label newRateErrorLabel;
+    @FXML private Label editRateMessageLabel;
+
+    /** All, Available, Rented, Overdue, Maintenance or Archived. */
     private String currentFilter = "All";
 
-    /** The vehicle whose rate is being changed in the popup. */
-    private VehicleRow rateTarget;
+    /** The vehicle being edited in the popup. */
+    private VehicleRow editTarget;
 
     @FXML
     public void initialize() {
@@ -81,9 +91,27 @@ public class VehiclesController {
         accountsBtn.setVisible(true);
         accountsBtn.setManaged(true);
 
-        typeCombo.setItems(FXCollections.observableArrayList(
-                "Sedan", "Hatchback", "SUV", "Crossover", "MPV", "Pickup", "Van", "Coupe", "Convertible", "Wagon"));
-        seatsCombo.setItems(FXCollections.observableArrayList(2, 4, 5, 7, 12, 15));
+        typeCombo.setItems(FXCollections.observableArrayList(VehicleSpecs.TYPES));
+        CarColors.setUp(colorCombo);
+        CarColors.setUp(editColorCombo);
+
+        // The seats depend on the body type: a sedan has 4-5 seats, a van 10-18, and so on.
+        seatsCombo.setDisable(true);
+        seatsCombo.setPromptText("Choose a type first");
+        typeCombo.valueProperty().addListener((o, a, type) -> {
+            seatsCombo.getSelectionModel().clearSelection();
+            seatsCombo.setItems(FXCollections.observableArrayList(VehicleSpecs.seatsFor(type)));
+            seatsCombo.setDisable(type == null);
+            seatsCombo.setPromptText(type == null ? "Choose a type first" : "Select seats");
+            if (type != null) FormValidation.clear(typeCombo, typeErrorLabel);
+        });
+        seatsCombo.valueProperty().addListener((o, a, b) -> {
+            if (b != null) FormValidation.clear(seatsCombo, seatsErrorLabel);
+        });
+        colorCombo.valueProperty().addListener((o, a, b) -> {
+            if (b != null) FormValidation.clear(colorCombo, colorErrorLabel);
+        });
+
         // A new car can only start as Available or in Maintenance. "Rented" is set by the system when a rental is made.
         statusCombo.setItems(FXCollections.observableArrayList("Available", "Maintenance"));
         statusCombo.getSelectionModel().selectFirst();
@@ -94,11 +122,28 @@ public class VehiclesController {
         FormValidation.live(modelField, modelErrorLabel, c -> FormValidation.vehicleModel(modelField.getText(), c));
         FormValidation.live(rateField, rateErrorLabel, c -> FormValidation.rate(rateField.getText(), c));
         FormValidation.live(newRateField, newRateErrorLabel, c -> FormValidation.rate(newRateField.getText(), c));
-        typeCombo.valueProperty().addListener((o, a, b) -> {
-            if (b != null) FormValidation.clear(typeCombo, typeErrorLabel);
-        });
-        seatsCombo.valueProperty().addListener((o, a, b) -> {
-            if (b != null) FormValidation.clear(seatsCombo, seatsErrorLabel);
+
+        pager = new Pager<>(vehicleTable, pagePrevBtn, pageNextBtn, pageLabel, pageInfoLabel, PAGE_SIZE);
+        setUpTable();
+        TableTools.fitHeaders(vehicleTable);    // no column title is cut
+        TableTools.lockColumns(vehicleTable);   // columns can't be dragged wider
+
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> loadVehicles());
+
+        DatabaseConnection.refreshOverdue();
+        loadVehicles();
+    }
+
+    // ------------------------------------------------------------ table
+
+    private void setUpTable() {
+        // Each row is tinted with the color of its car (and has a stripe of that color on the left).
+        vehicleTable.setRowFactory(tv -> new TableRow<>() {
+            @Override
+            protected void updateItem(VehicleRow row, boolean empty) {
+                super.updateItem(row, empty);
+                setStyle(empty || row == null ? "" : CarColors.rowStyle(row.color));
+            }
         });
 
         plateCol.setCellValueFactory(d -> d.getValue().plate);
@@ -119,15 +164,35 @@ public class VehiclesController {
         });
         modelCol.setCellValueFactory(d -> d.getValue().model);
         typeCol.setCellValueFactory(d -> d.getValue().type);
+
+        // The color column shows a round swatch in the car's real color next to its name.
+        colorCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().color));
+        colorCol.setCellFactory(col -> new TableCell<>() {
+            @Override
+            protected void updateItem(String value, boolean empty) {
+                super.updateItem(value, empty);
+                if (empty) {
+                    setText(null);
+                    setGraphic(null);
+                } else if (value == null || value.isBlank()) {
+                    setGraphic(null);
+                    setText("\u2014");
+                } else {
+                    setText(null);
+                    setGraphic(CarColors.badge(value));
+                }
+            }
+        });
+
         seatsCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().seats));
         seatsCol.setCellFactory(col -> new TableCell<>() {
             @Override
             protected void updateItem(Integer value, boolean empty) {
                 super.updateItem(value, empty);
-                // Cars added before seats were saved show a dash.
                 setText(empty ? null : (value == null ? "\u2014" : String.valueOf(value)));
             }
         });
+
         rateCol.setCellValueFactory(d -> d.getValue().rate.asObject());
         rateCol.setCellFactory(col -> new TableCell<>() {
             @Override
@@ -136,6 +201,7 @@ public class VehiclesController {
                 setText(empty || value == null ? null : "\u20b1" + String.format("%,.0f", value));
             }
         });
+
         statusCol.setCellValueFactory(d -> d.getValue().status);
         statusCol.setCellFactory(col -> new TableCell<>() {
             @Override
@@ -156,37 +222,39 @@ public class VehiclesController {
                 setText(null);
             }
         });
+
+        // Every action is a button: [status change] [Edit] [Archive]  (an archived car only has [Restore]).
+        actionsCol.setSortable(false);
         actionsCol.setCellFactory(col -> new TableCell<>() {
-            // The choices depend on the car's current status (see statusChoices).
-            private final ComboBox<String> statusChanger = new ComboBox<>();
-            private final Button editRateBtn = new Button("Edit rate");
-            private final Button deleteBtn = new Button("Delete");
-            private final HBox box = new HBox(8, statusChanger, editRateBtn, deleteBtn);
-            private boolean resetting = false;
+            private final Button statusBtn = new Button();
+            private final Button editBtn = new Button("Edit");
+            private final Button archiveBtn = new Button("Archive");
+            private final Button restoreBtn = new Button("Restore");
+            private final HBox box = new HBox(8, statusBtn, editBtn, archiveBtn, restoreBtn);
 
             {
-                statusChanger.setPromptText("Change status");
-                statusChanger.getStyleClass().add("table-combo");
-                deleteBtn.getStyleClass().add("ghost-button");
-                editRateBtn.getStyleClass().add("ghost-button");
-                statusChanger.setOnAction(e -> {
+                statusBtn.getStyleClass().addAll("ghost-button", "table-btn");
+                editBtn.getStyleClass().addAll("ghost-button", "table-btn");
+                archiveBtn.getStyleClass().addAll("ghost-button", "table-btn");
+                restoreBtn.getStyleClass().addAll("ghost-button", "table-btn");
+
+                statusBtn.setOnAction(e -> {
                     VehicleRow row = rowAtIndex();
-                    String newStatus = statusChanger.getValue();
-                    if (resetting || row == null || newStatus == null) return;
-                    if (!newStatus.equals(row.status.get())) {
-                        changeStatus(row, newStatus);
-                    }
+                    String target = row == null ? null : statusTarget(row.status.get());
+                    if (target != null) changeStatus(row, target);
                 });
-                deleteBtn.setOnAction(e -> {
+                editBtn.setOnAction(e -> {
                     VehicleRow row = rowAtIndex();
-                    if (row != null) confirmAndDelete(row);
+                    if (row != null) openEdit(row);
                 });
-                editRateBtn.setOnAction(e -> {
+                archiveBtn.setOnAction(e -> {
                     VehicleRow row = rowAtIndex();
-                    if (row != null) openEditRate(row);
+                    if (row != null) confirmAndArchive(row);
                 });
-                // Table cells are reused for other rows, so the choices are rebuilt when the row changes.
-                indexProperty().addListener((o, a, b) -> refreshChoices());
+                restoreBtn.setOnAction(e -> {
+                    VehicleRow row = rowAtIndex();
+                    if (row != null) restore(row);
+                });
             }
 
             private VehicleRow rowAtIndex() {
@@ -194,56 +262,68 @@ public class VehiclesController {
                 return (i >= 0 && i < getTableView().getItems().size()) ? getTableView().getItems().get(i) : null;
             }
 
-            private void refreshChoices() {
-                VehicleRow row = rowAtIndex();
-                List<String> choices = new ArrayList<>();
-                if (row != null) {
-                    choices.addAll(statusChoices(row.status.get()));
-                }
-                resetting = true;
-                statusChanger.getItems().setAll(choices);
-                statusChanger.setValue(null);
-                statusChanger.setDisable(choices.isEmpty());
-                resetting = false;
+            private void show(Button button, boolean visible) {
+                button.setVisible(visible);
+                button.setManaged(visible);
             }
 
             @Override
             protected void updateItem(Void value, boolean empty) {
                 super.updateItem(value, empty);
-                refreshChoices();
-                setGraphic(empty ? null : box);
+                VehicleRow row = empty ? null : rowAtIndex();
+                if (row == null) {
+                    setGraphic(null);
+                    return;
+                }
+                boolean archived = row.archived;
+                show(restoreBtn, archived);
+                show(editBtn, !archived);
+                show(archiveBtn, !archived);
+
+                String target = statusTarget(row.status.get());
+                show(statusBtn, !archived && target != null);
+                if (target != null) {
+                    statusBtn.setText(statusButtonText(row.status.get()));
+                }
+                setGraphic(box);
             }
         });
-
-        searchField.textProperty().addListener((obs, oldVal, newVal) -> loadVehicles());
-
-        DatabaseConnection.refreshOverdue();
-        loadVehicles();
     }
 
-    /**
-     * What a car can be changed to, depending on its current status:
-     * Rented -> Overdue, Available -> Maintenance, Maintenance -> Available,
-     * Overdue -> Available (the car was brought back).
-     */
-    private static List<String> statusChoices(String current) {
-        if (current == null) return List.of();
+    /** The status the status button changes the car to (null = nothing to offer). */
+    private static String statusTarget(String current) {
+        if (current == null) return null;
         return switch (current) {
-            case "Rented" -> List.of("Overdue");
-            case "Available" -> List.of("Maintenance");
-            case "Maintenance" -> List.of("Available");
-            case "Overdue" -> List.of("Available");
-            default -> List.of();
+            case "Available" -> "Maintenance";
+            case "Maintenance" -> "Available";
+            case "Rented" -> "Overdue";
+            case "Overdue" -> "Available";      // the car was brought back
+            default -> null;
+        };
+    }
+
+    private static String statusButtonText(String current) {
+        return switch (current) {
+            case "Available" -> "Maintenance";
+            case "Rented" -> "Mark overdue";
+            default -> "Set available";          // Maintenance, Overdue
         };
     }
 
     private void loadVehicles() {
+        loadVehicles(false);
+    }
+
+    /** keepPage = true after an action (like Archive) so the table stays on the same page. */
+    private void loadVehicles(boolean keepPage) {
         ObservableList<VehicleRow> rows = FXCollections.observableArrayList();
+        boolean archivedView = "Archived".equals(currentFilter);
+        boolean statusFilter = !"All".equals(currentFilter) && !archivedView;
 
         StringBuilder sql = new StringBuilder(
-                "SELECT vehicle_id, plate_no, model, type, seats, rate_per_day, status FROM vehicles " +
-                        "WHERE (plate_no LIKE ? OR model LIKE ?) ");
-        if (!"All".equals(currentFilter)) {
+                "SELECT vehicle_id, plate_no, model, type, color, seats, rate_per_day, status, archived FROM vehicles " +
+                        "WHERE (plate_no LIKE ? OR model LIKE ?) AND archived = ? ");
+        if (statusFilter) {
             sql.append("AND status = ? ");
         }
         sql.append("ORDER BY model ASC");
@@ -254,31 +334,44 @@ public class VehiclesController {
             String like = "%" + searchField.getText() + "%";
             stmt.setString(1, like);
             stmt.setString(2, like);
-            if (!"All".equals(currentFilter)) {
-                stmt.setString(3, currentFilter);
+            stmt.setInt(3, archivedView ? 1 : 0);
+            if (statusFilter) {
+                stmt.setString(4, currentFilter);
             }
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
+                    int seats = rs.getInt("seats");
+                    boolean noSeats = rs.wasNull();
                     rows.add(new VehicleRow(
                             rs.getInt("vehicle_id"),
                             rs.getString("plate_no"),
                             rs.getString("model"),
                             rs.getString("type"),
-                            (Integer) rs.getObject("seats"),
+                            rs.getString("color"),
+                            noSeats ? null : seats,
                             rs.getDouble("rate_per_day"),
-                            rs.getString("status")
+                            rs.getString("status"),
+                            rs.getBoolean("archived")
                     ));
                 }
             }
-            countLabel.setText(rows.size() + " in your fleet");
+            countLabel.setText(archivedView
+                    ? rows.size() + " archived vehicle" + (rows.size() == 1 ? "" : "s")
+                    : rows.size() + " in your fleet");
         } catch (SQLException e) {
             e.printStackTrace();
             countLabel.setText("Could not load the vehicles. Check the database connection.");
         }
 
-        vehicleTable.setItems(rows);
+        if (keepPage) {
+            pager.refreshItems(rows);
+        } else {
+            pager.setItems(rows);
+        }
     }
+
+    // ------------------------------------------------------------ status, archive
 
     /**
      * Changes a vehicle's status. Making a rented or overdue car Available again
@@ -296,52 +389,77 @@ public class VehiclesController {
             confirm.setTitle("Mark as returned");
             Optional<ButtonType> result = confirm.showAndWait();
             if (result.isEmpty() || result.get() != ButtonType.YES) {
-                loadVehicles();   // puts the dropdown back to normal
                 return;
             }
         }
         try {
-            DatabaseConnection.setVehicleStatus(row.id, newStatus);
+            DatabaseConnection.setVehicleStatus(row.id, newStatus, Session.username);
         } catch (SQLException e) {
             e.printStackTrace();
             Alert error = Dialogs.create(Alert.AlertType.ERROR, "Could not change the status. Try again.");
             error.setHeaderText(null);
             error.showAndWait();
         }
-        loadVehicles();
+        loadVehicles(true);
     }
 
-    private void confirmAndDelete(VehicleRow row) {
+    /** Archiving hides a car instead of deleting it, so its rental history is kept. */
+    private void confirmAndArchive(VehicleRow row) {
         Alert confirm = Dialogs.create(Alert.AlertType.CONFIRMATION,
-                "Are you sure you want to delete " + row.model.get() + " (" + row.plate.get() + ")?",
+                "Archive " + row.model.get() + " (" + row.plate.get() + ")?\n\n"
+                        + "It will be hidden from the vehicle list and can't be rented, but its rental history "
+                        + "is kept. You can restore it anytime from the Archived tab.",
                 ButtonType.YES, ButtonType.NO);
         confirm.setHeaderText(null);
-        confirm.setTitle("Delete vehicle");
+        confirm.setTitle("Archive vehicle");
         Optional<ButtonType> result = confirm.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.YES) {
-            String sql = "DELETE FROM vehicles WHERE vehicle_id = ?";
-            try (Connection conn = DatabaseConnection.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(sql)) {
-                stmt.setInt(1, row.id);
-                stmt.executeUpdate();
-                loadVehicles();
-            } catch (SQLException e) {
-                e.printStackTrace();
-                Alert error = Dialogs.create(Alert.AlertType.ERROR,
-                        "This vehicle may have rental history and can't be deleted.");
-                error.setHeaderText(null);
-                error.showAndWait();
-            }
+        if (result.isEmpty() || result.get() != ButtonType.YES) {
+            return;
         }
+
+        // A car that is out with a customer can't be archived.
+        String sql = "UPDATE vehicles SET archived = 1 WHERE vehicle_id = ? AND status NOT IN ('Rented','Overdue')";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, row.id);
+            if (stmt.executeUpdate() == 0) {
+                Alert warn = Dialogs.create(Alert.AlertType.WARNING,
+                        "This car is rented out right now. Return it first, then archive it.", ButtonType.OK);
+                warn.setHeaderText(null);
+                warn.setTitle("Can't archive");
+                warn.showAndWait();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            Alert error = Dialogs.create(Alert.AlertType.ERROR, "Could not archive the vehicle. Try again.");
+            error.setHeaderText(null);
+            error.showAndWait();
+        }
+        loadVehicles(true);
     }
 
-    // ---- Filter pills ----
+    private void restore(VehicleRow row) {
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("UPDATE vehicles SET archived = 0 WHERE vehicle_id = ?")) {
+            stmt.setInt(1, row.id);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            Alert error = Dialogs.create(Alert.AlertType.ERROR, "Could not restore the vehicle. Try again.");
+            error.setHeaderText(null);
+            error.showAndWait();
+        }
+        loadVehicles(true);
+    }
+
+    // ------------------------------------------------------------ filter pills
 
     @FXML private void onFilterAll() { setFilter("All", filterAllBtn); }
     @FXML private void onFilterAvailable() { setFilter("Available", filterAvailableBtn); }
     @FXML private void onFilterRented() { setFilter("Rented", filterRentedBtn); }
     @FXML private void onFilterOverdue() { setFilter("Overdue", filterOverdueBtn); }
     @FXML private void onFilterMaintenance() { setFilter("Maintenance", filterMaintenanceBtn); }
+    @FXML private void onFilterArchived() { setFilter("Archived", filterArchivedBtn); }
 
     private void setFilter(String filter, Button activeBtn) {
         currentFilter = filter;
@@ -350,11 +468,12 @@ public class VehiclesController {
         filterRentedBtn.getStyleClass().setAll("pill");
         filterOverdueBtn.getStyleClass().setAll("pill");
         filterMaintenanceBtn.getStyleClass().setAll("pill");
+        filterArchivedBtn.getStyleClass().setAll("pill");
         activeBtn.getStyleClass().setAll("pill-active");
         loadVehicles();
     }
 
-    // ---- Add vehicle popup ----
+    // ------------------------------------------------------------ add vehicle popup
 
     @FXML
     private void onAddVehicleClick() {
@@ -370,6 +489,7 @@ public class VehiclesController {
         rateField.clear();
         typeCombo.getSelectionModel().clearSelection();
         seatsCombo.getSelectionModel().clearSelection();
+        colorCombo.getSelectionModel().clearSelection();
         statusCombo.getSelectionModel().selectFirst();
         clearFormErrors();
         addVehicleOverlay.setVisible(false);
@@ -381,6 +501,7 @@ public class VehiclesController {
         FormValidation.clear(modelField, modelErrorLabel);
         FormValidation.clear(typeCombo, typeErrorLabel);
         FormValidation.clear(seatsCombo, seatsErrorLabel);
+        FormValidation.clear(colorCombo, colorErrorLabel);
         FormValidation.clear(rateField, rateErrorLabel);
         formMessageLabel.setText("");
     }
@@ -391,6 +512,7 @@ public class VehiclesController {
         String model = modelField.getText().trim();
         String type = typeCombo.getValue();
         Integer seats = seatsCombo.getValue();
+        String color = colorCombo.getValue();
         String rateText = rateField.getText().trim();
         String status = statusCombo.getValue();
 
@@ -398,7 +520,9 @@ public class VehiclesController {
         boolean ok = FormValidation.show(plateField, plateErrorLabel, FormValidation.plate(plate, true));
         ok &= FormValidation.show(modelField, modelErrorLabel, FormValidation.vehicleModel(model, true));
         ok &= FormValidation.show(typeCombo, typeErrorLabel, type == null ? "Select a body type." : null);
-        ok &= FormValidation.show(seatsCombo, seatsErrorLabel, seats == null ? "Select the number of seats." : null);
+        ok &= FormValidation.show(seatsCombo, seatsErrorLabel, seats == null
+                ? (type == null ? "Select the body type first." : "Select the number of seats.") : null);
+        ok &= FormValidation.show(colorCombo, colorErrorLabel, color == null ? "Select the car's color." : null);
         ok &= FormValidation.show(rateField, rateErrorLabel, FormValidation.rate(rateText, true));
         if (!ok) {
             formMessageLabel.setText("Please fix the fields marked in red.");
@@ -425,14 +549,16 @@ public class VehiclesController {
                 }
             }
 
-            String sql = "INSERT INTO vehicles (plate_no, model, type, seats, rate_per_day, status) VALUES (?, ?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO vehicles (plate_no, model, type, seats, color, rate_per_day, status) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setString(1, plate);
                 stmt.setString(2, model);
                 stmt.setString(3, type);
                 stmt.setInt(4, seats);
-                stmt.setDouble(5, rate);
-                stmt.setString(6, status);
+                stmt.setString(5, color);
+                stmt.setDouble(6, rate);
+                stmt.setString(7, status);
                 stmt.executeUpdate();
             }
 
@@ -445,13 +571,16 @@ public class VehiclesController {
         }
     }
 
-    // ---- Change rate popup ----
+    // ------------------------------------------------------------ edit vehicle popup (rate + color)
 
-    private void openEditRate(VehicleRow row) {
-        rateTarget = row;
+    private void openEdit(VehicleRow row) {
+        editTarget = row;
         editRateVehicleLabel.setText(row.model.get() + " (" + row.plate.get() + ") \u00b7 current rate \u20b1"
                 + String.format("%,.0f", row.rate.get()) + " / day");
-        newRateField.clear();
+        newRateField.setText(String.format(java.util.Locale.ROOT, "%.2f", row.rate.get()).replaceAll("\\.00$", ""));
+        editColorCombo.setValue(row.color);
+        editSeatsCombo.setItems(FXCollections.observableArrayList(VehicleSpecs.seatsFor(row.type.get())));
+        editSeatsCombo.setValue(row.seats);
         FormValidation.clear(newRateField, newRateErrorLabel);
         editRateMessageLabel.setText("");
         editRateOverlay.setVisible(true);
@@ -462,56 +591,69 @@ public class VehiclesController {
     @FXML
     private void onCancelEditRate() {
         newRateField.clear();
+        editColorCombo.setValue(null);
+        editSeatsCombo.setValue(null);
         FormValidation.clear(newRateField, newRateErrorLabel);
         editRateMessageLabel.setText("");
         editRateOverlay.setVisible(false);
         editRateOverlay.setManaged(false);
-        rateTarget = null;
+        editTarget = null;
     }
 
     @FXML
     private void onSaveRateClick() {
-        if (rateTarget == null) {
+        if (editTarget == null) {
             return;
         }
         String text = newRateField.getText().trim();
         String problem = FormValidation.rate(text, true);
-        if (problem == null && Math.abs(Double.parseDouble(text) - rateTarget.rate.get()) < 0.005) {
-            problem = "The new rate is the same as the current rate.";
-        }
         if (!FormValidation.show(newRateField, newRateErrorLabel, problem)) {
             return;
         }
         double newRate = Double.parseDouble(text);
+        String newColor = editColorCombo.getValue();
 
-        Alert confirm = Dialogs.create(Alert.AlertType.CONFIRMATION,
-                "Change the rate of " + rateTarget.model.get() + " (" + rateTarget.plate.get() + ")\n"
-                        + "from \u20b1" + String.format("%,.2f", rateTarget.rate.get())
-                        + " to \u20b1" + String.format("%,.2f", newRate) + " per day?\n\n"
-                        + "The new rate applies to new rentals only. Rentals already made keep their price.",
-                ButtonType.YES, ButtonType.NO);
-        confirm.setHeaderText(null);
-        confirm.setTitle("Change rate");
-        Optional<ButtonType> result = confirm.showAndWait();
-        if (result.isEmpty() || result.get() != ButtonType.YES) {
+        boolean rateChanged = Math.abs(newRate - editTarget.rate.get()) >= 0.005;
+        boolean colorChanged = newColor != null && !newColor.equals(editTarget.color);
+        Integer newSeats = editSeatsCombo.getValue();
+        boolean seatsChanged = newSeats != null && !newSeats.equals(editTarget.seats);
+        if (!rateChanged && !colorChanged && !seatsChanged) {
+            editRateMessageLabel.setText("Nothing was changed.");
             return;
         }
 
-        String sql = "UPDATE vehicles SET rate_per_day = ? WHERE vehicle_id = ?";
+        if (rateChanged) {
+            Alert confirm = Dialogs.create(Alert.AlertType.CONFIRMATION,
+                    "Change the rate of " + editTarget.model.get() + " (" + editTarget.plate.get() + ")\n"
+                            + "from \u20b1" + String.format("%,.2f", editTarget.rate.get())
+                            + " to \u20b1" + String.format("%,.2f", newRate) + " per day?\n\n"
+                            + "The new rate applies to new rentals only. Rentals already made keep their price.",
+                    ButtonType.YES, ButtonType.NO);
+            confirm.setHeaderText(null);
+            confirm.setTitle("Change rate");
+            Optional<ButtonType> result = confirm.showAndWait();
+            if (result.isEmpty() || result.get() != ButtonType.YES) {
+                return;
+            }
+        }
+
+        String sql = "UPDATE vehicles SET rate_per_day = ?, color = ?, seats = ? WHERE vehicle_id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setDouble(1, newRate);
-            stmt.setInt(2, rateTarget.id);
+            stmt.setString(2, newColor != null ? newColor : editTarget.color);
+            stmt.setObject(3, newSeats != null ? newSeats : editTarget.seats);
+            stmt.setInt(4, editTarget.id);
             stmt.executeUpdate();
             onCancelEditRate();
-            loadVehicles();
+            loadVehicles(true);
         } catch (SQLException e) {
             e.printStackTrace();
-            editRateMessageLabel.setText("Could not change the rate. Please try again.");
+            editRateMessageLabel.setText("Could not save the changes. Please try again.");
         }
     }
 
-    // ---- Navigation ----
+    // ------------------------------------------------------------ navigation
 
     @FXML
     private void onDashboardClick() {
@@ -571,21 +713,26 @@ public class VehiclesController {
     /** Backs one row of the vehicles table. */
     public static class VehicleRow {
         final int id;
-        final SimpleStringProperty plate;
-        final SimpleStringProperty model;
-        final SimpleStringProperty type;
-        final Integer seats;          // null for cars added before seats were saved
-        final SimpleDoubleProperty rate;
-        final SimpleStringProperty status;
+        final javafx.beans.property.SimpleStringProperty plate;
+        final javafx.beans.property.SimpleStringProperty model;
+        final javafx.beans.property.SimpleStringProperty type;
+        final String color;          // null for cars added before colors existed
+        final Integer seats;         // null for cars added before seats were saved
+        final javafx.beans.property.SimpleDoubleProperty rate;
+        final javafx.beans.property.SimpleStringProperty status;
+        final boolean archived;
 
-        VehicleRow(int id, String plate, String model, String type, Integer seats, double rate, String status) {
+        VehicleRow(int id, String plate, String model, String type, String color, Integer seats,
+                   double rate, String status, boolean archived) {
             this.id = id;
-            this.plate = new SimpleStringProperty(plate);
-            this.model = new SimpleStringProperty(model);
-            this.type = new SimpleStringProperty(type);
+            this.plate = new javafx.beans.property.SimpleStringProperty(plate);
+            this.model = new javafx.beans.property.SimpleStringProperty(model);
+            this.type = new javafx.beans.property.SimpleStringProperty(type);
+            this.color = color;
             this.seats = seats;
-            this.rate = new SimpleDoubleProperty(rate);
-            this.status = new SimpleStringProperty(status);
+            this.rate = new javafx.beans.property.SimpleDoubleProperty(rate);
+            this.status = new javafx.beans.property.SimpleStringProperty(status);
+            this.archived = archived;
         }
     }
 }

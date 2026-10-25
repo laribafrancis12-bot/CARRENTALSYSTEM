@@ -34,6 +34,9 @@ import java.util.Optional;
  */
 public class HistoryController {
 
+    /** How many records the table shows on one page. */
+    private static final int PAGE_SIZE = 10;
+
     private static final DateTimeFormatter TABLE_DATE = DateTimeFormatter.ofPattern("MMM d, yyyy");
 
     @FXML private Button vehiclesBtn;
@@ -51,6 +54,14 @@ public class HistoryController {
     @FXML private TableColumn<HistoryRow, LocalDate> returnedOnCol;
     @FXML private TableColumn<HistoryRow, String> timingCol;
     @FXML private TableColumn<HistoryRow, Double> totalCol;
+    @FXML private TableColumn<HistoryRow, String> rentedByCol;
+    @FXML private TableColumn<HistoryRow, String> returnedByCol;
+
+    @FXML private Button pagePrevBtn;
+    @FXML private Button pageNextBtn;
+    @FXML private Label pageLabel;
+    @FXML private Label pageInfoLabel;
+    private Pager<HistoryRow> pager;
     @FXML private TableColumn<HistoryRow, Void> actionsCol;
 
     @FXML
@@ -61,7 +72,10 @@ public class HistoryController {
         accountsBtn.setVisible(admin);
         accountsBtn.setManaged(admin);
 
+        pager = new Pager<>(historyTable, pagePrevBtn, pageNextBtn, pageLabel, pageInfoLabel, PAGE_SIZE);
         setUpTable();
+        TableTools.fitHeaders(historyTable);    // no column title is cut
+        TableTools.lockColumns(historyTable);   // columns can't be dragged wider
         searchField.textProperty().addListener((o, a, b) -> loadHistory(b));
         loadHistory("");
     }
@@ -77,16 +91,18 @@ public class HistoryController {
     private void setUpTable() {
         historyTable.setPlaceholder(new Label("No completed rentals yet"));
 
-        sizeColumn(idCol, 0.06, 72);
-        sizeColumn(customerCol, 0.12, 110);
-        sizeColumn(contactCol, 0.10, 100);
-        sizeColumn(addressCol, 0.12, 130);
-        sizeColumn(vehicleCol, 0.12, 130);
-        sizeColumn(rentDateCol, 0.09, 95);
-        sizeColumn(returnedOnCol, 0.09, 95);
-        sizeColumn(timingCol, 0.10, 100);
-        sizeColumn(totalCol, 0.07, 80);
-        sizeColumn(actionsCol, 0.13, 175);
+        sizeColumn(idCol, 0.05, 65);
+        sizeColumn(customerCol, 0.10, 100);
+        sizeColumn(contactCol, 0.08, 95);
+        sizeColumn(addressCol, 0.11, 120);
+        sizeColumn(vehicleCol, 0.11, 120);
+        sizeColumn(rentDateCol, 0.07, 90);
+        sizeColumn(returnedOnCol, 0.07, 90);
+        sizeColumn(timingCol, 0.07, 90);
+        sizeColumn(totalCol, 0.06, 75);
+        sizeColumn(rentedByCol, 0.07, 85);
+        sizeColumn(returnedByCol, 0.07, 85);
+        sizeColumn(actionsCol, 0.14, 175);
 
         idCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().id));
         idCol.setCellFactory(col -> new TableCell<>() {
@@ -97,6 +113,8 @@ public class HistoryController {
             }
         });
 
+        rentedByCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().rentedBy));
+        returnedByCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().returnedBy));
         customerCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().customer));
         contactCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().contact));
         addressCol.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(d.getValue().address));
@@ -194,7 +212,7 @@ public class HistoryController {
     private void loadHistory(String search) {
         String sql =
                 "SELECT r.rental_id, c.full_name, c.contact_no, c.address, c.id_photo, v.model, v.plate_no, " +
-                        "r.rent_date, r.return_date, r.returned_on, r.total_amount " +
+                        "r.rent_date, r.return_date, r.returned_on, r.total_amount, r.created_by, r.returned_by " +
                         "FROM rentals r " +
                         "JOIN customers c ON r.customer_id = c.customer_id " +
                         "JOIN vehicles v ON r.vehicle_id = v.vehicle_id " +
@@ -242,7 +260,9 @@ public class HistoryController {
                             returnedOn,
                             timing,
                             rs.getDouble("total_amount"),
-                            rs.getString("id_photo")
+                            rs.getString("id_photo"),
+                            dash(rs.getString("created_by")),
+                            dash(rs.getString("returned_by"))
                     ));
                 }
             }
@@ -252,8 +272,13 @@ public class HistoryController {
             return;
         }
 
-        historyTable.setItems(rows);
+        pager.setItems(rows);
         countLabel.setText(rows.size() + " completed rental" + (rows.size() == 1 ? "" : "s"));
+    }
+
+    /** Older records have no staff name saved, so they show a dash. */
+    private static String dash(String value) {
+        return value == null || value.isBlank() ? "\u2014" : value;
     }
 
     /** Shows the photo of the customer's valid ID. */
@@ -354,10 +379,12 @@ public class HistoryController {
         final String timing;          // Early, On time, Late (n days) or empty
         final double total;
         final String idPhoto;     // file name in the valid_ids folder, or null
+        final String rentedBy;    // staff who made the rental (gets the sale)
+        final String returnedBy;  // staff who received the car back
 
         HistoryRow(int id, String customer, String contact, String address, String vehicle,
                    LocalDate rentDate, LocalDate returnedOn, String timing, double total,
-                   String idPhoto) {
+                   String idPhoto, String rentedBy, String returnedBy) {
             this.id = id;
             this.customer = customer;
             this.contact = contact;
@@ -368,6 +395,8 @@ public class HistoryController {
             this.timing = timing;
             this.total = total;
             this.idPhoto = idPhoto;
+            this.rentedBy = rentedBy;
+            this.returnedBy = returnedBy;
         }
     }
 }

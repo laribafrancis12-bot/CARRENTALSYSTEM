@@ -7,7 +7,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -33,7 +32,6 @@ public class AccountsController {
     @FXML private PasswordField confirmPasswordField;
     @FXML private TextField newPasswordVisibleField;
     @FXML private TextField confirmPasswordVisibleField;
-    @FXML private CheckBox showNewPasswordCheck;
     @FXML private Label newUsernameErrorLabel;
     @FXML private Label newPasswordErrorLabel;
     @FXML private Label confirmPasswordErrorLabel;
@@ -43,7 +41,6 @@ public class AccountsController {
     @FXML private PasswordField changePasswordField;
     @FXML private TextField changePasswordVisibleField;
     @FXML private TextField confirmChangePasswordVisibleField;
-    @FXML private CheckBox showChangePasswordCheck;
     @FXML private PasswordField confirmChangePasswordField;
     @FXML private Label changePasswordErrorLabel;
     @FXML private Label confirmChangePasswordErrorLabel;
@@ -123,6 +120,12 @@ public class AccountsController {
                                 confirmChangePasswordField.getText(), true));
             }
         });
+
+        // The eye in each password box shows or hides that password.
+        PasswordEye.attach(newPasswordField, newPasswordVisibleField);
+        PasswordEye.attach(confirmPasswordField, confirmPasswordVisibleField);
+        PasswordEye.attach(changePasswordField, changePasswordVisibleField);
+        PasswordEye.attach(confirmChangePasswordField, confirmChangePasswordVisibleField);
 
         loadAccounts();
     }
@@ -238,7 +241,6 @@ public class AccountsController {
         newPasswordField.clear();
         confirmPasswordField.clear();
         clearAddStaffErrors();
-        showNewPasswordCheck.setSelected(false);
         setNewPasswordVisible(false);
         addStaffOverlay.setVisible(true);
         addStaffOverlay.setManaged(true);
@@ -313,7 +315,6 @@ public class AccountsController {
         FormValidation.clear(changePasswordField, changePasswordErrorLabel);
         FormValidation.clear(confirmChangePasswordField, confirmChangePasswordErrorLabel);
         changePasswordMessageLabel.setText("");
-        showChangePasswordCheck.setSelected(false);
         setChangePasswordVisible(false);
         changePasswordOverlay.setVisible(true);
         changePasswordOverlay.setManaged(true);
@@ -367,11 +368,6 @@ public class AccountsController {
         }
     }
 
-    @FXML
-    private void onToggleNewPasswordVisibility() {
-        setNewPasswordVisible(showNewPasswordCheck.isSelected());
-    }
-
     private void setNewPasswordVisible(boolean show) {
         newPasswordField.setVisible(!show);
         newPasswordField.setManaged(!show);
@@ -381,11 +377,6 @@ public class AccountsController {
         confirmPasswordField.setManaged(!show);
         confirmPasswordVisibleField.setVisible(show);
         confirmPasswordVisibleField.setManaged(show);
-    }
-
-    @FXML
-    private void onToggleChangePasswordVisibility() {
-        setChangePasswordVisible(showChangePasswordCheck.isSelected());
     }
 
     private void setChangePasswordVisible(boolean show) {

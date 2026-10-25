@@ -1,3 +1,4 @@
+
 package com.carrentalsystem.carsystem;
 
 import javafx.fxml.FXML;
@@ -20,13 +21,16 @@ import java.time.temporal.ChronoUnit;
 
 public class ReceiptController {
 
-    private static final DateTimeFormatter LONG_DATE = DateTimeFormatter.ofPattern("MMMM d, yyyy");
-    private static final DateTimeFormatter SHORT_DATE = DateTimeFormatter.ofPattern("MMM d, yyyy");
+    private static final DateTimeFormatter LONG_DATE =
+            DateTimeFormatter.ofPattern("MMMM d, yyyy");
+
+    private static final DateTimeFormatter SHORT_DATE =
+            DateTimeFormatter.ofPattern("MMM d, yyyy");
 
     @FXML private Button vehiclesBtn;
     @FXML private Button accountsBtn;
 
-    /** The white "paper" that gets printed / saved as PDF. */
+    /** The white receipt paper that gets printed or saved as PDF. */
     @FXML private VBox receiptPaper;
 
     @FXML private Label receiptNoLabel;
@@ -37,6 +41,7 @@ public class ReceiptController {
     @FXML private Label contactLabel;
     @FXML private Label addressLabel;
     @FXML private Label validIdLabel;
+
     @FXML private Button backBtn;
 
     @FXML private Label vehicleLabel;
@@ -59,17 +64,19 @@ public class ReceiptController {
 
     @FXML private Label statusMessageLabel;
 
-    /** Where the Back button goes: "rentals" (default) or "history". */
+    /** Where the Back button goes: "rentals" or "history". */
     private String backTarget = "rentals";
 
-    /** Used for the default PDF file name. */
+    /** Used for the default PDF filename. */
     private String receiptNo = "receipt";
 
     @FXML
     public void initialize() {
         boolean admin = Session.isAdmin();
+
         vehiclesBtn.setVisible(admin);
         vehiclesBtn.setManaged(admin);
+
         accountsBtn.setVisible(admin);
         accountsBtn.setManaged(admin);
     }
@@ -80,16 +87,18 @@ public class ReceiptController {
         backBtn.setText("\u2190 Back to history");
     }
 
-    /** Called right after this screen is loaded, before it's shown. */
+    /** Called after this screen is loaded, before it is shown. */
     public void setRentalId(int rentalId) {
         loadReceipt(rentalId);
     }
 
     private void loadReceipt(int rentalId) {
         String sql =
-                "SELECT r.rental_id, c.full_name, c.contact_no, c.license_no, c.address, c.id_photo, " +
+                "SELECT r.rental_id, c.full_name, c.contact_no, " +
+                        "c.license_no, c.address, c.id_photo, " +
                         "v.model, v.plate_no, v.type, v.rate_per_day, " +
-                        "r.rent_date, r.return_date, r.total_amount, r.payment_method " +
+                        "r.rent_date, r.return_date, r.total_amount, " +
+                        "r.payment_method " +
                         "FROM rentals r " +
                         "JOIN customers c ON r.customer_id = c.customer_id " +
                         "JOIN vehicles v ON r.vehicle_id = v.vehicle_id " +
@@ -99,111 +108,222 @@ public class ReceiptController {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, rentalId);
+
             try (ResultSet rs = stmt.executeQuery()) {
+
                 if (!rs.next()) {
                     statusMessageLabel.setText("Receipt not found.");
                     return;
                 }
 
-                LocalDate rentDate = rs.getDate("rent_date").toLocalDate();
-                LocalDate returnDate = rs.getDate("return_date").toLocalDate();
-                long days = ChronoUnit.DAYS.between(rentDate, returnDate);
+                LocalDate rentDate =
+                        rs.getDate("rent_date").toLocalDate();
+
+                LocalDate returnDate =
+                        rs.getDate("return_date").toLocalDate();
+
+                long days = ChronoUnit.DAYS.between(
+                        rentDate, returnDate
+                );
+
                 double total = rs.getDouble("total_amount");
 
-                // The system doesn't charge a service fee or give discounts yet,
-                // so they show as zero and the subtotal equals the total.
+                // No service fee or discounts are currently applied.
                 double serviceFee = 0;
                 double discount = 0;
                 double subtotal = total - serviceFee + discount;
 
-                // Receipt number such as RA-2026-1004-001 (year, month+day, rental id).
-                receiptNo = String.format("RA-%d-%02d%02d-%03d",
-                        rentDate.getYear(), rentDate.getMonthValue(), rentDate.getDayOfMonth(), rentalId);
+                // Example: RA-2026-1004-001
+                receiptNo = String.format(
+                        "RA-%d-%02d%02d-%03d",
+                        rentDate.getYear(),
+                        rentDate.getMonthValue(),
+                        rentDate.getDayOfMonth(),
+                        rentalId
+                );
 
                 receiptNoLabel.setText(receiptNo);
-                issueDateLabel.setText(rentDate.format(LONG_DATE));
+                issueDateLabel.setText(
+                        rentDate.format(LONG_DATE)
+                );
 
-                customerLabel.setText(orDash(rs.getString("full_name")));
-                licenseLabel.setText(orDash(rs.getString("license_no")));
-                contactLabel.setText(orDash(rs.getString("contact_no")));
-                addressLabel.setText(orDash(rs.getString("address")));
+                customerLabel.setText(
+                        orDash(rs.getString("full_name"))
+                );
+
+                licenseLabel.setText(
+                        orDash(rs.getString("license_no"))
+                );
+
+                contactLabel.setText(
+                        orDash(rs.getString("contact_no"))
+                );
+
+                addressLabel.setText(
+                        orDash(rs.getString("address"))
+                );
+
                 String idPhoto = rs.getString("id_photo");
-                validIdLabel.setText(idPhoto == null || idPhoto.isBlank() ? "\u2014" : "Photo on file");
 
-                vehicleLabel.setText(orDash(rs.getString("model")));
-                plateLabel.setText(orDash(rs.getString("plate_no")));
-                vehicleTypeLabel.setText(orDash(rs.getString("type")));
+                validIdLabel.setText(
+                        idPhoto == null || idPhoto.isBlank()
+                                ? "\u2014"
+                                : "Photo on file"
+                );
 
-                rentedOnLabel.setText(rentDate.format(SHORT_DATE));
-                returnByLabel.setText(returnDate.format(SHORT_DATE));
-                durationLabel.setText(days + (days == 1 ? " day" : " days"));
-                durationHoursLabel.setText((days * 24) + " hours");
-                // The rate the customer actually paid (total / days), so changing a car's rate later
-                // does not change old receipts.
-                double paidRate = days > 0 ? total / days : rs.getDouble("rate_per_day");
-                rateLabel.setText(peso(paidRate, paidRate % 1 == 0 ? 0 : 2));
+                vehicleLabel.setText(
+                        orDash(rs.getString("model"))
+                );
 
-                paymentLabel.setText(orDash(rs.getString("payment_method")));
-                paymentNoteLabel.setText("Payment received in full on " + rentDate.format(SHORT_DATE)
-                        + ". No balance remains.");
+                plateLabel.setText(
+                        orDash(rs.getString("plate_no"))
+                );
+
+                vehicleTypeLabel.setText(
+                        orDash(rs.getString("type"))
+                );
+
+                rentedOnLabel.setText(
+                        rentDate.format(SHORT_DATE)
+                );
+
+                returnByLabel.setText(
+                        returnDate.format(SHORT_DATE)
+                );
+
+                durationLabel.setText(
+                        days + (days == 1 ? " day" : " days")
+                );
+
+                durationHoursLabel.setText(
+                        (days * 24) + " hours"
+                );
+
+                // Preserve the rate actually paid on the receipt.
+                double paidRate = days > 0
+                        ? total / days
+                        : rs.getDouble("rate_per_day");
+
+                rateLabel.setText(
+                        peso(paidRate, paidRate % 1 == 0 ? 0 : 2)
+                );
+
+                paymentLabel.setText(
+                        orDash(rs.getString("payment_method"))
+                );
+
+                paymentNoteLabel.setText(
+                        "Payment received in full on "
+                                + rentDate.format(SHORT_DATE)
+                                + ". No balance remains."
+                );
 
                 subtotalLabel.setText(peso(subtotal, 0));
                 serviceFeeLabel.setText(peso(serviceFee, 0));
                 discountLabel.setText(peso(discount, 0));
                 totalPaidLabel.setText(peso(total, 0));
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
-            statusMessageLabel.setText("Could not load this receipt. Check the database connection.");
+
+            statusMessageLabel.setText(
+                    "Could not load this receipt. " +
+                            "Check the database connection."
+            );
         }
     }
 
     private static String orDash(String value) {
-        return value == null || value.isBlank() ? "\u2014" : value;
+        return value == null || value.isBlank()
+                ? "\u2014"
+                : value;
     }
 
     private static String peso(double amount, int decimals) {
-        return "\u20b1" + String.format("%,." + decimals + "f", amount);
+        return "\u20b1" + String.format(
+                "%,." + decimals + "f", amount
+        );
     }
 
-    // ---- Save as PDF / Print ----
+    // ---- Save as PDF ----
 
     @FXML
     private void onSavePdfClick() {
         FileChooser chooser = new FileChooser();
+
         chooser.setTitle("Save receipt as PDF");
         chooser.setInitialFileName(receiptNo + ".pdf");
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF file", "*.pdf"));
 
-        File file = chooser.showSaveDialog(receiptPaper.getScene().getWindow());
+        chooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter(
+                        "PDF file", "*.pdf"
+                )
+        );
+
+        File file = chooser.showSaveDialog(
+                receiptPaper.getScene().getWindow()
+        );
+
         if (file == null) {
-            return;   // cancelled
+            return;
         }
+
         if (!file.getName().toLowerCase().endsWith(".pdf")) {
-            file = new File(file.getParentFile(), file.getName() + ".pdf");
+            file = new File(
+                    file.getParentFile(),
+                    file.getName() + ".pdf"
+            );
         }
 
         try {
-            WritableImage image = ReceiptExporter.snapshot(receiptPaper);
+            WritableImage image =
+                    ReceiptExporter.snapshot(receiptPaper);
+
             ReceiptExporter.savePdf(image, file);
-            statusMessageLabel.setText("Saved: " + file.getAbsolutePath());
+
+            statusMessageLabel.setText(
+                    "Saved: " + file.getAbsolutePath()
+            );
+
         } catch (IOException | RuntimeException e) {
             e.printStackTrace();
-            statusMessageLabel.setText("Could not save the PDF. Make sure the file is not open in another program and try again.");
+
+            statusMessageLabel.setText(
+                    "Could not save the PDF. Make sure the file " +
+                            "is not open in another program and try again."
+            );
         }
     }
+
+    // ---- Print receipt ----
 
     @FXML
     private void onPrintClick() {
         try {
-            WritableImage image = ReceiptExporter.snapshot(receiptPaper);
-            boolean printed = ReceiptExporter.print(image, receiptPaper.getScene().getWindow());
-            statusMessageLabel.setText(printed ? "Sent to the printer." : "");
+            WritableImage image =
+                    ReceiptExporter.snapshot(receiptPaper);
+
+            boolean printed = ReceiptExporter.print(
+                    image,
+                    receiptPaper.getScene().getWindow()
+            );
+
+            statusMessageLabel.setText(
+                    printed ? "Sent to the printer." : ""
+            );
+
         } catch (IOException | RuntimeException e) {
             e.printStackTrace();
-            statusMessageLabel.setText(e.getMessage() + " You can use Save as PDF instead.");
+
+            statusMessageLabel.setText(
+                    e.getMessage()
+                            + " You can use Save as PDF instead."
+            );
         }
     }
+
+    // ---- Back navigation ----
 
     @FXML
     private void onBackClick() {
@@ -218,28 +338,46 @@ public class ReceiptController {
 
     @FXML
     private void onDashboardClick() {
-        switchScene("dashboard-view.fxml", "Car Rental System - Dashboard");
+        switchScene(
+                "dashboard-view.fxml",
+                "Car Rental System - Dashboard"
+        );
     }
 
     @FXML
     private void onVehiclesClick() {
-        switchScene("vehicles-view.fxml", "Car Rental System - Vehicles");
+        switchScene(
+                "vehicles-view.fxml",
+                "Car Rental System - Vehicles"
+        );
     }
 
     @FXML
     private void onRentalsClick() {
-        switchScene("rentals-view.fxml", "Car Rental System - Rentals");
+        switchScene(
+                "rentals-view.fxml",
+                "Car Rental System - Rentals"
+        );
     }
 
     @FXML
     private void onHistoryClick() {
-        switchScene("history-view.fxml", "Car Rental System - History");
+        switchScene(
+                "history-view.fxml",
+                "Car Rental System - History"
+        );
     }
 
     @FXML
     private void onAccountsClick() {
-        if (!Session.isAdmin()) return;
-        switchScene("accounts-view.fxml", "Car Rental System - Accounts");
+        if (!Session.isAdmin()) {
+            return;
+        }
+
+        switchScene(
+                "accounts-view.fxml",
+                "Car Rental System - Accounts"
+        );
     }
 
     @FXML
@@ -250,7 +388,12 @@ public class ReceiptController {
 
     private void switchScene(String fxmlFile, String title) {
         try {
-            Navigator.show((Stage) receiptPaper.getScene().getWindow(), fxmlFile, title);
+            Navigator.show(
+                    (Stage) receiptPaper.getScene().getWindow(),
+                    fxmlFile,
+                    title
+            );
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -258,7 +401,10 @@ public class ReceiptController {
 
     private void goToLogin() {
         try {
-            Navigator.showLogin((Stage) receiptPaper.getScene().getWindow());
+            Navigator.showLogin(
+                    (Stage) receiptPaper.getScene().getWindow()
+            );
+
         } catch (IOException e) {
             e.printStackTrace();
         }

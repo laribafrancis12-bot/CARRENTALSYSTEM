@@ -3,7 +3,6 @@ package com.carrentalsystem.carsystem;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
@@ -20,21 +19,12 @@ public class LoginController {
     @FXML private TextField usernameField;
     @FXML private PasswordField passwordField;
     @FXML private TextField passwordVisibleField;
-    @FXML private CheckBox showPasswordCheck;
     @FXML private Label messageLabel;
 
     @FXML
     public void initialize() {
         passwordVisibleField.textProperty().bindBidirectional(passwordField.textProperty());
-    }
-
-    @FXML
-    protected void onTogglePasswordVisibility() {
-        boolean show = showPasswordCheck.isSelected();
-        passwordField.setVisible(!show);
-        passwordField.setManaged(!show);
-        passwordVisibleField.setVisible(show);
-        passwordVisibleField.setManaged(show);
+        PasswordEye.attach(passwordField, passwordVisibleField);   // the eye in the password box
     }
 
     @FXML
@@ -85,6 +75,6 @@ public class LoginController {
 
     private void showMessage(String text, boolean success) {
         messageLabel.setText(text);
-        messageLabel.setStyle(success ? "-fx-text-fill: #4CAF66;" : "-fx-text-fill: #F27A6F;");
+        messageLabel.setStyle(success ? "-fx-text-fill: #1B8A45;" : "-fx-text-fill: #C62828;");
     }
 }

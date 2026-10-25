@@ -27,8 +27,10 @@ public class DatabaseConnection {
             addColumnIfMissing(conn, meta, "customers", "address", "VARCHAR(150) NULL");   // customer address
             addColumnIfMissing(conn, meta, "customers", "id_photo", "VARCHAR(100) NULL");   // file name of the uploaded ID photo
             addColumnIfMissing(conn, meta, "users", "active", "TINYINT(1) NOT NULL DEFAULT 1"); // 0 = deactivated
-            addColumnIfMissing(conn, meta, "vehicles", "seats", "INT NULL");                  // passenger seats (older cars have none saved)
-
+            addColumnIfMissing(conn, meta, "rentals", "returned_by", "VARCHAR(50) NULL");  // staff who received the car back
+            addColumnIfMissing(conn, meta, "vehicles", "color", "VARCHAR(30) NULL");       // physical color of the car
+            addColumnIfMissing(conn, meta, "vehicles", "seats", "INT NULL");
+            addColumnIfMissing(conn, meta, "vehicles", "archived", "TINYINT(1) NOT NULL DEFAULT 0"); // 1 = hidden, history kept
 
             // If these columns were created as ENUM, values like "Overdue" or "SUV" would be rejected.
             widenIfEnum(conn, meta, "vehicles", "status", "VARCHAR(20) DEFAULT 'Available'");
@@ -93,10 +95,12 @@ public class DatabaseConnection {
     /**
      * The customer brought the car back (on time, early or late): the rental becomes Returned
      * and the vehicle becomes Available again. The amount charged is not changed.
+     * The staff member who received the car is saved as returned_by (the sale itself stays with
+     * created_by, the staff member who made the rental).
      *
      * @return false if the rental was not found or was already returned
      */
-    public static boolean markReturned(int rentalId) throws SQLException {
+    public static boolean markReturned(int rentalId, String returnedBy) throws SQLException {
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
             try {
@@ -113,7 +117,8 @@ public class DatabaseConnection {
                         vehicleId = rs.getInt(1);
                     }
                 }
-                run(conn, "UPDATE rentals SET status='Returned', returned_on=CURDATE() WHERE rental_id = ?", rentalId);
+                run(conn, "UPDATE rentals SET status='Returned', returned_on=CURDATE(), returned_by = ? WHERE rental_id = ?",
+                        returnedBy, rentalId);
                 // Only free it if it is still out; a car sent to Maintenance stays in Maintenance.
                 run(conn, "UPDATE vehicles SET status='Available' WHERE vehicle_id = ? "
                         + "AND status IN ('Rented','Overdue')", vehicleId);
@@ -131,13 +136,13 @@ public class DatabaseConnection {
      * - Available: any open rental for this vehicle is closed as Returned.
      * - Overdue: any Active rental for this vehicle is flagged Overdue.
      */
-    public static void setVehicleStatus(int vehicleId, String newStatus) throws SQLException {
+    public static void setVehicleStatus(int vehicleId, String newStatus, String byUser) throws SQLException {
         try (Connection conn = getConnection()) {
             conn.setAutoCommit(false);
             try {
                 if ("Available".equals(newStatus)) {
-                    run(conn, "UPDATE rentals SET status='Returned', returned_on=CURDATE() "
-                            + "WHERE vehicle_id = ? AND status IN ('Active','Overdue')", vehicleId);
+                    run(conn, "UPDATE rentals SET status='Returned', returned_on=CURDATE(), returned_by = ? "
+                            + "WHERE vehicle_id = ? AND status IN ('Active','Overdue')", byUser, vehicleId);
                 } else if ("Overdue".equals(newStatus)) {
                     run(conn, "UPDATE rentals SET status='Overdue' "
                             + "WHERE vehicle_id = ? AND status = 'Active'", vehicleId);

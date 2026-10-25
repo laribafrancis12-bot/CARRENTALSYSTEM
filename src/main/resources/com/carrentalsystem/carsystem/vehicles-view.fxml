@@ -34,15 +34,15 @@
         </left>
 
         <center>
-            <VBox spacing="14.0" styleClass="page-content" maxWidth="1500.0" BorderPane.alignment="TOP_CENTER">
+            <VBox spacing="14.0" styleClass="page-content" BorderPane.alignment="TOP_CENTER">
 
                 <HBox alignment="CENTER_LEFT" spacing="10.0">
                     <VBox HBox.hgrow="ALWAYS">
                         <Label text="Vehicles" styleClass="page-title"/>
                         <Label fx:id="countLabel" text="0 in your fleet" styleClass="page-subtitle"/>
                     </VBox>
-                    <TextField fx:id="searchField" promptText="Search plate no. or model" maxWidth="260.0"
-                               prefHeight="36.0" styleClass="field-input"/>
+                    <TextField fx:id="searchField" promptText="Search plate no. or model" maxWidth="280.0"
+                               prefHeight="40.0" styleClass="field-input"/>
                     <Button text="+ Add vehicle" styleClass="cta-button" onAction="#onAddVehicleClick"/>
                 </HBox>
 
@@ -52,6 +52,7 @@
                     <Button fx:id="filterRentedBtn" text="Rented" styleClass="pill" onAction="#onFilterRented"/>
                     <Button fx:id="filterOverdueBtn" text="Overdue" styleClass="pill" onAction="#onFilterOverdue"/>
                     <Button fx:id="filterMaintenanceBtn" text="Maintenance" styleClass="pill" onAction="#onFilterMaintenance"/>
+                    <Button fx:id="filterArchivedBtn" text="Archived" styleClass="pill" onAction="#onFilterArchived"/>
                 </HBox>
 
                 <!-- CONSTRAINED_RESIZE_POLICY makes the columns stretch/shrink with the window -->
@@ -61,21 +62,30 @@
                     </columnResizePolicy>
                     <columns>
                         <TableColumn fx:id="plateCol" text="Plate no." prefWidth="110.0"/>
-                        <TableColumn fx:id="modelCol" text="Model" prefWidth="200.0"/>
-                        <TableColumn fx:id="typeCol" text="Type" prefWidth="110.0"/>
+                        <TableColumn fx:id="modelCol" text="Model" prefWidth="190.0"/>
+                        <TableColumn fx:id="typeCol" text="Type" prefWidth="100.0"/>
+                        <TableColumn fx:id="colorCol" text="Color" prefWidth="120.0"/>
                         <TableColumn fx:id="seatsCol" text="Seats" prefWidth="70.0"/>
-                        <TableColumn fx:id="rateCol" text="Rate/day" prefWidth="110.0"/>
-                        <TableColumn fx:id="statusCol" text="Status" prefWidth="130.0"/>
-                        <TableColumn fx:id="actionsCol" text="Actions" prefWidth="340.0"/>
+                        <TableColumn fx:id="rateCol" text="Rate/day" prefWidth="100.0"/>
+                        <TableColumn fx:id="statusCol" text="Status" prefWidth="120.0"/>
+                        <TableColumn fx:id="actionsCol" text="Actions" prefWidth="360.0"/>
                     </columns>
                 </TableView>
+
+                <!-- Page arrows: the table shows 10 vehicles at a time -->
+                <HBox alignment="CENTER" spacing="12.0">
+                    <Label fx:id="pageInfoLabel" text="" styleClass="page-subtitle" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="pagePrevBtn" text="&#8592;" styleClass="pager-btn"/>
+                    <Label fx:id="pageLabel" text="Page 1 of 1" styleClass="pager-label"/>
+                    <Button fx:id="pageNextBtn" text="&#8594;" styleClass="pager-btn"/>
+                </HBox>
             </VBox>
         </center>
     </BorderPane>
 
     <!-- Add vehicle overlay -->
     <StackPane fx:id="addVehicleOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="14.0" maxWidth="500.0">
+        <VBox styleClass="modal-card" spacing="14.0" maxWidth="540.0">
             <padding><Insets top="26.0" bottom="26.0" left="30.0" right="30.0"/></padding>
 
             <HBox alignment="CENTER_LEFT" spacing="12.0">
@@ -93,36 +103,44 @@
             <HBox spacing="14.0">
                 <VBox HBox.hgrow="ALWAYS" prefWidth="0.0" spacing="4.0">
                     <Label text="Plate number" styleClass="field-label"/>
-                    <TextField fx:id="plateField" promptText="ABC 1234" prefHeight="38.0" styleClass="field-input"/>
+                    <TextField fx:id="plateField" promptText="ABC 1234" prefHeight="40.0" styleClass="field-input"/>
                     <Label fx:id="plateErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                 </VBox>
                 <VBox HBox.hgrow="ALWAYS" prefWidth="0.0" spacing="4.0">
                     <Label text="Model" styleClass="field-label"/>
-                    <TextField fx:id="modelField" promptText="Toyota Vios" prefHeight="38.0" styleClass="field-input"/>
+                    <TextField fx:id="modelField" promptText="Toyota Vios" prefHeight="40.0" styleClass="field-input"/>
                     <Label fx:id="modelErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                 </VBox>
             </HBox>
 
             <HBox spacing="14.0">
-                <VBox HBox.hgrow="ALWAYS" minWidth="120.0" prefWidth="0.0" spacing="4.0">
+                <VBox HBox.hgrow="ALWAYS" prefWidth="0.0" spacing="4.0">
                     <Label text="Type" styleClass="field-label"/>
-                    <ComboBox fx:id="typeCombo" maxWidth="Infinity" prefWidth="140.0" prefHeight="38.0" styleClass="field-input"/>
+                    <ComboBox fx:id="typeCombo" promptText="Select type" maxWidth="Infinity" prefHeight="40.0" styleClass="field-input"/>
                     <Label fx:id="typeErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                 </VBox>
-                <VBox HBox.hgrow="ALWAYS" minWidth="100.0" prefWidth="0.0" spacing="4.0">
+                <VBox HBox.hgrow="ALWAYS" prefWidth="0.0" spacing="4.0">
                     <Label text="Seats" styleClass="field-label"/>
-                    <ComboBox fx:id="seatsCombo" maxWidth="Infinity" prefWidth="110.0" prefHeight="38.0" styleClass="field-input"/>
+                    <ComboBox fx:id="seatsCombo" promptText="Choose a type first" maxWidth="Infinity" prefHeight="40.0" styleClass="field-input"/>
                     <Label fx:id="seatsErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                 </VBox>
-                <VBox HBox.hgrow="ALWAYS" minWidth="120.0" prefWidth="0.0" spacing="4.0">
+            </HBox>
+
+            <HBox spacing="14.0">
+                <VBox HBox.hgrow="ALWAYS" prefWidth="0.0" spacing="4.0">
+                    <Label text="Color" styleClass="field-label"/>
+                    <ComboBox fx:id="colorCombo" promptText="Select color" maxWidth="Infinity" prefHeight="40.0" styleClass="field-input"/>
+                    <Label fx:id="colorErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
+                </VBox>
+                <VBox HBox.hgrow="ALWAYS" prefWidth="0.0" spacing="4.0">
                     <Label text="Rate/day" styleClass="field-label"/>
-                    <TextField fx:id="rateField" promptText="1500" prefHeight="38.0" styleClass="field-input"/>
+                    <TextField fx:id="rateField" promptText="1500" prefHeight="40.0" styleClass="field-input"/>
                     <Label fx:id="rateErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
                 </VBox>
             </HBox>
 
             <Label text="Status" styleClass="field-label"/>
-            <ComboBox fx:id="statusCombo" maxWidth="Infinity" prefHeight="38.0" styleClass="field-input"/>
+            <ComboBox fx:id="statusCombo" maxWidth="Infinity" prefHeight="40.0" styleClass="field-input"/>
 
             <Label fx:id="formMessageLabel" styleClass="error-label" wrapText="true"/>
 
@@ -133,34 +151,43 @@
         </VBox>
     </StackPane>
 
-
-    <!-- Change rate overlay -->
+    <!-- Edit vehicle overlay (rate and color) -->
     <StackPane fx:id="editRateOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="14.0" maxWidth="440.0">
+        <VBox styleClass="modal-card" spacing="14.0" maxWidth="460.0">
             <padding><Insets top="26.0" bottom="26.0" left="30.0" right="30.0"/></padding>
 
             <HBox alignment="CENTER_LEFT" spacing="12.0">
                 <VBox HBox.hgrow="ALWAYS">
-                    <Label text="Change rate" styleClass="modal-title"/>
+                    <Label text="Edit vehicle" styleClass="modal-title"/>
                     <Label fx:id="editRateVehicleLabel" text="-" styleClass="page-subtitle" wrapText="true"/>
                 </VBox>
                 <Button text="X" styleClass="modal-close" onAction="#onCancelEditRate"/>
             </HBox>
 
             <VBox spacing="4.0">
-                <Label text="New rate per day (&#8369;)" styleClass="field-label"/>
-                <TextField fx:id="newRateField" promptText="1500" prefHeight="38.0" styleClass="field-input" onAction="#onSaveRateClick"/>
+                <Label text="Rate per day (&#8369;)" styleClass="field-label"/>
+                <TextField fx:id="newRateField" promptText="1500" prefHeight="40.0" styleClass="field-input" onAction="#onSaveRateClick"/>
                 <Label fx:id="newRateErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
             </VBox>
 
-            <Label text="The new rate applies to new rentals only. Rentals already made keep the price they were booked at."
+            <VBox spacing="4.0">
+                <Label text="Color" styleClass="field-label"/>
+                <ComboBox fx:id="editColorCombo" promptText="Select color" maxWidth="Infinity" prefHeight="40.0" styleClass="field-input"/>
+            </VBox>
+
+            <VBox spacing="4.0">
+                <Label text="Seats (choices depend on the car's type)" styleClass="field-label"/>
+                <ComboBox fx:id="editSeatsCombo" promptText="Select seats" maxWidth="Infinity" prefHeight="40.0" styleClass="field-input"/>
+            </VBox>
+
+            <Label text="A new rate applies to new rentals only. Rentals already made keep the price they were booked at."
                    styleClass="page-subtitle" wrapText="true" minHeight="-Infinity"/>
 
             <Label fx:id="editRateMessageLabel" styleClass="error-label" wrapText="true"/>
 
             <HBox alignment="CENTER_RIGHT" spacing="10.0">
                 <Button text="Cancel" styleClass="ghost-button" onAction="#onCancelEditRate"/>
-                <Button text="Save rate" styleClass="cta-button" onAction="#onSaveRateClick"/>
+                <Button text="Save changes" styleClass="cta-button" onAction="#onSaveRateClick"/>
             </HBox>
         </VBox>
     </StackPane>
