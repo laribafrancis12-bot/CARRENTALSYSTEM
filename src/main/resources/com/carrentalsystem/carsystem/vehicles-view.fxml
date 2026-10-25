@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.Group?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
@@ -85,7 +86,8 @@
 
     <!-- Add vehicle overlay -->
     <StackPane fx:id="addVehicleOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="14.0" maxWidth="540.0" maxHeight="-Infinity">
+        <Group>
+        <VBox styleClass="modal-card" spacing="14.0" maxWidth="540.0">
             <padding><Insets top="26.0" bottom="26.0" left="30.0" right="30.0"/></padding>
 
             <HBox alignment="CENTER_LEFT" spacing="12.0">
@@ -149,11 +151,13 @@
                 <Button text="Save vehicle" styleClass="cta-button" onAction="#onSaveVehicleClick"/>
             </HBox>
         </VBox>
+        </Group>
     </StackPane>
 
     <!-- Edit vehicle overlay (rate and color) -->
     <StackPane fx:id="editRateOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="14.0" maxWidth="460.0" maxHeight="-Infinity">
+        <Group>
+        <VBox styleClass="modal-card" spacing="14.0" maxWidth="460.0">
             <padding><Insets top="26.0" bottom="26.0" left="30.0" right="30.0"/></padding>
 
             <HBox alignment="CENTER_LEFT" spacing="12.0">
@@ -190,6 +194,7 @@
                 <Button text="Save changes" styleClass="cta-button" onAction="#onSaveRateClick"/>
             </HBox>
         </VBox>
+        </Group>
     </StackPane>
 
 </StackPane>
