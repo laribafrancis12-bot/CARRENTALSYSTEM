@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.Group?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
@@ -53,7 +54,8 @@
 
     <!-- Add staff overlay -->
     <StackPane fx:id="addStaffOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="10.0" maxWidth="380.0" maxHeight="640.0">
+        <Group>
+        <VBox styleClass="modal-card" spacing="10.0" maxWidth="380.0">
             <padding><Insets top="20.0" bottom="20.0" left="24.0" right="24.0"/></padding>
 
             <HBox alignment="CENTER_LEFT">
@@ -69,7 +71,8 @@
             <StackPane>
                 <PasswordField fx:id="newPasswordField" promptText="Temporary password" styleClass="field-input"/>
                 <TextField fx:id="newPasswordVisibleField" promptText="Temporary password" styleClass="field-input" visible="false" managed="false"/>
-            </StackPane>
+                </Group>
+    </StackPane>
             <Label fx:id="newPasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
             <Label text="Use at least 8 characters with an uppercase letter and a special character (! @ # $ %)." styleClass="page-subtitle" wrapText="true" minHeight="-Infinity"/>
 
@@ -92,7 +95,8 @@
 
     <!-- Change password overlay -->
     <StackPane fx:id="changePasswordOverlay" styleClass="modal-overlay" visible="false" managed="false">
-        <VBox styleClass="modal-card" spacing="10.0" maxWidth="380.0" maxHeight="640.0">
+        <Group>
+        <VBox styleClass="modal-card" spacing="10.0" maxWidth="380.0">
             <padding><Insets top="20.0" bottom="20.0" left="24.0" right="24.0"/></padding>
 
             <HBox alignment="CENTER_LEFT">
@@ -104,7 +108,8 @@
             <StackPane>
                 <PasswordField fx:id="changePasswordField" promptText="New password" styleClass="field-input"/>
                 <TextField fx:id="changePasswordVisibleField" promptText="New password" styleClass="field-input" visible="false" managed="false"/>
-            </StackPane>
+                </Group>
+    </StackPane>
             <Label fx:id="changePasswordErrorLabel" styleClass="error-label" wrapText="true" visible="false" managed="false" minHeight="-Infinity"/>
             <Label text="Use at least 8 characters with an uppercase letter and a special character (! @ # $ %)." styleClass="page-subtitle" wrapText="true" minHeight="-Infinity"/>
 

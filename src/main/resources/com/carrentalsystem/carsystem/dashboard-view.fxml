@@ -43,6 +43,8 @@
                         <Label text="Dashboard" styleClass="page-title"/>
                         <Label fx:id="dateLabel" text="Logged in as Admin" styleClass="page-subtitle"/>
                     </VBox>
+                    <Label fx:id="chartRefreshLabel" text="Loaded from MySQL" styleClass="page-subtitle"/>
+                    <Button text="Refresh data" styleClass="ghost-button" onAction="#onRefreshDashboardClick"/>
                     <Button text="Export report" styleClass="ghost-button" onAction="#onExportReportClick"/>
                     <Button text="+ New rental" styleClass="cta-button" onAction="#onNewRentalClick"/>
                 </HBox>
