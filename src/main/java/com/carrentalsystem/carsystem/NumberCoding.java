@@ -30,11 +30,12 @@ public final class NumberCoding {
         String p = plate.trim();
         if (p.isEmpty()) return -1;
         char last = p.charAt(p.length() - 1);
-        return Character.isDigit(last) ? last - '0' : -1;
+        return last >= '0' && last <= '9' ? last - '0' : -1;
     }
 
     /** The weekday a plate ending in this digit is banned on. */
     public static DayOfWeek codingDay(int digit) {
+        if (digit < 0 || digit > 9) throw new IllegalArgumentException("Plate digit must be between 0 and 9");
         return switch (digit) {
             case 1, 2 -> DayOfWeek.MONDAY;
             case 3, 4 -> DayOfWeek.TUESDAY;
